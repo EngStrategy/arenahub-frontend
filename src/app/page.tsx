@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Pagination } from 'antd';
-import { ArenaCard } from '@/components/ArenaCard';
+import { ArenaCard } from '@/components/Cards/ArenaCard';
 import { sportIcons } from '@/data/sportIcons';
 import { Arena, getAllArenas } from './api/entities/arena';
 import { useSession } from 'next-auth/react';
@@ -22,13 +22,7 @@ export default function HomePage() {
   React.useEffect(() => {
     const fetchArenas = async () => {
       try {
-        const response = await getAllArenas(
-          session?.user.accessToken ?? '',
-          {
-            currentPage,
-            pageSize,
-          }
-        );
+        const response = await getAllArenas({ currentPage, pageSize });
         setArenas(response?.content || []);
       } catch (error) {
         console.error("Erro ao buscar arenas:", error);
@@ -38,7 +32,7 @@ export default function HomePage() {
   }, [currentPage, pageSize, session?.user.accessToken]);
 
   const filteredArenas = arenas.filter(arena => {
-    const matchesSport = selectedSport === 'Todos' || arena.sports?.includes(selectedSport);
+    const matchesSport = selectedSport === 'Todos' || arena.esportes?.includes(selectedSport);
     const matchesSearch = searchTerm === '' || arena.endereco.cidade.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSport && matchesSearch;
   });
@@ -72,7 +66,6 @@ export default function HomePage() {
                   <ArenaCard
                     arena={{
                       ...arena,
-                      sports: arena.sports || ["Futebol Society", "Vôlei", "Beach Tennis", "Basquete",],
                       avaliacao: arena.avaliacao ?? 1.0,
                       numeroAvaliacoes: arena.numeroAvaliacoes ?? 10,
                     }}

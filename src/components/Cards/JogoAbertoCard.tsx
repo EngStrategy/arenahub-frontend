@@ -3,7 +3,6 @@ import { Button, App, Popconfirm } from 'antd';
 import Image from 'next/image';
 import React from 'react';
 import { formatarData } from '@/context/functions/formatarData';
-import { ButtonPrimary } from './ButtonPrimary';
 
 type JogoAberto = {
     id: string;
