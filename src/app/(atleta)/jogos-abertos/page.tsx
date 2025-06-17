@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { sportIcons } from '@/data/sportIcons';
 import { Pagination } from 'antd';
-import { JogoAbertoCard } from '@/components/JogoAbertoCard';
+import { JogoAbertoCard } from '@/components/Cards/JogoAbertoCard';
 import CitySports from '@/components/CitySports';
 
 type JogoAberto = {
@@ -137,7 +137,6 @@ export default function JogosAbertos() {
                     setSelectedSport={setSelectedSport}
                     searchTerm=""
                     setSearchTerm={() => { }}
-                    // currentPage={1}
                     setCurrentPage={() => { }}
                     allSports={allSports}
                     sportIcons={sportIcons}

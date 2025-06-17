@@ -9,8 +9,8 @@ import {
 } from "antd";
 import { Estados } from "@/data/Estados";
 import Link from "next/link";
-import { ButtonPrimary } from "./ButtonPrimary";
-import { ButtonCancelar } from "./ButtonCancelar";
+import { ButtonPrimary } from "./Buttons/ButtonPrimary";
+import { ButtonCancelar } from "./Buttons/ButtonCancelar";
 import { validarCPF } from "@/context/functions/validarCPF";
 import { formatarTelefone } from "@/context/functions/formatarTelefone";
 import { formatarCNPJ } from "@/context/functions/formatarCNPJ";
@@ -48,7 +48,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
     };
 
     const beforeUpload = (file: FileType) => {
-        const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+        const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg' || file.type === 'image/webp' || file.type === 'image/svg';
         if (!isJpgOrPng) { message.error('Você só pode fazer upload de arquivos JPG/PNG!'); }
         const isLt5M = file.size / 1024 / 1024 < 5;
         if (!isLt5M) { message.error('A imagem deve ter no máximo 5MB!'); }
@@ -164,14 +164,14 @@ export const RegistroArena = ({ className }: { className?: string }) => {
         let urlParaSalvar = imageUrl;
         if (selectedFile) {
             const key = 'uploading-image';
-            message.loading({ content: 'Enviando foto...', key, duration: 0 });
+            message.loading({ content: 'Carregando...', key, duration: 0 });
             urlParaSalvar = await uploadToImgur(selectedFile);
             message.destroy(key);
         }
 
         const {
             nome, email, telefone, senha, cpfProprietario, cnpj, descricao,
-            urlFoto, cep, estado, cidade, bairro, rua, numero, complemento
+            cep, estado, cidade, bairro, rua, numero, complemento
         } = values;
 
         const payload: ArenaCreate = {
@@ -236,7 +236,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                         { required: true, message: "Insira seu email!" },
                         { type: "email", message: "Insira um email válido!" },
                     ]}
-                    className="sem-asterisco flex-1"
+                    className="flex-1"
                 >
                     <Input placeholder="Insira seu email" />
                 </Form.Item>
@@ -258,7 +258,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                             },
                         },
                     ]}
-                    className="sem-asterisco flex-1"
+                    className="flex-1"
                 >
                     <Input
                         placeholder="Insira seu CPF"
@@ -284,7 +284,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                             },
                         },
                     ]}
-                    className="sem-asterisco flex-1"
+                    className="flex-1"
                 >
                     <Input
                         placeholder="(99) 99999-9999"
@@ -303,7 +303,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                         { required: true, message: "Insira sua senha!" },
                         { min: 8, message: "Pelo menos 8 caracteres!" },
                     ]}
-                    className="sem-asterisco flex-1"
+                    className="flex-1"
                 >
                     <Input.Password placeholder="Insira sua senha" />
                 </Form.Item>
@@ -316,7 +316,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                         { required: true, message: "Confirme sua senha!" },
                         { min: 8, message: "Pelo menos 8 caracteres!" },
                     ]}
-                    className="sem-asterisco flex-1"
+                    className="flex-1"
                 >
                     <Input.Password placeholder="Confirme sua senha" />
                 </Form.Item>
@@ -364,7 +364,6 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                         },
                     },
                 ]}
-                className="sem-asterisco"
             >
                 <Input
                     placeholder="Insira seu CNPJ"
@@ -397,7 +396,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 rules={[
                     { required: true, message: "Insira o nome da sua arena" },
                 ]}
-                className="sem-asterisco flex-1"
+                className="flex-1"
             >
                 <Input placeholder="Insira o nome da sua arena" />
             </Form.Item>
@@ -418,7 +417,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                         },
                     },
                 ]}
-                className="sem-asterisco flex-1"
+                className="flex-1"
             >
                 <Input
                     placeholder="Insira o CEP da sua arena"
@@ -439,7 +438,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     rules={[
                         { required: true, message: "Selecione o estado da sua arena" },
                     ]}
-                    className="sem-asterisco flex-1"
+                    className="flex-1"
                 >
                     <Select placeholder="Estado" options={Estados} />
                 </Form.Item>
@@ -450,7 +449,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     rules={[
                         { required: true, message: "Selecione a cidade da sua arena" },
                     ]}
-                    className="sem-asterisco flex-1"
+                    className="flex-1"
                 >
                     <Select placeholder="Cidade">
                         <option value="0">Selecione uma cidade</option>
@@ -469,7 +468,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 rules={[
                     { required: true, message: "Insira o bairro da sua arena" },
                 ]}
-                className="sem-asterisco flex-1"
+                className="flex-1"
             >
                 <Input placeholder="Insirao o bairro da sua arena" />
             </Form.Item>
@@ -480,7 +479,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 rules={[
                     { required: true, message: "Insira o Rua da sua arena" },
                 ]}
-                className="sem-asterisco flex-1"
+                className="flex-1"
             >
                 <Input placeholder="Insira o rua da sua arena" />
             </Form.Item>
@@ -492,7 +491,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     rules={[
                         { required: true, message: "Insira o número" },
                     ]}
-                    className="sem-asterisco flex-1"
+                    className="flex-1"
                 >
                     <Input placeholder="Nº" />
                 </Form.Item>
@@ -500,7 +499,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 <Form.Item
                     label="Complemento (opcional)"
                     name="complemento"
-                    className="sem-asterisco flex-1"
+                    className="flex-1"
                 >
                     <Input placeholder="Insira algo" />
                 </Form.Item>
@@ -535,14 +534,40 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     </div>
                 </div>
             </Form.Item>
+            <Form.Item label="Foto ou logomarca da arena" className="!mb-2">
+                <div className="flex items-center gap-4">
+                    <div className="relative group cursor-pointer" title="Clique para alterar a foto">
+                        <Avatar
+                            size={64}
+                            src={imageUrl ?? undefined}
+                            icon={<PictureOutlined />}
+                            className="flex-shrink-0"
+                        />
+                    </div>
+                    <div className='flex rounded-md flex-col gap-2 w-full'>
+                        <span className="text-gray-500 text-xs">Tamanho máximo: 5MB</span>
+                        <ImgCrop rotationSlider>
+                            <Upload
+                                showUploadList={false}
+                                beforeUpload={beforeUpload}
+                                onChange={handleChange}
+                                onPreview={handlePreview}
+                                maxCount={1}
+                                multiple={false}
+                                accept="image/jpeg,image/png/image/jpg"
+                                disabled={loading}
+                            >
+                                {uploadButton}
+                            </Upload>
+                        </ImgCrop>
+                    </div>
+                </div>
+            </Form.Item>
 
             <Form.Item
-                label="Descrição"
+                label="Descrição (opcional)"
                 name="descricao"
-                rules={[
-                    { required: true, message: "Insira a descrição da sua arena" },
-                ]}
-                className="sem-asterisco flex-1"
+                className="flex-1"
             >
                 <Input.TextArea
                     placeholder="Digite algo que descreva sua arena e ajude a atrair mais reservas"

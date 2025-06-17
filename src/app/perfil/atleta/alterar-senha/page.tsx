@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { Form, Input, App } from 'antd';
-import { ButtonPrimary } from '@/components/ButtonPrimary';
-import { ButtonCancelar } from '@/components/ButtonCancelar';
+import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
+import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { useSession } from "next-auth/react";
 import type { } from 'antd';
 

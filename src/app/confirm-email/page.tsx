@@ -10,7 +10,7 @@ import {
     VerifyEmailPayload
 } from "../api/entities/verifyEmail";
 import Loading from "../loading";
-import { ButtonPrimary } from "@/components/ButtonPrimary";
+import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 
 function ConfirmEmailComponent() {
     const { message } = App.useApp();

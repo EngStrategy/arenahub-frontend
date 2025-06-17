@@ -1,6 +1,36 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import { signOut, getSession } from 'next-auth/react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export interface PaginatedResponse<T> {
+  content: T[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort: {
+      empty: boolean;
+      sorted: boolean;
+      unsorted: boolean;
+    };
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  last: boolean;
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+  sort: {
+    empty: boolean;
+    sorted: boolean;
+    unsorted: boolean;
+  };
+  first: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -8,6 +38,31 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+api.interceptors.request.use(async (config) => {
+  const session = await getSession();
+
+  if (session?.user?.accessToken) {
+    config.headers.Authorization = `Bearer ${session.user.accessToken}`;
+  }
+
+  return config;
+}, (error) => {
+  return Promise.reject(new Error(error?.message ?? String(error)));
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401 || error.response?.status === 403) {
+      console.warn("Interceptor: Recebido 401. Deslogando...");
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+        await signOut({ callbackUrl: '/login', redirect: true });
+      }
+    }
+    return Promise.reject(new Error(error?.message ?? String(error)));
+  }
+);
 
 interface RequestParams {
   [key: string]: any; // Escolher um tipo melhor
@@ -20,7 +75,7 @@ interface RequestData {
 type HttpMethod = "get" | "post" | "put" | "delete" | "patch" | "head" | "options";
 
 // Escolher um tipo melhor
-export const request = async <T = any>( 
+export const request = async <T = any>(
   method: HttpMethod,
   url: string,
   data: RequestData = {},
@@ -39,12 +94,11 @@ export const request = async <T = any>(
   } catch (error: any) { // Escolher um tipo melhor
     if (axios.isAxiosError(error)) {
       if (error.response) {
-        // O servidor respondeu com um status de erro
         const errorMessage = error.response.data?.message ?? error.response.data ?? error.response.status;
+        console.error("Erro na requisição:", errorMessage);
         throw new Error(`${errorMessage}`);
       }
       if (error.request) {
-        // A requisição foi feita, mas não houve resposta
         throw new Error("Erro de rede: Não foi possível obter uma resposta do servidor.");
       }
     }

@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Input, Upload, Avatar, App, Image, Button, Dropdown } from 'antd';
 import { UserOutlined, UploadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { ButtonPrimary } from '@/components/ButtonPrimary';
-import { ButtonCancelar } from '@/components/ButtonCancelar';
+import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
+import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { useSession } from "next-auth/react";
 import type { GetProp, MenuProps, UploadFile, UploadProps } from 'antd';
 import ImgCrop from 'antd-img-crop';
@@ -60,7 +60,7 @@ export default function InformacoesPessoaisAtleta() {
         if (status === 'authenticated' && session?.user?.userId && session?.user?.accessToken) {
             setLoading(true);
             try {
-                const userData = await getAtletaById(session.user.accessToken, session.user.userId);
+                const userData = await getAtletaById(session.user.userId);
                 if (!userData) {
                     return message.warning('Dados do usuário não encontrados.');
                 }
@@ -107,7 +107,7 @@ export default function InformacoesPessoaisAtleta() {
                 telefone: values.phone,
                 urlFoto: urlParaSalvar ?? undefined,
             };
-            await updateAtleta(session.user.accessToken, session.user.userId, updatedData,);
+            await updateAtleta(session.user.userId, updatedData,);
             message.success('Informações salvas com sucesso!');
 
             await update({
@@ -190,7 +190,7 @@ export default function InformacoesPessoaisAtleta() {
     }
 
     return (
-        <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center mt-6">
+        <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center my-6">
             <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
                 <h1 className="text-2xl font-semibold text-gray-800 mb-2">Informações pessoais</h1>
                 <p className="text-gray-600 mb-8">
