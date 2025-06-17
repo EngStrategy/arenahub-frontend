@@ -3,6 +3,7 @@ import { Button, App, Popconfirm } from 'antd';
 import Image from 'next/image';
 import React from 'react';
 import { formatarData } from '@/context/functions/formatarData';
+import { ButtonPrimary } from './ButtonPrimary';
 
 type JogoAberto = {
     id: string;
@@ -65,11 +66,11 @@ export function JogoAbertoCard({ jogoAberto }: JogoAbertoCardProps) {
             {/* Coluna da Direita: Botão de Ação */}
             <div className="ml-auto self-center">
                 <Popconfirm
-                    title="Confirmar entrada no jogo?"
-                    description={`Verifique os detalhes antes de confirmar.`}
-                    okText="Sim, entrar"
+                    title="Confirmar solicitação"
+                    description={`Tem certeza que deseja solicitar entrada neste jogo?`}
+                    okText='Confirmar'
                     cancelText="Cancelar"
-                    cancelButtonProps={{ type: 'text', className: '!text-gray-600' }}
+                    cancelButtonProps={{ type: 'text', className: '!text-gray-600'}}
                     okButtonProps={{ type: 'primary' }}
                     onConfirm={() => notification.success({
                         message: 'Solicitação Enviada!',

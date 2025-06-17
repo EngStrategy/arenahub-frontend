@@ -175,24 +175,38 @@ const Navbar = () => {
     <div className="p-0">
       {session ? (
         // Menu Mobile - Logado
-        <Menu
-          mode="inline"
-          selectable={false}
-          items={[
-            ...userMenuItems,
-            { type: 'divider', className: "!border !border-gray-300" },
-            ...commonMenuItems,
-            { type: 'divider', className: "!border !border-gray-300" },
-            {
-              key: "logout",
-              icon: <LogoutOutlined className="!text-sm" />,
-              label: "Sair da conta",
-              onClick: handleSignOut,
-              className: "!text-red-500 !font-medium",
-            },
-            { type: 'divider', className: "!border !border-gray-300" },
-          ]}
-        />
+        <div>
+          <div className="text-center m-4">
+            <Avatar
+              size={64}
+              src={session.user?.imageUrl}
+              icon={<UserOutlined />}
+              className="transition-all duration-300 ease-in-out shadow-[0_0_0_2px_#ffffff,0_0_0_4px_#22c55e,0_0_0_5px_#e5e7eb] hover:shadow-[0_0_0_2px_#ffffff,0_0_0_5px_#16a34a,0_0_0_7px_#d1d5db]"
+            />
+            <p className="mt-2 font-semibold text-lg text-gray-800 truncate">
+              {session.user.name.split(' ').slice(0, 2).join(' ')
+                ?? "Usuário"}
+            </p>
+          </div>
+
+          <Menu
+            mode="inline"
+            selectable={false}
+            items={[
+              ...userMenuItems,
+              { type: 'divider', className: "!my-1 !border-gray-200" },
+              ...commonMenuItems,
+              { type: 'divider', className: "!my-1 !border-gray-200" },
+              {
+                key: "logout",
+                icon: <LogoutOutlined className="!text-sm" />,
+                label: "Sair da conta",
+                onClick: handleSignOut,
+                className: "!text-red-500 !font-medium hover:!bg-red-50",
+              },
+            ]}
+          />
+        </div>
       ) : (
         // Menu Mobile - Não Logado
         <div className="flex flex-col h-full">
@@ -287,14 +301,22 @@ const Navbar = () => {
           <Dropdown menu={{ items: desktopUserDropdownItems }} trigger={["click"]} placement="bottomRight" overlayClassName="!mt-2 !w-64 !shadow-lg !rounded-md">
             <button className="flex items-center gap-2 space-x-2 p-1 px-2 rounded-full hover:bg-gray-200 transition-colors duration-200 border border-gray-300 cursor-pointer">
               {session.user?.imageUrl ? (
-                <Avatar size={28} src={session.user.imageUrl} />
+                <Avatar
+                  size={28}
+                  src={session.user.imageUrl}
+                  className="transition-shadow duration-300 ease-in-out shadow-[0_0_0_1.5px_#22c55e] hover:shadow-[0_0_0_2px_#16a34a]"
+                />
               ) : (
-                <Avatar size={28} icon={<UserOutlined />} />
+                <Avatar
+                  size={28}
+                  icon={<UserOutlined />}
+                  className="transition-shadow duration-300 ease-in-out shadow-[0_0_0_1.5px_#22c55e] hover:shadow-[0_0_0_2px_#16a34a]"
+                />
               )}
               <span className="text-gray-700 font-base  lg:block">
                 {session.user?.role === "ATLETA" ? (session.user?.name?.split(' ')[0] ?? "Usuário") :
                   session.user?.name
-                    ? session.user.name.split(' ').slice(0, 3).join(' ')
+                    ? session.user.name.split(' ').slice(0, 2).join(' ')
                     : "Usuário"
                 }
               </span>
