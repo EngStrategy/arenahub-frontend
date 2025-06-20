@@ -184,7 +184,7 @@ const Navbar = () => {
               className="transition-all duration-300 ease-in-out shadow-[0_0_0_2px_#ffffff,0_0_0_4px_#22c55e,0_0_0_5px_#e5e7eb] hover:shadow-[0_0_0_2px_#ffffff,0_0_0_5px_#16a34a,0_0_0_7px_#d1d5db]"
             />
             <p className="mt-2 font-semibold text-lg text-gray-800 truncate">
-              {session.user.name.split(' ').slice(0, 2).join(' ')
+              {session.user.name.split(' ').slice(0, 3).join(' ')
                 ?? "Usuário"}
             </p>
           </div>

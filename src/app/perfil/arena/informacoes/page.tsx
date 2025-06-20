@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Input, Upload, Avatar, App, Image, Button, Select, Dropdown, type MenuProps } from 'antd';
-import { UserOutlined, UploadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { PictureOutlined, UploadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { ButtonPrimary } from '@/components/ButtonPrimary';
 import { ButtonCancelar } from '@/components/ButtonCancelar';
 import { useSession } from "next-auth/react";
@@ -299,7 +299,7 @@ export default function InformacoesPessoaisArena() {
                                             <Avatar
                                                 size={64}
                                                 src={imageUrl ?? undefined}
-                                                icon={<UserOutlined />}
+                                                icon={<PictureOutlined />}
                                                 className="flex-shrink-0"
                                             />
                                             <div className="absolute inset-0 flex items-center justify-center rounded-full bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300">
