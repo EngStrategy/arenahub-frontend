@@ -17,34 +17,13 @@ import { formatarCNPJ } from "@/context/functions/formatarCNPJ";
 import { formatarCPF } from "@/context/functions/formatarCPF";
 import { formatarCEP } from "@/context/functions/formatarCEP";
 import { createArena, ArenaCreate } from "@/app/api/entities/arena";
-import { UploadOutlined, UserOutlined } from "@ant-design/icons";
+import { PictureOutlined, UploadOutlined } from "@ant-design/icons";
 import ImgCrop from "antd-img-crop";
+import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
 
 type CITYResponse = {
     id: number;
     nome: string;
-};
-
-type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
-
-const getBase64 = (img: FileType): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(img);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (error) => reject(error);
-    });
-};
-
-const uploadToImgur = async (imageFile: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('image', imageFile);
-    const response = await fetch('/api/upload', { method: 'POST', body: formData });
-    const data = await response.json();
-    if (!response.ok) {
-        throw new Error(data.error ?? 'Falha no upload do arquivo.');
-    }
-    return data.link;
 };
 
 export const RegistroArena = ({ className }: { className?: string }) => {
@@ -533,7 +512,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                         <Avatar
                             size={64}
                             src={imageUrl ?? undefined}
-                            icon={<UserOutlined />}
+                            icon={<PictureOutlined />}
                             className="flex-shrink-0"
                         />
                     </div>
