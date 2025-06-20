@@ -8,18 +8,19 @@ import { Arena } from '@/app/api/entities/arena';
 interface ArenaCardProps {
   arena: Arena;
   showDescription?: boolean;
+  showHover?: boolean;
 }
 
-export const ArenaCard = ({ arena, showDescription }: ArenaCardProps) => {
+export const ArenaCard = ({ arena, showDescription, showHover = true }: ArenaCardProps) => {
   const fallbackSrc = '/images/imagem-default.png';
   const [imgSrc, setImgSrc] = useState(arena.urlFoto || fallbackSrc);
-  
+
   return (
     <div
       className={`
         flex rounded-lg overflow-hidden gap-4
-        transition-all duration-200 ease-in-out 
-        hover:shadow-xl hover:scale-105 cursor-pointer
+        transition-all duration-200 ease-in-out
+        ${showHover ? 'hover:shadow-xl hover:scale-105 cursor-pointer': ''}
       `}
     >
       <div className="rounded-lg relative h-36 min-w-[144px] w-45 overflow-hidden bg-gray-300 flex-shrink-0">
