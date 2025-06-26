@@ -12,6 +12,7 @@ const RegisterPage = () => {
   const { data: session, status } = useSession();
   const [accountType, setAccountType] = useState<"atleta" | "arena">("atleta");
   const [isFading, setIsFading] = useState(false);
+  const [isFull, setIsFull] = useState(false);
   const [form] = Form.useForm();
   const router = useRouter();
 
@@ -45,21 +46,25 @@ const RegisterPage = () => {
         </p>
 
         <div className="flex justify-center mb-4 w-full max-w-full md:max-w-none">
-          <button
-            className={`px-4 py-2 border-b-2 cursor-pointer hover:text-green-600 w-1/2 ${accountType === "atleta"
-              ? "border-green-primary text-green-primary"
-              : "border-transparent text-gray-500"
-              }`}
-            onClick={() => handleAccountTypeChange("atleta")}
-            disabled={isFading}
-          >
-            Atleta
-          </button>
+          {!isFull && (
+            <button
+              className={`px-4 py-2 border-b-2 cursor-pointer hover:text-green-600 w-1/2 ${accountType === "atleta"
+                ? "border-green-primary text-green-primary"
+                : "border-transparent text-gray-500"
+                }`}
+              onClick={() => handleAccountTypeChange("atleta")}
+              disabled={isFading}
+            >
+              Atleta
+            </button>
+          )}
+
           <button
             className={`px-4 py-2 border-b-2 cursor-pointer hover:text-green-600 w-1/2 ${accountType === "arena"
               ? "border-green-primary text-green-primary"
               : "border-transparent text-gray-500 hover:text-green-primary"
-              }`}
+              }
+              ${isFull ? "w-full" : ""}`}
             onClick={() => handleAccountTypeChange("arena")}
             disabled={isFading}
           >
@@ -76,6 +81,7 @@ const RegisterPage = () => {
         {accountType === "arena" && (
           <RegistroArena
             className={`w-full transition-opacity duration-400 ease-in-out ${isFading ? "opacity-30" : "opacity-100"}`}
+            setIsFull={setIsFull}
           />
         )}
       </div>
