@@ -26,7 +26,9 @@ type CITYResponse = {
     nome: string;
 };
 
-export const RegistroArena = ({ className }: { className?: string }) => {
+export const RegistroArena = (
+    { className, setIsFull }: FormProps
+) => {
     const { message } = App.useApp();
     const [form] = Form.useForm();
     const router = useRouter();

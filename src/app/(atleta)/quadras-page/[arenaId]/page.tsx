@@ -4,27 +4,38 @@ import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { format, addDays, isBefore, setHours, setMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
-import { Button, Checkbox, Form, Switch, Select } from 'antd';
+import { Button, Checkbox, Form, Switch, Select, Radio } from 'antd';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { ArenaCard } from '@/components/ArenaCard';
 import Image from 'next/image';
 import { TbSoccerField } from "react-icons/tb";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { IoCloseOutline } from "react-icons/io5";
+import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 
 
 type Arena = {
-    id: string;
-    name: string;
-    city: string;
-    state: string;
-    address: string;
-    rating: number;
-    reviews: number;
-    image: string;
-    description?: string;
+    id: number;
+    nome: string;
+    email: string;
+    telefone: string;
+    cpfProprietario: string;
+    cnpj: string;
+    endereco: {
+        cep: string;
+        estado: string;
+        cidade: string;
+        bairro: string;
+        rua: string;
+        numero: string;
+        complemento: string;
+    };
+    descricao: string;
     sports?: string[];
-    onClick?: () => void;
+    avaliacao?: number;
+    numeroAvaliacoes?: number;
+    urlFoto: string;
+    role: string;
 };
 
 type Horario = {
@@ -44,16 +55,29 @@ type Quadra = {
     equipamentosDisponibilizados?: string[];
 };
 
-const arena: Arena = {
-    id: 'A',
-    name: 'Arena A',
-    city: 'Fortaleza',
-    state: 'CE',
-    address: 'Av. Mister Hull, s/n - Pici - CEP 60455-760',
-    rating: 5.0,
-    reviews: 10,
-    image: '/arenaesportes.png',
-    description: 'Arena esportiva simples em Fortaleza.',
+const arena: Arena & {
+
+} = {
+    id: 10,
+    nome: 'Arena B',
+    email: 'contato@arenaa.com',
+    telefone: '(85) 99999-9999',
+    cpfProprietario: '123.456.789-00',
+    cnpj: '12.345.678/0001-99',
+    avaliacao: 5.0,
+    numeroAvaliacoes: 10,
+    descricao: 'Arena esportiva simples em Fortaleza.',
+    urlFoto: '/arenaesportes.png',
+    role: 'arena',
+    endereco: {
+        cidade: 'Fortaleza',
+        estado: 'CE',
+        rua: 'Av. Mister Hull',
+        numero: 's/n',
+        bairro: 'Pici',
+        cep: '60455-760',
+        complemento: 'Próximo ao IFCE',
+    },
 };
 
 const gerarHorarios = (intervalos: [number, number][], dias: number): Horario[] => {
@@ -154,7 +178,9 @@ const quadrasPorArena: { [key: string]: Quadra[] } = {
 export default function QuadraPage() {
     const params = useParams();
     const arenaId = params?.arenaId as string;
-    const quadrasRaw = quadrasPorArena[arenaId] || [];
+
+    // Fallback to "A" if arenaId is not found in mock (for development/demo)
+    const quadrasRaw = quadrasPorArena[arenaId] || quadrasPorArena["A"] || [];
     const quadras: Quadra[] = quadrasRaw.map((q) => ({
         ...q,
         horarios: gerarHorarios(q.horarioFuncionamento, 30),
@@ -166,8 +192,10 @@ export default function QuadraPage() {
 
     const allDates = Array.from({ length: 30 }, (_, i) => addDays(new Date(), i));
     const [horarioFoiEscolhido, setHorarioFoiEscolhido] = useState(false);
+    const [isFix, setIsFix] = useState(false);
     const [isIncomplete, setIsIncomplete] = useState(false);
     const [quadraSelecionada, setQuadraSelecionada] = useState<Quadra | null>(null);
+    const [numeroJogadoresFaltando, setNumeroJogadoresFaltando] = useState(0);
 
 
     useEffect(() => {
@@ -195,7 +223,7 @@ export default function QuadraPage() {
     return (
         <div className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
             <div className='flex flex-row items-start justify-between mb-6'>
-                <ArenaCard arena={arena} />
+                <ArenaCard arena={arena} showDescription={true} />
                 {selectedHorarios.length > 0 && (
                     <Button
                         type="primary"
@@ -372,9 +400,9 @@ export default function QuadraPage() {
 
                             <div className="flex flex-col justify-between px-10 max-w-md w-full h-full">
                                 <div className="flex flex-col mb-4">
-                                    <h1 className="text-xl font-bold mb-1">{arena.name}</h1>
+                                    <h1 className="text-xl font-bold mb-1">{arena.nome}</h1>
                                     <h2 className='font-semibold'>{quadraSelecionada?.nome}</h2>
-                                    <h3>{arena.address}</h3>
+                                    {/* <h3>{arena.endereco}</h3> */}
                                     {quadraSelecionada?.equipamentosDisponibilizados && (
                                         <p className="text-sm text-black">
                                             A arena vai disponibilizar para você:{' '}
@@ -387,11 +415,10 @@ export default function QuadraPage() {
 
                                 {selectedHorarios.length > 0 && (
                                     <div className="flex flex-row items-center gap-4 rounded-lg p-2 mb-4 border border-gray-200">
-                                        
+
                                         <div className="flex flex-col flex-1">
                                             <span className="font-semibold text-base">
                                                 {(() => {
-                                                    // Agrupar horários selecionados por quadra
                                                     const horariosSelecionados = selectedHorarios
                                                         .filter(val => {
                                                             const [quadraId] = val.split('|');
@@ -487,7 +514,7 @@ export default function QuadraPage() {
                                         className="sem-asterisco flex flex-col className='!mb-2'"
                                     >
                                         <Select
-                                            placeholder="Esporte"
+                                            placeholder="Selecione um esporte"
                                             className="w-full !bg-gray-200 border border-gray-300 rounded-md"
                                         >
                                             {quadraSelecionada?.esportes.map((esporte) => (
@@ -499,27 +526,76 @@ export default function QuadraPage() {
                                     </Form.Item>
 
                                     <Form.Item className='sem-asterisco !mb-2'>
-                                        <div className="flex flex-row flex-wrap justify-between items-center gap-x-4 gap-y-2 bg-gray-200 p-2 rounded-md border border-gray-300">
-                                            <span>Quero reservar este horário como fixxo</span>
+                                        <div className="flex flex-row flex-wrap justify-between items-center bg-gray-200 p-2 rounded-md border border-gray-300">
+                                            <span>Quer reservar este horário como fixo?</span>
                                             <Switch
                                                 size="small"
-                                            // checked={!haveCnpj}
-                                            // onChange={(checked) => setHaveCnpj(!checked)}
+                                                checked={isFix}
+                                                onChange={(checked) => {
+                                                    setIsFix(checked);
+                                                    if (checked) {
+                                                        setIsIncomplete(false); // Desativa o outro
+                                                    }
+                                                }}
                                             />
                                         </div>
                                     </Form.Item>
 
+                                    {isFix && (
+                                        <Form.Item>
+                                            <Radio.Group
+                                                className='flex flex-row justify-between items-center'
+                                                name="quantidadeMeses"
+                                                defaultValue={1}
+                                                options={[
+                                                    { value: 1, label: '1 mês' },
+                                                    { value: 3, label: '3 meses' },
+                                                    { value: 6, label: '6 meses' },
+                                                ]}></Radio.Group>
+                                        </Form.Item>
+                                    )}
+
                                     <Form.Item className='sem-asterisco !mb-2'>
                                         <div className="flex flex-row flex-wrap justify-between items-center bg-gray-200 p-2 rounded-md border border-gray-300">
-                                            <span>Tá faltando gente</span>
+                                            <span>Tá faltando gente?</span>
                                             <Switch
                                                 size="small"
                                                 checked={isIncomplete}
-                                                onChange={(checked) => setIsIncomplete(checked)}
-                                            // olhar se tá mudando a variável isIncomplete
+                                                onChange={(checked) => {
+                                                    setIsIncomplete(checked);
+                                                    if (checked) {
+                                                        setIsFix(false); // Desativa o outro
+                                                    }
+                                                }}
                                             />
                                         </div>
                                     </Form.Item>
+
+                                    {isIncomplete && (
+                                        <div className='flex flex-row gap-3 items-start'>
+                                            <span className='text-sm text-gray-600'>Quantos jogadores você precisa?</span>
+                                            <Form.Item className='sem-asterisco flex-1 flex-col !mb-0 !h-10'>
+                                                <div className="flex flex-row items-center rounded border border-gray-300 h-10">
+                                                    <Button
+                                                        onClick={() => setNumeroJogadoresFaltando(prev => Math.max(0, prev - 1))}
+                                                        disabled={numeroJogadoresFaltando === 0}
+                                                        className="!px-3 !py-1 !text-black text-center !border-none hover:!bg-gray-300 disabled:!bg-gray-100 disabled:!text-gray-400 !h-full"
+                                                    >
+                                                        <AiOutlineMinus />
+                                                    </Button>
+                                                    <span className="px-4 text-center font-semibold text-lg border-x border-gray-300 flex items-center h-full">
+                                                        {numeroJogadoresFaltando}
+                                                    </span>
+                                                    <Button
+                                                        onClick={() => setNumeroJogadoresFaltando(prev => prev + 1)}
+                                                        className="!px-3 !py-1 !text-black !border-none hover:!bg-gray-300 flex items-center justify-center !h-full"
+                                                    >
+                                                        <AiOutlinePlus />
+                                                    </Button>
+                                                </div>
+                                            </Form.Item>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex flex-col flex-1 justify-end">
@@ -543,6 +619,7 @@ export default function QuadraPage() {
                                         className="w-full bg-green-primary !font-semibold hover:bg-green-500 text-white !py-5 !rounded-md"
                                     >
                                         Confirmar agendamento
+
                                     </Button>
                                 </div>
                             </div>

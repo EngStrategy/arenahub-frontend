@@ -137,7 +137,7 @@ export default function JogosAbertos() {
                     setSelectedSport={setSelectedSport}
                     searchTerm=""
                     setSearchTerm={() => { }}
-                    currentPage={1}
+                    // currentPage={1}
                     setCurrentPage={() => { }}
                     allSports={allSports}
                     sportIcons={sportIcons}
