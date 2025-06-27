@@ -298,29 +298,34 @@ const Navbar = () => {
       {/* Botão Entrar/Dropdown Usuário - Desktop */}
       <div className="hidden md:block">
         {session ? (
-          <Dropdown menu={{ items: desktopUserDropdownItems }} trigger={["click"]} placement="bottomRight" overlayClassName="!mt-2 !w-64 !shadow-lg !rounded-md">
-            <button className="flex items-center gap-2 space-x-2 p-1 px-2 rounded-full hover:bg-gray-200 transition-colors duration-200 border border-gray-300 cursor-pointer">
-              {session.user?.imageUrl ? (
-                <Avatar
-                  size={28}
-                  src={session.user.imageUrl}
-                  className="transition-shadow duration-300 ease-in-out shadow-[0_0_0_1.5px_#22c55e] hover:shadow-[0_0_0_2px_#16a34a]"
-                />
-              ) : (
-                <Avatar
-                  size={28}
-                  icon={<UserOutlined />}
-                  className="transition-shadow duration-300 ease-in-out shadow-[0_0_0_1.5px_#22c55e] hover:shadow-[0_0_0_2px_#16a34a]"
-                />
-              )}
-              <span className="text-gray-700 font-base  lg:block">
-                {session.user?.role === "ATLETA" ? (session.user?.name?.split(' ')[0] ?? "Usuário") :
-                  session.user?.name
-                    ? session.user.name.split(' ').slice(0, 2).join(' ')
-                    : "Usuário"
+          <Dropdown
+            menu={{ items: desktopUserDropdownItems }}
+            trigger={["click"]}
+            placement="bottomRight"
+            overlayClassName="!mt-2 !w-64 !shadow-lg !rounded-md"
+          >
+            <button
+              className="flex items-center gap-2 space-x-2 p-1 px-2 rounded-full hover:bg-gray-200 transition-colors duration-200 border border-gray-300 cursor-pointer"
+            >
+              <Avatar
+                size={28}
+                src={session.user.imageUrl}
+                icon={!session.user?.imageUrl && <UserOutlined />}
+                className="transition-shadow duration-300 ease-in-out shadow-[0_0_0_1.5px_#22c55e] hover:shadow-[0_0_0_2px_#16a34a]"
+              />
+              {(() => {
+                let displayName = "Usuário";
+                if (session.user?.role === "ATLETA") {
+                  displayName = session.user?.name?.split(' ')[0] ?? "Usuário";
+                } else if (session.user?.name) {
+                  displayName = session.user.name.split(' ').slice(0, 2).join(' ');
                 }
-              </span>
-              {/* Mostra só o primeiro nome em telas lg, ou "Usuário" */}
+                return (
+                  <span className="text-gray-700 font-base  lg:block">
+                    {displayName}
+                  </span>
+                );
+              })()}
               <FaAngleDown className="!text-gray-500 !size-3" />
             </button>
           </Dropdown>
