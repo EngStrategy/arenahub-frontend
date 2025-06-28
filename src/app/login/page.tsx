@@ -6,7 +6,7 @@ import React, { useState, useEffect } from "react";
 import { Checkbox, Form, Input, App } from 'antd';
 import Link from "next/link"
 import Image from "next/image";
-import { ButtonPrimary } from "@/components/ButtonPrimary";
+import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 
 export default function Login() {
     const { data: session, status } = useSession();

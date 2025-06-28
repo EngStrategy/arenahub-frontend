@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Form, Input, App } from "antd";
 import Link from "next/link";
-import { ButtonPrimary } from "./ButtonPrimary";
+import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { createAtleta } from '@/app/api/entities/atleta';
 import { formatarTelefone } from "@/context/functions/formatarTelefone";
 

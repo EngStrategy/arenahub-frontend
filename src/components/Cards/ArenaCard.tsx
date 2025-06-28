@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { StarFilled } from '@ant-design/icons';
 import Image from 'next/image';
 import { Arena } from '@/app/api/entities/arena';
+import { formatarEsporte } from '@/data/mapeamentoEsportes';
 
 interface ArenaCardProps {
   arena: Arena;
@@ -15,12 +16,21 @@ export const ArenaCard = ({ arena, showDescription, showHover = true }: ArenaCar
   const fallbackSrc = '/images/imagem-default.png';
   const [imgSrc, setImgSrc] = useState(arena.urlFoto || fallbackSrc);
 
+  const esportesFormatados = arena.esportes
+    ? (arena.esportes as any[]).map(esporte => formatarEsporte(esporte as any))
+    : [];
+
+  const listFormatter = new Intl.ListFormat('pt-BR', {
+    style: 'long',
+    type: 'conjunction'
+  });
+
   return (
     <div
       className={`
         flex rounded-lg overflow-hidden gap-4
         transition-all duration-200 ease-in-out
-        ${showHover ? 'hover:shadow-xl hover:scale-105 cursor-pointer': ''}
+        ${showHover ? 'hover:shadow-xl hover:scale-105 cursor-pointer' : ''}
       `}
     >
       <div className="rounded-lg relative h-36 min-w-[144px] w-45 overflow-hidden bg-gray-300 flex-shrink-0">
@@ -40,9 +50,11 @@ export const ArenaCard = ({ arena, showDescription, showHover = true }: ArenaCar
           <p className="text-sm text-gray-600">{arena.endereco.cidade} - {arena.endereco.estado}</p>
           <p className="text-sm text-gray-500">{arena.endereco.rua}, {arena.endereco.numero} - {arena.endereco.bairro} - CEP {arena.endereco.cep}</p>
         </div>
-        <p className="font-semibold text-green-600">
-          {arena.sports && new Intl.ListFormat('pt-BR', { style: 'long', type: 'conjunction' }).format(arena.sports)}
-        </p>
+        {esportesFormatados.length > 0 && (
+          <p className="font-semibold text-green-600">
+            {listFormatter.format(esportesFormatados)}
+          </p>
+        )}
         {/* Parte inferior */}
         <div className="mb-2 flex items-center">
           <StarFilled className="!text-yellow-500 mr-1" />

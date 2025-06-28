@@ -6,37 +6,13 @@ import { format, addDays, isBefore, setHours, setMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { Button, Checkbox, Form, Switch, Select, Radio } from 'antd';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
-import { ArenaCard } from '@/components/ArenaCard';
+import { ArenaCard } from '@/components/Cards/ArenaCard';
 import Image from 'next/image';
 import { TbSoccerField } from "react-icons/tb";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { IoCloseOutline } from "react-icons/io5";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
-
-
-type Arena = {
-    id: number;
-    nome: string;
-    email: string;
-    telefone: string;
-    cpfProprietario: string;
-    cnpj: string;
-    endereco: {
-        cep: string;
-        estado: string;
-        cidade: string;
-        bairro: string;
-        rua: string;
-        numero: string;
-        complemento: string;
-    };
-    descricao: string;
-    sports?: string[];
-    avaliacao?: number;
-    numeroAvaliacoes?: number;
-    urlFoto: string;
-    role: string;
-};
+import { Arena } from '@/app/api/entities/arena';
 
 type Horario = {
     data: string;
@@ -55,20 +31,11 @@ type Quadra = {
     equipamentosDisponibilizados?: string[];
 };
 
-const arena: Arena & {
-
-} = {
+const arena: Arena = {
     id: 10,
     nome: 'Arena B',
     email: 'contato@arenaa.com',
     telefone: '(85) 99999-9999',
-    cpfProprietario: '123.456.789-00',
-    cnpj: '12.345.678/0001-99',
-    avaliacao: 5.0,
-    numeroAvaliacoes: 10,
-    descricao: 'Arena esportiva simples em Fortaleza.',
-    urlFoto: '/arenaesportes.png',
-    role: 'arena',
     endereco: {
         cidade: 'Fortaleza',
         estado: 'CE',
@@ -78,6 +45,13 @@ const arena: Arena & {
         cep: '60455-760',
         complemento: 'Próximo ao IFCE',
     },
+    descricao: 'Arena esportiva simples em Fortaleza.',
+    urlFoto: '/arenaesportes.png',
+    dataCriacao: '2023-01-01T00:00:00Z',
+    esportes: ['Futebol', 'Beach Tennis', 'Vôlei', 'Futevôlei'],
+    avaliacao: 4.5,
+    numeroAvaliacoes: 20,
+    role: 'arena',
 };
 
 const gerarHorarios = (intervalos: [number, number][], dias: number): Horario[] => {
@@ -146,7 +120,7 @@ const quadrasPorArena: { [key: string]: Quadra[] } = {
                 [15, 17],
                 [18, 23],
             ],
-            equipamentosDisponibilizados: ['Colete', 'Bola', 'apito'],
+            equipamentosDisponibilizados: ['Colete', 'Bola', 'Apito'],
         },
         {
             id: '2',
@@ -154,7 +128,7 @@ const quadrasPorArena: { [key: string]: Quadra[] } = {
             image: '/arenaesportes.png',
             esportes: ['Beach Tennis', 'Vôlei', 'Futevôlei'],
             horarioFuncionamento: [[18, 22]],
-            equipamentosDisponibilizados: ['Colete', 'Bola', 'apito'],
+            equipamentosDisponibilizados: ['Colete', 'Bola', 'Apito'],
         },
         {
             id: '3',
@@ -162,7 +136,7 @@ const quadrasPorArena: { [key: string]: Quadra[] } = {
             image: '/arenaesportes.png',
             esportes: ['Beach Tennis', 'Vôlei', 'Futevôlei'],
             horarioFuncionamento: [[18, 22]],
-            equipamentosDisponibilizados: ['Colete', 'Bola', 'apito'],
+            equipamentosDisponibilizados: ['Colete', 'Bola', 'Apito'],
         },
         {
             id: '4',
@@ -170,7 +144,7 @@ const quadrasPorArena: { [key: string]: Quadra[] } = {
             image: '/arenaesportes.png',
             esportes: ['Beach Tennis', 'Vôlei', 'Futevôlei'],
             horarioFuncionamento: [[18, 22]],
-            equipamentosDisponibilizados: ['Colete', 'Bola', 'apito'],
+            equipamentosDisponibilizados: ['Colete', 'Bola', 'Apito'],
         },
     ],
 };
@@ -223,7 +197,7 @@ export default function QuadraPage() {
     return (
         <div className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
             <div className='flex flex-row items-start justify-between mb-6'>
-                <ArenaCard arena={arena} showDescription={true} />
+                <ArenaCard arena={arena} showDescription={true} showHover={false} />
                 {selectedHorarios.length > 0 && (
                     <Button
                         type="primary"
@@ -239,7 +213,7 @@ export default function QuadraPage() {
                                             const [quadraId, hora] = val.split('|');
                                             const quadra = quadras.find(q => q.id === quadraId);
                                             const horario = quadra?.horarios?.find(h => h.hora === hora && h.data === selectedDate);
-                                            return horario?.preco || 0;
+                                            return horario?.preco ?? 0;
                                         })
                                         .reduce((acc, preco) => acc + preco, 0)
                                         .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -339,15 +313,21 @@ export default function QuadraPage() {
                                         ?.filter((h) => h.data === selectedDate)
                                         .map((horario) => {
                                             const checkboxValue = `${quadra.id}|${horario.hora}`;
+                                            // Determine the class for the label based on availability and selection
+                                            let horarioClass = '';
+                                            if (horario.disponivel) {
+                                                if (selectedHorarios.includes(checkboxValue)) {
+                                                    horarioClass = 'border-green-600 bg-white text-black';
+                                                } else {
+                                                    horarioClass = 'border-gray-300 bg-white text-black hover:bg-green-50';
+                                                }
+                                            } else {
+                                                horarioClass = 'opacity-50 text-gray-400 line-through cursor-not-allowed bg-gray-100 border-gray-100';
+                                            }
                                             return (
                                                 <label
                                                     key={checkboxValue}
-                                                    className={`flex flex-row items-center gap-2 rounded border px-2 py-2 text-xs select-none min-w-[130px] max-w-[160px] ${horario.disponivel
-                                                        ? selectedHorarios.includes(checkboxValue)
-                                                            ? 'border-green-600 bg-white text-black'
-                                                            : 'border-gray-300 bg-white text-black hover:bg-green-50'
-                                                        : 'opacity-50 text-gray-400 line-through cursor-not-allowed bg-gray-100 border-gray-100'
-                                                        }`}
+                                                    className={`flex flex-row items-center gap-2 rounded border px-2 py-2 text-xs select-none min-w-[130px] max-w-[160px] ${horarioClass}`}
                                                 >
                                                     <Checkbox
                                                         value={checkboxValue}
@@ -432,7 +412,7 @@ export default function QuadraPage() {
                                                             const [, hora] = val.split('|');
                                                             return hora;
                                                         })
-                                                        .sort();
+                                                        .sort((a, b) => a.localeCompare(b));
 
                                                     if (horariosSelecionados.length === 0) return "Selecione um horário";
 
@@ -482,7 +462,7 @@ export default function QuadraPage() {
                                                         const [quadraId, hora] = val.split('|');
                                                         const quadra = quadras.find(q => q.id === quadraId);
                                                         const horario = quadra?.horarios?.find(h => h.hora === hora && h.data === selectedDate);
-                                                        return horario?.preco || 0;
+                                                        return horario?.preco ?? 0;
                                                     })
                                                     .reduce((acc, preco) => acc + preco, 0)
                                                     .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -611,7 +591,7 @@ export default function QuadraPage() {
                                                     const [quadraId, hora] = val.split('|');
                                                     const quadra = quadras.find(q => q.id === quadraId);
                                                     const horario = quadra?.horarios?.find(h => h.hora === hora && h.data === selectedDate);
-                                                    return horario?.preco || 0;
+                                                    return horario?.preco ?? 0;
                                                 })
                                                 .reduce((acc, preco) => acc + preco, 0)
                                                 .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}

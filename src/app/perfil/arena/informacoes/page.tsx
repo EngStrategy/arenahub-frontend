@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Input, Upload, Avatar, App, Image, Button, Select, Dropdown, type MenuProps } from 'antd';
 import { PictureOutlined, UploadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { ButtonPrimary } from '@/components/ButtonPrimary';
-import { ButtonCancelar } from '@/components/ButtonCancelar';
+import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
+import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { useSession } from "next-auth/react";
 import type { GetProp, UploadFile, UploadProps } from 'antd';
 import ImgCrop from 'antd-img-crop';
@@ -121,7 +121,7 @@ export default function InformacoesPessoaisArena() {
         if (status === 'authenticated' && session?.user?.userId && session?.user?.accessToken) {
             setLoading(true);
             try {
-                const userData = await getArenaById(session.user.accessToken, session.user.userId);
+                const userData = await getArenaById(session.user.userId);
                 if (!userData) {
                     return message.warning('Dados do usuário não encontrados.');
                 }
@@ -222,7 +222,7 @@ export default function InformacoesPessoaisArena() {
                 descricao: values.descricao ?? '',
                 urlFoto: urlParaSalvar ?? undefined,
             };
-            await updateArena(session.user.accessToken, session.user.userId, updatedData,);
+            await updateArena(session.user.userId, updatedData,);
             message.success('Informações salvas com sucesso!');
 
             await update({
@@ -274,7 +274,7 @@ export default function InformacoesPessoaisArena() {
 
 
     return (
-        <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center mt-6">
+        <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center my-6">
             <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
                 <h1 className="text-2xl font-semibold text-gray-800 mb-2">Informações da arena</h1>
                 <p className="text-gray-600 mb-8">
@@ -332,7 +332,7 @@ export default function InformacoesPessoaisArena() {
                             label="Nome da Arena"
                             name="nome"
                             rules={[{ required: true, message: "Insira o nome da sua arena" }]}
-                            className="sem-asterisco"
+                            className=""
                         >
                             <Input placeholder="Insira o nome da sua arena" />
                         </Form.Item>
@@ -353,7 +353,7 @@ export default function InformacoesPessoaisArena() {
                                     },
                                 },
                             ]}
-                            className="sem-asterisco flex-1"
+                            className=" flex-1"
                         >
                             <Input
                                 placeholder="(99) 99999-9999"
@@ -379,7 +379,7 @@ export default function InformacoesPessoaisArena() {
                                     },
                                 },
                             ]}
-                            className="sem-asterisco flex-1"
+                            className=" flex-1"
                         >
                             <Input
                                 placeholder="Insira o CEP da sua arena"
@@ -399,7 +399,7 @@ export default function InformacoesPessoaisArena() {
                                 rules={[
                                     { required: true, message: "Selecione o estado da sua arena" },
                                 ]}
-                                className="sem-asterisco flex-1"
+                                className=" flex-1"
                             >
                                 <Select placeholder="Estado" options={Estados} />
                             </Form.Item>
@@ -410,7 +410,7 @@ export default function InformacoesPessoaisArena() {
                                 rules={[
                                     { required: true, message: "Selecione a cidade da sua arena" },
                                 ]}
-                                className="sem-asterisco flex-1"
+                                className=" flex-1"
                             >
                                 <Select placeholder="Cidade">
                                     <option value="0">Selecione uma cidade</option>
@@ -429,7 +429,7 @@ export default function InformacoesPessoaisArena() {
                             rules={[
                                 { required: true, message: "Insira o bairro da sua arena" },
                             ]}
-                            className="sem-asterisco flex-1"
+                            className=" flex-1"
                         >
                             <Input placeholder="Insirao o bairro da sua arena" />
                         </Form.Item>
@@ -440,7 +440,7 @@ export default function InformacoesPessoaisArena() {
                             rules={[
                                 { required: true, message: "Insira o Rua da sua arena" },
                             ]}
-                            className="sem-asterisco flex-1"
+                            className=" flex-1"
                         >
                             <Input placeholder="Insira o rua da sua arena" />
                         </Form.Item>
@@ -451,7 +451,7 @@ export default function InformacoesPessoaisArena() {
                             rules={[
                                 { required: true, message: "Insira o número" },
                             ]}
-                            className="sem-asterisco flex-1"
+                            className=" flex-1"
                         >
                             <Input placeholder="Nº" />
                         </Form.Item>
@@ -459,12 +459,24 @@ export default function InformacoesPessoaisArena() {
                         <Form.Item
                             label="Complemento (opcional)"
                             name="complemento"
-                            className="sem-asterisco flex-1"
+                            className=" flex-1"
                         >
                             <Input placeholder="Insira algo" />
                         </Form.Item>
 
                     </div>
+
+                    <Form.Item
+                        label="Descrição (opcional)"
+                        name="descricao"
+                        className=" flex-1"
+                    >
+                        <Input.TextArea
+                            placeholder="Digite algo que descreva sua arena e ajude a atrair mais reservas"
+                            autoSize={{ minRows: 3, maxRows: 6 }}
+                        />
+                    </Form.Item>
+
                     <Form.Item className="mt-8 flex justify-end">
                         <div className='flex items-center gap-4'>
                             <ButtonCancelar
