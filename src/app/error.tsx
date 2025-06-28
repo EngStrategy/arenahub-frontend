@@ -1,6 +1,6 @@
 'use client'
 
-import { ButtonPrimary } from '@/components/ButtonPrimary'
+import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary'
 import React from 'react'
 import localFont from 'next/font/local'
 import Link from 'next/link'

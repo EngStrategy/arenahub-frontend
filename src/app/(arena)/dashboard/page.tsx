@@ -14,7 +14,7 @@ import {
   TeamOutlined
 } from '@ant-design/icons';
 import { FaWhatsapp } from 'react-icons/fa';
-import { ButtonPrimary } from '@/components/ButtonPrimary';
+import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import Link from 'next/link';
 
 interface StatCardProps {
@@ -26,7 +26,7 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ icon, title, value, change, changeType }) => (
-  <div className="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4 transition-transform hover:scale-105">
+  <div className="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4">
     <div className="bg-green-light p-3 rounded-full">
       {icon}
     </div>
@@ -97,11 +97,13 @@ export default function Dashboard() {
             </h1>
             <p className="text-gray-500 mt-1">Aqui está um resumo do seu dia.</p>
           </div>
-          <ButtonPrimary
-            text="Novo Agendamento"
-            type="primary"
-            icon={<PlusOutlined />}
-          />
+          <Link href="/perfil/arena/minhas-quadras/nova">
+            <ButtonPrimary
+              text="Nova Quadra"
+              type="primary"
+              icon={<PlusOutlined />}
+            />
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
