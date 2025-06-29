@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button, DatePicker, Pagination } from 'antd';
-import { CardAgendamento } from '@/components/AgendamentoCard';
+import { CardAgendamento } from '@/components/Cards/AgendamentoCard';
 import dayjs, { Dayjs } from 'dayjs';
 
 type Agendamento = {

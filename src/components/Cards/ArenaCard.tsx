@@ -10,9 +10,10 @@ interface ArenaCardProps {
   arena: Arena;
   showDescription?: boolean;
   showHover?: boolean;
+  showEsportes?: boolean;
 }
 
-export const ArenaCard = ({ arena, showDescription, showHover = true }: ArenaCardProps) => {
+export const ArenaCard = ({ arena, showDescription, showHover = true, showEsportes = true }: ArenaCardProps) => {
   const fallbackSrc = '/images/imagem-default.png';
   const [imgSrc, setImgSrc] = useState(arena.urlFoto || fallbackSrc);
 
@@ -50,7 +51,7 @@ export const ArenaCard = ({ arena, showDescription, showHover = true }: ArenaCar
           <p className="text-sm text-gray-600">{arena.endereco.cidade} - {arena.endereco.estado}</p>
           <p className="text-sm text-gray-500">{arena.endereco.rua}, {arena.endereco.numero} - {arena.endereco.bairro} - CEP {arena.endereco.cep}</p>
         </div>
-        {esportesFormatados.length > 0 && (
+        {(esportesFormatados.length > 0 && showEsportes) && (
           <p className="font-semibold text-green-600">
             {listFormatter.format(esportesFormatados)}
           </p>
