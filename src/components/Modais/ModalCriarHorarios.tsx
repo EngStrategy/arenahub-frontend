@@ -12,8 +12,8 @@ import {
 } from 'antd';
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { ButtonCancelar } from './Buttons/ButtonCancelar';
-import { ButtonPrimary } from './Buttons/ButtonPrimary';
+import { ButtonCancelar } from '../Buttons/ButtonCancelar';
+import { ButtonPrimary } from '../Buttons/ButtonPrimary';
 import { DiaDaSemana } from '@/app/api/entities/quadra';
 
 const { Title } = Typography;
