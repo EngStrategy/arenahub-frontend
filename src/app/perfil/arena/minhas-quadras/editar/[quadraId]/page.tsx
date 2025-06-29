@@ -30,7 +30,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
-import ModalCriarHorarios from '@/components/ModalCriarHorarios';
+import ModalCriarHorarios from '@/components/Modais/ModalCriarHorarios';
 import {
     updateQuadra, getQuadraById, QuadraCreate, DiaDaSemana,
     TipoQuadra, DuracaoReserva, MaterialFornecido,

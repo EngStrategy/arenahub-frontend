@@ -2,221 +2,371 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { format, addDays, isBefore, setHours, setMinutes } from 'date-fns';
+import { format, addDays, isBefore, setHours, setMinutes, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
-import { Button, Checkbox, Form, Switch, Select, Radio } from 'antd';
+import { Button, Checkbox } from 'antd';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
 import Image from 'next/image';
 import { TbSoccerField } from "react-icons/tb";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { IoCloseOutline } from "react-icons/io5";
-import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
-import { Arena } from '@/app/api/entities/arena';
+import { DrawerConfirmacaoReserva } from '../../../../components/Drawers/DrawerConfirmacaoReserva';
+import { motion, AnimatePresence } from 'framer-motion';
+import type {
+    Quadra as QuadraOficial,
+    HorarioFuncionamento,
+    DuracaoReserva,
+    MaterialFornecido,
+} from '@/app/api/entities/quadra';
+import type { Arena as ArenaOficial } from '@/app/api/entities/arena';
+import Loading from '@/app/loading';
+import { formatarEsporte } from '@/data/mapeamentoEsportes';
 
-type Horario = {
+
+export interface Horario {
     data: string;
     hora: string;
     preco: number;
     disponivel: boolean;
-};
+}
 
-type Quadra = {
-    id: string;
-    nome: string;
-    image: string;
-    esportes: string[];
-    horarioFuncionamento: [number, number][];
-    horarios?: Horario[];
-    equipamentosDisponibilizados?: string[];
-};
+export interface QuadraComHorarios extends QuadraOficial {
+    horarios: Horario[];
+}
 
-const arena: Arena = {
-    id: 10,
-    nome: 'Arena B',
-    email: 'contato@arenaa.com',
-    telefone: '(85) 99999-9999',
+const arena: ArenaOficial = {
+    id: 1,
+    nome: "Arena Pici",
+    email: "contato@arenapici.com",
+    telefone: "85912345678",
     endereco: {
-        cidade: 'Fortaleza',
-        estado: 'CE',
-        rua: 'Av. Mister Hull',
-        numero: 's/n',
-        bairro: 'Pici',
-        cep: '60455-760',
-        complemento: 'Próximo ao IFCE',
+        cidade: "Fortaleza",
+        estado: "CE",
+        rua: "Av. Mister Hull",
+        numero: "s/n",
+        bairro: "Pici",
+        cep: "60455-760",
+        complemento: "Próximo ao IFCE"
     },
-    descricao: 'Arena esportiva simples em Fortaleza.',
-    urlFoto: '/arenaesportes.png',
-    dataCriacao: '2023-01-01T00:00:00Z',
-    esportes: ['Futebol', 'Beach Tennis', 'Vôlei', 'Futevôlei'],
-    avaliacao: 4.5,
-    numeroAvaliacoes: 20,
-    role: 'arena',
+    descricao: "Complexo esportivo com quadras de alta qualidade para diversos esportes.",
+    urlFoto: "/arenaesportes.png",
+    dataCriacao: "2023-01-01",
+    esportes: ["Futebol Society", "Futsal", "Beach Tennis", "Vôlei", "Futevôlei"],
+    avaliacao: 4.8,
+    numeroAvaliacoes: 150,
+    role: "ADMIN",
 };
 
-const gerarHorarios = (intervalos: [number, number][], dias: number): Horario[] => {
-    const horarios: Horario[] = [];
+const quadrasPorArena: { [key: number]: QuadraOficial[] } = {
+    1: [
+        {
+            id: 101,
+            nomeQuadra: 'Campo Society 1',
+            urlFotoQuadra: '/arenaesportes.png',
+            tipoQuadra: ['FUTEBOL_SOCIETY'],
+            descricao: 'Campo de grama sintética de alta qualidade, ideal para jogos de society.',
+            duracaoReserva: 'TRINTA_MINUTOS',
+            cobertura: false,
+            iluminacaoNoturna: true,
+            materiaisFornecidos: ['BOLA', 'COLETE'],
+            arenaId: 1,
+            nomeArena: "Arena Pici",
+            horariosFuncionamento: [
+                {
+                    id: 2,
+                    diaDaSemana: 'TERCA',
+                    intervalosDeHorario: [
+                        { id: 10, inicio: '08:00', fim: '12:00', valor: 80, status: 'DISPONIVEL' },
+                        { id: 11, inicio: '16:00', fim: '19:00', valor: 100, status: 'DISPONIVEL' },
+                        { id: 12, inicio: '20:00', fim: '00:00', valor: 140, status: 'DISPONIVEL' }
+                    ]
+                },
+                {
+                    id: 3,
+                    diaDaSemana: 'QUARTA',
+                    intervalosDeHorario: [
+                        { id: 13, inicio: '08:00', fim: '12:00', valor: 80, status: 'DISPONIVEL' },
+                        { id: 14, inicio: '16:00', fim: '19:00', valor: 100, status: 'DISPONIVEL' },
+                        { id: 15, inicio: '20:00', fim: '00:00', valor: 140, status: 'DISPONIVEL' }
+                    ]
+                },
+                {
+                    id: 4,
+                    diaDaSemana: 'QUINTA',
+                    intervalosDeHorario: [
+                        { id: 16, inicio: '08:00', fim: '12:00', valor: 80, status: 'DISPONIVEL' },
+                        { id: 17, inicio: '16:00', fim: '19:00', valor: 100, status: 'DISPONIVEL' },
+                        { id: 18, inicio: '20:00', fim: '00:00', valor: 140, status: 'DISPONIVEL' }
+                    ]
+                },
+                {
+                    id: 5,
+                    diaDaSemana: 'SEXTA',
+                    intervalosDeHorario: [
+                        { id: 19, inicio: '08:00', fim: '12:00', valor: 80, status: 'DISPONIVEL' },
+                        { id: 20, inicio: '16:00', fim: '19:00', valor: 100, status: 'DISPONIVEL' },
+                        { id: 21, inicio: '20:00', fim: '00:00', valor: 140, status: 'DISPONIVEL' }
+                    ]
+                },
+                {
+                    id: 6,
+                    diaDaSemana: 'SABADO',
+                    intervalosDeHorario: [
+                        { id: 22, inicio: '16:00', fim: '21:00', valor: 100, status: 'DISPONIVEL' },
+                    ]
+                },
+            ],
+        },
+        {
+            id: 102,
+            nomeQuadra: 'Quadra de Areia 1',
+            urlFotoQuadra: '/arenaesportes.png',
+            tipoQuadra: ['BEACHTENIS', 'VOLEI', 'FUTEVOLEI'],
+            descricao: 'Quadra de areia perfeita para esportes de praia, com iluminação para jogos noturnos.',
+            duracaoReserva: 'UMA_HORA',
+            cobertura: false,
+            iluminacaoNoturna: true,
+            materiaisFornecidos: ['BOLA', 'LUVA', 'CHUTEIRA'],
+            arenaId: 1,
+            nomeArena: "Arena Pici",
+            horariosFuncionamento: [
+                {
+                    id: 7,
+                    diaDaSemana: 'QUARTA',
+                    intervalosDeHorario: [
+                        { id: 13, inicio: '08:00', fim: '12:00', valor: 80, status: 'DISPONIVEL' },
+                        { id: 14, inicio: '16:00', fim: '19:00', valor: 100, status: 'DISPONIVEL' },
+                        { id: 15, inicio: '20:00', fim: '00:00', valor: 140, status: 'DISPONIVEL' }
+                    ]
+                },
+                {
+                    id: 8,
+                    diaDaSemana: 'QUINTA',
+                    intervalosDeHorario: [
+                        { id: 16, inicio: '08:00', fim: '12:00', valor: 80, status: 'DISPONIVEL' },
+                        { id: 17, inicio: '16:00', fim: '19:00', valor: 100, status: 'DISPONIVEL' },
+                        { id: 18, inicio: '20:00', fim: '00:00', valor: 140, status: 'DISPONIVEL' }
+                    ]
+                },
+                {
+                    id: 9,
+                    diaDaSemana: 'SEXTA',
+                    intervalosDeHorario: [
+                        { id: 19, inicio: '08:00', fim: '12:00', valor: 80, status: 'DISPONIVEL' },
+                        { id: 20, inicio: '16:00', fim: '19:00', valor: 100, status: 'DISPONIVEL' },
+                        { id: 21, inicio: '20:00', fim: '00:00', valor: 140, status: 'DISPONIVEL' }
+                    ]
+                },
+            ],
+        },
+    ],
+};
+
+const formatarMaterial = (material: MaterialFornecido): string => {
+    return material.charAt(0).toUpperCase() + material.slice(1).toLowerCase();
+}
+
+const gerarHorarios = (hf: HorarioFuncionamento[], duracaoReserva: DuracaoReserva): Horario[] => {
     const hoje = new Date();
+    const horarios: Horario[] = [];
+    const diasDaSemanaMap = ['DOMINGO', 'SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO'];
 
-    for (let i = 0; i < dias; i++) {
+    let duracaoEmMinutos: number;
+    duracaoEmMinutos = duracaoReserva === 'UMA_HORA' ? 60 : 30;
+
+    for (let i = 0; i < 30; i++) {
         const dataAtual = addDays(hoje, i);
-        const dataStr = format(dataAtual, 'yyyy-MM-dd');
+        const diaDaSemanaString = diasDaSemanaMap[dataAtual.getDay()];
 
-        intervalos.forEach(([inicio, fim]) => {
-            for (let hora = inicio; hora < fim; hora++) {
-                ['00', '30'].forEach((minuto) => {
-                    const horaCompleta = `${String(hora).padStart(2, '0')}:${minuto}`;
-                    const dataHoraCompleta = setMinutes(setHours(dataAtual, hora), parseInt(minuto));
-                    if (isBefore(dataHoraCompleta, new Date())) return;
+        const horarioFuncionamentoDoDia = hf?.find(h => h.diaDaSemana === diaDaSemanaString);
+
+        if (horarioFuncionamentoDoDia && horarioFuncionamentoDoDia.intervalosDeHorario?.length > 0) {
+            const dataStr = format(dataAtual, 'yyyy-MM-dd');
+
+            horarioFuncionamentoDoDia.intervalosDeHorario.forEach(intervalo => {
+                const { inicio, fim, valor } = intervalo;
+                const horaInicioTotalMinutos = parseInt(inicio.split(':')[0]) * 60 + parseInt(inicio.split(':')[1]);
+
+                let horaFimTotalMinutos = parseInt(fim.split(':')[0]) * 60 + parseInt(fim.split(':')[1]);
+                if (horaFimTotalMinutos === 0) {
+                    horaFimTotalMinutos = 24 * 60; // 1440 minutos
+                }
+
+                for (let minutoAtual = horaInicioTotalMinutos; minutoAtual < horaFimTotalMinutos; minutoAtual += duracaoEmMinutos) {
+                    const hora = Math.floor(minutoAtual / 60);
+                    const minuto = minutoAtual % 60;
+
+                    const horaFormatada = hora === 24 ? 0 : hora;
+                    const horaCompleta = `${String(horaFormatada).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
+                    const dataHoraCompleta = setMinutes(setHours(dataAtual, hora), minuto);
+
+                    if (isBefore(dataHoraCompleta, new Date())) continue;
 
                     horarios.push({
                         data: dataStr,
                         hora: horaCompleta,
-                        preco: 100,
-                        disponivel: true,
+                        preco: valor,
+                        disponivel: Math.random() > 0.2
                     });
-                });
-            }
-        });
+                }
+            });
+        }
     }
-
     return horarios;
 };
 
-function formatarIntervalo(horaInicio: string, intervalos: [number, number][]) {
-    const [horaStr, minStr] = horaInicio.split(':');
-    const minutosInicio = parseInt(horaStr) * 60 + parseInt(minStr);
-    let minutosFim = minutosInicio + 30;
-
-    for (const [inicio, fim] of intervalos) {
-        const inicioMinutos = inicio * 60;
-        const fimMinutos = fim * 60;
-
-        if (minutosInicio >= inicioMinutos && minutosInicio < fimMinutos) {
-            if (minutosFim > fimMinutos) {
-                minutosFim = fimMinutos;
-            }
-            break;
-        }
+const formatarIntervalo = (horaInicio: string, duracaoReserva: DuracaoReserva) => {
+    let duracaoEmMinutos: number;
+    if (duracaoReserva === 'UMA_HORA') {
+        duracaoEmMinutos = 60;
+    } else {
+        duracaoEmMinutos = 30;
     }
 
+    const [horaStr, minStr] = horaInicio.split(':');
+    const minutosInicio = parseInt(horaStr) * 60 + parseInt(minStr);
+    const minutosFim = minutosInicio + duracaoEmMinutos;
+
     const formatarMinutos = (m: number) => {
-        const h = Math.floor(m / 60);
+        let h = Math.floor(m / 60);
         const min = m % 60;
+
+        if (h === 24) {
+            h = 0;
+        }
+
         return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
     };
 
     return `${horaInicio} às ${formatarMinutos(minutosFim)}`;
 }
 
-const quadrasPorArena: { [key: string]: Quadra[] } = {
-    A: [
-        {
-            id: '1',
-            nome: 'Campo 1',
-            esportes: ['Futebol'],
-            image: '/arenaesportes.png',
-            horarioFuncionamento: [
-                [15, 17],
-                [18, 23],
-            ],
-            equipamentosDisponibilizados: ['Colete', 'Bola', 'Apito'],
-        },
-        {
-            id: '2',
-            nome: 'Quadra 1',
-            image: '/arenaesportes.png',
-            esportes: ['Beach Tennis', 'Vôlei', 'Futevôlei'],
-            horarioFuncionamento: [[18, 22]],
-            equipamentosDisponibilizados: ['Colete', 'Bola', 'Apito'],
-        },
-        {
-            id: '3',
-            nome: 'Quadra 2',
-            image: '/arenaesportes.png',
-            esportes: ['Beach Tennis', 'Vôlei', 'Futevôlei'],
-            horarioFuncionamento: [[18, 22]],
-            equipamentosDisponibilizados: ['Colete', 'Bola', 'Apito'],
-        },
-        {
-            id: '4',
-            nome: 'Quadra 3',
-            image: '/arenaesportes.png',
-            esportes: ['Beach Tennis', 'Vôlei', 'Futevôlei'],
-            horarioFuncionamento: [[18, 22]],
-            equipamentosDisponibilizados: ['Colete', 'Bola', 'Apito'],
-        },
-    ],
+const addDuration = (time: string, durationMinutes: number): string => {
+    const [h, m] = time.split(':').map(Number);
+    const totalMinutes = h * 60 + m + durationMinutes;
+    const newH = Math.floor(totalMinutes / 60);
+    const newM = totalMinutes % 60;
+    return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+};
+
+const subDuration = (time: string, durationMinutes: number): string => {
+    const [h, m] = time.split(':').map(Number);
+    const totalMinutes = h * 60 + m - durationMinutes;
+    const newH = Math.floor(totalMinutes / 60);
+    const newM = totalMinutes % 60;
+    return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 };
 
 export default function QuadraPage() {
     const params = useParams();
-    const arenaId = params?.arenaId as string;
-
-    // Fallback to "A" if arenaId is not found in mock (for development/demo)
-    const quadrasRaw = quadrasPorArena[arenaId] || quadrasPorArena["A"] || [];
-    const quadras: Quadra[] = quadrasRaw.map((q) => ({
-        ...q,
-        horarios: gerarHorarios(q.horarioFuncionamento, 30),
-    }));
-
+    const [loading, setLoading] = useState(true);
+    const [quadras, setQuadras] = useState<QuadraComHorarios[]>([]);
+    const [direction, setDirection] = useState(0);
     const [startIndex, setStartIndex] = useState(0);
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedHorarios, setSelectedHorarios] = useState<string[]>([]);
-
+    const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+    const [quadraSelecionada, setQuadraSelecionada] = useState<QuadraComHorarios | null>(null);
+    
     const allDates = Array.from({ length: 30 }, (_, i) => addDays(new Date(), i));
-    const [horarioFoiEscolhido, setHorarioFoiEscolhido] = useState(false);
-    const [isFix, setIsFix] = useState(false);
-    const [isIncomplete, setIsIncomplete] = useState(false);
-    const [quadraSelecionada, setQuadraSelecionada] = useState<Quadra | null>(null);
-    const [numeroJogadoresFaltando, setNumeroJogadoresFaltando] = useState(0);
+    const VISIBLE_DATES_WINDOW_SIZE = 10;
+
+
+    useEffect(() => {
+        setLoading(true);
+        const arenaId = Number(params?.arenaId as string) || 1;
+        const quadrasRaw = quadrasPorArena[arenaId] || [];
+
+        const quadrasData = quadrasRaw.map((q) => ({
+            ...q,
+            horarios: gerarHorarios(q.horariosFuncionamento, q.duracaoReserva),
+        }));
+
+        setQuadras(quadrasData);
+        setLoading(false);
+    }, [params?.arenaId]);
 
 
     useEffect(() => {
         if (!selectedDate && allDates.length > 0) {
             setSelectedDate(format(allDates[0], 'yyyy-MM-dd'));
         }
-    }, [arenaId, allDates, selectedDate]);
+    }, [allDates, selectedDate]);
 
-    const visibleDates = allDates.slice(startIndex, startIndex + 7);
+    const visibleDates = allDates.slice(startIndex, startIndex + VISIBLE_DATES_WINDOW_SIZE);
 
-    const onCheckboxChange = (e: CheckboxChangeEvent) => {
+    const onCheckboxChange = (e: CheckboxChangeEvent, quadra: QuadraComHorarios) => {
         const { value, checked } = e.target;
+        const [quadraIdStr, timeToChange] = value.split('|');
+
         if (checked) {
             setSelectedHorarios((prev) => [...prev, value]);
+            setQuadraSelecionada(quadra);
         } else {
-            setSelectedHorarios((prev) => prev.filter((h) => h !== value));
+            const sortedTimes = selectedHorarios
+                .filter(h => h.startsWith(`${quadraIdStr}|`))
+                .map(h => h.split('|')[1])
+                .sort();
+
+            const indexOfDeselected = sortedTimes.indexOf(timeToChange);
+
+            if (indexOfDeselected === -1) return;
+
+            let timesToKeep;
+
+            if (indexOfDeselected === 0) {
+                timesToKeep = sortedTimes.slice(1);
+            }
+            else if (indexOfDeselected === sortedTimes.length - 1) {
+                timesToKeep = sortedTimes.slice(0, indexOfDeselected);
+            }
+            else {
+                timesToKeep = sortedTimes.slice(0, indexOfDeselected);
+            }
+
+            const newSelectedValues = timesToKeep.map(t => `${quadraIdStr}|${t}`);
+
+            setSelectedHorarios(newSelectedValues);
+
+            if (newSelectedValues.length === 0) {
+                setQuadraSelecionada(null);
+            }
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        alert(`Horários selecionados:\n${selectedHorarios.join(', ')}`);
+    const calcularTotal = () => {
+        return selectedHorarios.map((val) => {
+            const [quadraId, hora] = val.split('|');
+            const quadra = quadras.find(q => q.id === Number(quadraId));
+            const horario = quadra?.horarios?.find(h => h.hora === hora && h.data === selectedDate);
+            return horario?.preco ?? 0;
+        }).reduce((acc, preco) => acc + preco, 0);
     };
+
+    if (loading) {
+        return (
+            <div className='flex justify-center items-center h-screen'>
+                <Loading />
+            </div>
+        );
+    }
 
     return (
         <div className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
             <div className='flex flex-row items-start justify-between mb-6'>
-                <ArenaCard arena={arena} showDescription={true} showHover={false} />
+                <ArenaCard arena={arena} showDescription={true} showHover={false} showEsportes={false} />
                 {selectedHorarios.length > 0 && (
                     <Button
                         type="primary"
-                        onClick={() => setHorarioFoiEscolhido(true)}
-                        className="w-full flex flex-row hover:bg-green-500 !py-7 !rounded-none bg-green-primary !fixed bottom-0 left-0 z-50 sm:!z-0 sm:!static sm:w-auto text-white hover:!bg-green-500"
+                        onClick={() => setIsDrawerVisible(true)}
+                        className="!w-full !flex !flex-row hover:!bg-green-500 !py-7 !rounded-none !bg-green-primary 
+                        !fixed !bottom-0 !left-0 !z-40 sm:!z-0 sm:!static sm:!w-auto !text-white hover:!bg-green-500"
                     >
                         <span className="flex flex-row items-center justify-center w-full">
                             <TbSoccerField className="w-8 h-9 mr-2 rotate-135" />
                             <span className="flex flex-col items-start justify-center text-base">
                                 <span className="font-semibold text-center">
-                                    {selectedHorarios
-                                        .map((val) => {
-                                            const [quadraId, hora] = val.split('|');
-                                            const quadra = quadras.find(q => q.id === quadraId);
-                                            const horario = quadra?.horarios?.find(h => h.hora === hora && h.data === selectedDate);
-                                            return horario?.preco ?? 0;
-                                        })
-                                        .reduce((acc, preco) => acc + preco, 0)
-                                        .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    {calcularTotal().toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                 </span>
                                 <span>
                                     {selectedHorarios.length} horário{selectedHorarios.length > 1 ? 's' : ''}
@@ -227,390 +377,180 @@ export default function QuadraPage() {
                 )}
             </div>
 
-
-            <div className="text-center text-lg font-semibold mb-2 capitalize mt-4">
+            <div className="text-center text-lg font-semibold mb-2 capitalize pt-4 border-2 border-transparent border-t-gray-300">
                 {format(allDates[startIndex], 'MMMM yyyy', { locale: ptBR })}
             </div>
-
             <div className="flex items-center justify-center gap-3 mb-6">
-                <button
-                    onClick={() => setStartIndex(Math.max(0, startIndex - 1))}
+                <Button
+                    type='primary'
+                    onClick={() => {
+                        setDirection(-1);
+                        setStartIndex(Math.max(0, startIndex - 4))
+                    }}
                     disabled={startIndex === 0}
-                    className={`flex min-w-[42px] px-2 py-2 rounded justify-center items-center text-center text-sm ${startIndex === 0 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-green-500 hover:text-white'}`}
-                    aria-label="Back"
-                    title="Back"
+                    className="!bg-transparent !border-0 !text-gray-500 hover:!bg-transparent hover:!text-gray-700 !shadow-none"
                 >
-                    <IoIosArrowBack className='h-9' />
-                </button>
+                    <IoIosArrowBack
+                        color={`${startIndex === 0 ? 'gray' : 'black'} `}
+                        className='!h-9'
+                    />
+                </Button>
 
-                <div className="flex gap-2 overflow-x-auto">
-                    {visibleDates.map((day) => {
-                        const dateStr = format(day, 'yyyy-MM-dd');
-                        const isSelected = selectedDate === dateStr;
-                        return (
-                            <button
-                                key={dateStr}
-                                className={`min-w-[56px] px-2 py-2 rounded text-center text-sm font-semibold ${isSelected ? 'bg-green-600 text-white' : 'bg-gray-200 text-black'}`}
-                                onClick={() => {
-                                    setSelectedDate(dateStr);
-                                    setSelectedHorarios([]);
-                                }}
-                            >
-                                <div>{format(day, 'd', { locale: ptBR })}</div>
-                                <div className="text-xs font-inter">
-                                    {format(day, 'eee', { locale: ptBR })
-                                        .slice(0, 3)
-                                        .replace(/^./, (c) => c.toUpperCase())}
-                                </div>
-                            </button>
-                        );
-                    })}
+                <div className="flex gap-2 overflow-hidden w-[580px]">
+                    <AnimatePresence initial={false} custom={direction}>
+                        <motion.div
+                            key={startIndex}
+                            custom={direction}
+                            variants={{
+                                enter: (direction: number) => ({
+                                    x: direction > 0 ? '100%' : '-100%',
+                                    opacity: 0
+                                }),
+                                center: {
+                                    x: 0,
+                                    opacity: 1
+                                },
+                                exit: (direction: number) => ({
+                                    x: direction < 0 ? '100%' : '-100%',
+                                    opacity: 0
+                                })
+                            }}
+                            initial="enter"
+                            animate="center"
+                            exit={{ opacity: 0 }}
+                            transition={{
+                                x: { type: "spring", stiffness: 800, damping: 10 },
+                                opacity: { duration: 0.2 }
+                            }}
+                            className="flex gap-2"
+                        >
+                            {visibleDates.map((day) => {
+                                const dateStr = format(day, 'yyyy-MM-dd');
+                                const isSelected = selectedDate === dateStr;
+                                return (
+                                    <button
+                                        key={dateStr}
+                                        className={`min-w-[56px] px-2 py-2 text-center text-sm font-semibold ${isSelected ? 'bg-green-600 text-white' : 'bg-gray-200 text-black'} hover:bg-green-200 hover:cursor-pointer`}
+                                        onClick={() => { setSelectedDate(dateStr); setSelectedHorarios([]); }}
+                                    >
+                                        <div>{format(day, 'd', { locale: ptBR })}</div>
+                                        <div className="text-xs font-inter">
+                                            {format(day, 'eee', { locale: ptBR }).slice(0, 3).replace(/^./, c => c.toUpperCase())}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
 
-                <button
-                    onClick={() => setStartIndex(Math.min(allDates.length - 7, startIndex + 1))}
-                    disabled={startIndex + 7 >= allDates.length}
-                    className={`flex min-w-[42px] px-2 py-2 rounded justify-center items-center text-center text-sm ${startIndex + 7 >= allDates.length ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-green-500 hover:text-white'}`}
-                    aria-label="Next"
-                    title="Next"
+                <Button
+                    onClick={() => {
+                        setDirection(1);
+                        setStartIndex(Math.min(allDates.length - 10, startIndex + 4))
+                    }}
+                    disabled={startIndex + 10 >= allDates.length}
+                    className="!bg-transparent !border-0 !text-gray-500 hover:!bg-transparent hover:!text-gray-700 !shadow-none"
                 >
-                    <IoIosArrowForward className='h-9' />
-                </button>
+                    <IoIosArrowForward
+                        color={`${startIndex + 10 >= allDates.length ? 'gray' : 'black'} `}
+                    />
+                </Button>
             </div>
 
-            <Form onFinish={handleSubmit}>
-                <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
-                    {quadras.map((quadra) => (
-                        <div key={quadra.id} className="border border-gray-400 rounded-lg p-4 mb-2">
-                            <div className="flex rounded-lg overflow-hidden gap-4 mb-4">
-                                <div className="rounded-lg relative h-25 min-w-[144px] w-45 overflow-hidden bg-gray-300 flex-shrink-0">
-                                    <Image
-                                        src={quadra.image}
-                                        alt={`Imagem da ${quadra.nome}`}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                {quadras.map((quadra) => {
+                    const horariosDoDia = quadra.horarios?.filter((h) => h.data === selectedDate);
+                    const diaDaSemanaFormatado = selectedDate ? format(parseISO(selectedDate), 'EEEE', { locale: ptBR }) : '';
 
-                                <div className="flex flex-col h-full justify-between">
-                                    <div>
-                                        <h3 className="font-semibold text-lg mb-1">{quadra.nome}</h3>
-                                        <p className="text-green-600 text-sm mb-2 font-semibold">{quadra.esportes.join(', ')}</p>
-                                        {quadra.equipamentosDisponibilizados && (
-                                            <p className="text-sm text-black">
-                                                A arena vai disponibilizar para você:{' '}
-                                                <span className="text-green-600 font-semibold">
-                                                    {quadra.equipamentosDisponibilizados?.join(', ')}
-                                                </span>
-                                            </p>
-                                        )}
-                                    </div>
+                    return (
+                        <div key={quadra.id} className="border-2 border-transparent border-b-gray-300 p-4">
+                            <div className="flex overflow-hidden gap-4 mb-4">
+                                <div className="relative h-24 min-w-[120px] w-30 overflow-hidden bg-gray-300 flex-shrink-0">
+                                    <Image src={quadra.urlFotoQuadra} alt={`Imagem da ${quadra.nomeQuadra}`} fill className="object-cover" />
                                 </div>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                <div className="flex flex-row gap-2 overflow-x-auto pb-2">
-                                    {quadra.horarios
-                                        ?.filter((h) => h.data === selectedDate)
-                                        .map((horario) => {
-                                            const checkboxValue = `${quadra.id}|${horario.hora}`;
-                                            // Determine the class for the label based on availability and selection
-                                            let horarioClass = '';
-                                            if (horario.disponivel) {
-                                                if (selectedHorarios.includes(checkboxValue)) {
-                                                    horarioClass = 'border-green-600 bg-white text-black';
-                                                } else {
-                                                    horarioClass = 'border-gray-300 bg-white text-black hover:bg-green-50';
-                                                }
-                                            } else {
-                                                horarioClass = 'opacity-50 text-gray-400 line-through cursor-not-allowed bg-gray-100 border-gray-100';
-                                            }
-                                            return (
-                                                <label
-                                                    key={checkboxValue}
-                                                    className={`flex flex-row items-center gap-2 rounded border px-2 py-2 text-xs select-none min-w-[130px] max-w-[160px] ${horarioClass}`}
-                                                >
-                                                    <Checkbox
-                                                        value={checkboxValue}
-                                                        disabled={
-                                                            !horario.disponivel ||
-                                                            (
-                                                                selectedHorarios.length > 0 &&
-                                                                !selectedHorarios[0].startsWith(`${quadra.id}|`)
-                                                            )
-                                                        }
-                                                        checked={selectedHorarios.includes(checkboxValue)}
-                                                        onChange={(e) => {
-                                                            onCheckboxChange(e);
-                                                            if (e.target.checked) {
-                                                                setQuadraSelecionada(quadra);
-                                                            } else {
-                                                                const horariosRestantes = selectedHorarios.filter(val => val.startsWith(`${quadra.id}|`));
-                                                                if (horariosRestantes.length <= 1) {
-                                                                    setQuadraSelecionada(null);
-                                                                }
-                                                            }
-                                                        }}
-                                                        className="accent-green-600 mr-1"
-                                                    />
-                                                    <div className="flex flex-col w-full">
-                                                        <span className="block leading-tight text-left">
-                                                            {formatarIntervalo(horario.hora, quadra.horarioFuncionamento)}
-                                                        </span>
-                                                        <span className="font-semibold text-left">R$ {horario.preco.toFixed(2)}</span>
-                                                    </div>
-                                                </label>
-                                            );
-                                        })}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                {horarioFoiEscolhido && (
-                    <div className="flex flex-row !fixed inset-0 items-start justify-end h-full z-50">
-                        <div className='flex flex-col bg-white w-[400px] h-full overflow-y-auto shadow-lg'>
-                            <div className='bg-white py-4 max-w-md w-full'>
-                                <Button
-                                    type="primary"
-                                    onClick={() => {
-                                        setHorarioFoiEscolhido(false);
-                                        setIsIncomplete(false);
-                                    }}
-                                    className="!bg-white !shadow-none border-none"
-                                >
-                                    <IoCloseOutline className="text-black w-full h-full" />
-                                </Button>
-                            </div>
-
-                            <div className="flex flex-col justify-between px-10 max-w-md w-full h-full">
-                                <div className="flex flex-col mb-4">
-                                    <h1 className="text-xl font-bold mb-1">{arena.nome}</h1>
-                                    <h2 className='font-semibold'>{quadraSelecionada?.nome}</h2>
-                                    {/* <h3>{arena.endereco}</h3> */}
-                                    {quadraSelecionada?.equipamentosDisponibilizados && (
+                                <div className="flex flex-col h-auto justify-between">
+                                    <h3 className="font-semibold text-lg mb-1">{quadra.nomeQuadra}</h3>
+                                    <p className="text-green-600 text-sm mb-2 font-semibold">
+                                        {quadra.tipoQuadra.map(formatarEsporte).join(', ')}
+                                    </p>
+                                    {quadra.materiaisFornecidos && quadra.materiaisFornecidos.length > 0 && (
                                         <p className="text-sm text-black">
-                                            A arena vai disponibilizar para você:{' '}
+                                            A Arena vai disponibilizar para você:{' '}
                                             <span className="text-green-600 font-semibold">
-                                                {quadraSelecionada?.equipamentosDisponibilizados?.join(', ')}
+                                                {quadra.materiaisFornecidos.length === 1
+                                                    ? formatarMaterial(quadra.materiaisFornecidos[0])
+                                                    : quadra.materiaisFornecidos.map(formatarMaterial).reduce((acc, curr, idx, arr) => {
+                                                        if (idx === 0) return curr;
+                                                        if (idx === arr.length - 1) return `${acc} e ${curr}`;
+                                                        return `${acc}, ${curr}`;
+                                                    }, '')}
                                             </span>
                                         </p>
                                     )}
                                 </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-row gap-2 overflow-x-auto pb-2">
+                                    {horariosDoDia && horariosDoDia.length > 0 ? (
+                                        horariosDoDia.map((horario) => {
+                                            const checkboxValue = `${quadra.id}|${horario.hora}`;
+                                            const isSelected = selectedHorarios.includes(checkboxValue);
 
-                                {selectedHorarios.length > 0 && (
-                                    <div className="flex flex-row items-center gap-4 rounded-lg p-2 mb-4 border border-gray-200">
-
-                                        <div className="flex flex-col flex-1">
-                                            <span className="font-semibold text-base">
-                                                {(() => {
-                                                    const horariosSelecionados = selectedHorarios
-                                                        .filter(val => {
-                                                            const [quadraId] = val.split('|');
-                                                            return quadraSelecionada?.id === quadraId;
-                                                        })
-                                                        .map(val => {
-                                                            const [, hora] = val.split('|');
-                                                            return hora;
-                                                        })
-                                                        .sort((a, b) => a.localeCompare(b));
-
-                                                    if (horariosSelecionados.length === 0) return "Selecione um horário";
-
-                                                    // Ordenar corretamente os horários
-                                                    const horariosOrdenados = horariosSelecionados
-                                                        .map(h => {
-                                                            const [hh, mm] = h.split(':').map(Number);
-                                                            return hh * 60 + mm;
-                                                        })
-                                                        .sort((a, b) => a - b);
-
-                                                    const inicio = horariosOrdenados[0];
-                                                    const fim = horariosOrdenados[horariosOrdenados.length - 1] + 30;
-                                                    const duracaoMin = fim - inicio;
-                                                    const horas = Math.floor(duracaoMin / 60);
-                                                    const minutos = duracaoMin % 60;
-
-                                                    const formatarHora = (minutos: number) => {
-                                                        const h = Math.floor(minutos / 60);
-                                                        const m = minutos % 60;
-                                                        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                                                    };
-
-                                                    const horaInicioStr = formatarHora(inicio);
-                                                    const horaFimStr = formatarHora(fim);
-
-                                                    return (
-                                                        <>
-                                                            {horaInicioStr} às {horaFimStr}
-                                                            {' '}
-                                                            (
-                                                            {horas > 0 && `${horas} hora${horas > 1 ? 's' : ''}`}
-                                                            {horas > 0 && minutos > 0 && ' '}
-                                                            {minutos > 0 && `${minutos} min`}
-                                                            )
-                                                        </>
-                                                    );
-                                                })()}
-                                            </span>
-                                            <span className="text-green-600 font-bold text-lg mt-1">
-                                                {selectedHorarios
-                                                    .filter(val => {
-                                                        const [quadraId] = val.split('|');
-                                                        return quadraSelecionada?.id === quadraId;
-                                                    })
-                                                    .map(val => {
-                                                        const [quadraId, hora] = val.split('|');
-                                                        const quadra = quadras.find(q => q.id === quadraId);
-                                                        const horario = quadra?.horarios?.find(h => h.hora === hora && h.data === selectedDate);
-                                                        return horario?.preco ?? 0;
-                                                    })
-                                                    .reduce((acc, preco) => acc + preco, 0)
-                                                    .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex flex-col items-center justify-center min-w-[48px] gap-2">
-                                            <span className="text-2xl font-bold leading-none">
-                                                {format(
-                                                    new Date(
-                                                        selectedDate + 'T00:00:00'
-                                                    ),
-                                                    'dd'
-                                                )}
-                                            </span>
-                                            <span className="text-lg uppercase font-bold text-gray-500 leading-none">
-                                                {format(
-                                                    new Date(
-                                                        selectedDate + 'T00:00:00'
-                                                    ),
-                                                    'MMM',
-                                                    { locale: ptBR }
-                                                )}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="flex flex-col gap-2 mb-4">
-                                    <h1 className='font-semibold text-lg'>Selecione um esporte</h1>
-
-                                    <Form.Item
-                                        name="esporteSelecionado"
-                                        className="sem-asterisco flex flex-col className='!mb-2'"
-                                    >
-                                        <Select
-                                            placeholder="Selecione um esporte"
-                                            className="w-full !bg-gray-200 border border-gray-300 rounded-md"
-                                        >
-                                            {quadraSelecionada?.esportes.map((esporte) => (
-                                                <Select.Option key={esporte} value={esporte}>
-                                                    {esporte}
-                                                </Select.Option>
-                                            ))}
-                                        </Select>
-                                    </Form.Item>
-
-                                    <Form.Item className='sem-asterisco !mb-2'>
-                                        <div className="flex flex-row flex-wrap justify-between items-center bg-gray-200 p-2 rounded-md border border-gray-300">
-                                            <span>Quer reservar este horário como fixo?</span>
-                                            <Switch
-                                                size="small"
-                                                checked={isFix}
-                                                onChange={(checked) => {
-                                                    setIsFix(checked);
-                                                    if (checked) {
-                                                        setIsIncomplete(false); // Desativa o outro
+                                            let isDisabled = !horario.disponivel;
+                                            if (!isDisabled) {
+                                                const selectedQuadraId = selectedHorarios.length > 0 ? selectedHorarios[0].split('|')[0] : null;
+                                                if (selectedQuadraId && selectedQuadraId !== String(quadra.id)) {
+                                                    isDisabled = true;
+                                                } else if (selectedQuadraId && !isSelected) {
+                                                    const selectedTimes = selectedHorarios.map(h => h.split('|')[1]).sort();
+                                                    const firstSelected = selectedTimes[0];
+                                                    const lastSelected = selectedTimes[selectedTimes.length - 1];
+                                                    const duracaoEmMinutos = quadra.duracaoReserva === 'UMA_HORA' ? 60 : 30;
+                                                    const prevAdjacent = subDuration(firstSelected, duracaoEmMinutos);
+                                                    const nextAdjacent = addDuration(lastSelected, duracaoEmMinutos);
+                                                    if (horario.hora !== prevAdjacent && horario.hora !== nextAdjacent) {
+                                                        isDisabled = true;
                                                     }
-                                                }}
-                                            />
-                                        </div>
-                                    </Form.Item>
+                                                }
+                                            }
 
-                                    {isFix && (
-                                        <Form.Item>
-                                            <Radio.Group
-                                                className='flex flex-row justify-between items-center'
-                                                name="quantidadeMeses"
-                                                defaultValue={1}
-                                                options={[
-                                                    { value: 1, label: '1 mês' },
-                                                    { value: 3, label: '3 meses' },
-                                                    { value: 6, label: '6 meses' },
-                                                ]}></Radio.Group>
-                                        </Form.Item>
-                                    )}
+                                            let horarioClass = isDisabled
+                                                ? 'opacity-50 text-gray-400 line-through cursor-not-allowed bg-gray-100 border-gray-100'
+                                                : 'border-gray-300 bg-white text-black hover:bg-green-50';
+                                            if (isSelected) horarioClass = 'border-2 border-green-600 bg-white text-black';
 
-                                    <Form.Item className='sem-asterisco !mb-2'>
-                                        <div className="flex flex-row flex-wrap justify-between items-center bg-gray-200 p-2 rounded-md border border-gray-300">
-                                            <span>Tá faltando gente?</span>
-                                            <Switch
-                                                size="small"
-                                                checked={isIncomplete}
-                                                onChange={(checked) => {
-                                                    setIsIncomplete(checked);
-                                                    if (checked) {
-                                                        setIsFix(false); // Desativa o outro
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                    </Form.Item>
-
-                                    {isIncomplete && (
-                                        <div className='flex flex-row gap-3 items-start'>
-                                            <span className='text-sm text-gray-600'>Quantos jogadores você precisa?</span>
-                                            <Form.Item className='sem-asterisco flex-1 flex-col !mb-0 !h-10'>
-                                                <div className="flex flex-row items-center rounded border border-gray-300 h-10">
-                                                    <Button
-                                                        onClick={() => setNumeroJogadoresFaltando(prev => Math.max(0, prev - 1))}
-                                                        disabled={numeroJogadoresFaltando === 0}
-                                                        className="!px-3 !py-1 !text-black text-center !border-none hover:!bg-gray-300 disabled:!bg-gray-100 disabled:!text-gray-400 !h-full"
-                                                    >
-                                                        <AiOutlineMinus />
-                                                    </Button>
-                                                    <span className="px-4 text-center font-semibold text-lg border-x border-gray-300 flex items-center h-full">
-                                                        {numeroJogadoresFaltando}
-                                                    </span>
-                                                    <Button
-                                                        onClick={() => setNumeroJogadoresFaltando(prev => prev + 1)}
-                                                        className="!px-3 !py-1 !text-black !border-none hover:!bg-gray-300 flex items-center justify-center !h-full"
-                                                    >
-                                                        <AiOutlinePlus />
-                                                    </Button>
-                                                </div>
-                                            </Form.Item>
+                                            return (
+                                                <label key={`${quadra.id}|${horario.hora}`} className={`flex flex-row items-center gap-2 border px-2 py-2 text-xs select-none min-w-[130px] max-w-[160px] cursor-pointer ${horarioClass}`}>
+                                                    <Checkbox value={checkboxValue} disabled={isDisabled} checked={isSelected} onChange={(e) => onCheckboxChange(e, quadra)} className="!accent-green-600 !mr-1" />
+                                                    <div className="flex flex-col w-full">
+                                                        <span className="block leading-tight text-left">{formatarIntervalo(horario.hora, quadra.duracaoReserva)}</span>
+                                                        <span className="font-semibold text-left">R$ {horario.preco.toFixed(2)}</span>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="w-full text-left text-gray-500 py-2 px-1 text-sm">
+                                            Fechado na {diaDaSemanaFormatado.replace("-feira", "")}
                                         </div>
                                     )}
-                                </div>
-
-                                <div className="flex flex-col flex-1 justify-end">
-                                    <div className='flex flex-row justify-between items-center mb-4'>
-                                        <span className='text-lg'>Total</span>
-                                        <span className='text-lg font-semibold text-green-600'>
-                                            {selectedHorarios
-                                                .map((val) => {
-                                                    const [quadraId, hora] = val.split('|');
-                                                    const quadra = quadras.find(q => q.id === quadraId);
-                                                    const horario = quadra?.horarios?.find(h => h.hora === hora && h.data === selectedDate);
-                                                    return horario?.preco ?? 0;
-                                                })
-                                                .reduce((acc, preco) => acc + preco, 0)
-                                                .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                        </span>
-                                    </div>
-                                    <Button
-                                        type="primary"
-                                        htmlType="submit"
-                                        className="w-full bg-green-primary !font-semibold hover:bg-green-500 text-white !py-5 !rounded-md"
-                                    >
-                                        Confirmar agendamento
-
-                                    </Button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </Form>
+                    )
+                })}
+            </div>
+
+            <DrawerConfirmacaoReserva
+                open={isDrawerVisible}
+                onClose={() => setIsDrawerVisible(false)}
+                arena={arena}
+                quadraSelecionada={quadraSelecionada}
+                selectedDate={selectedDate}
+                selectedHorarios={selectedHorarios}
+                quadras={quadras}
+            />
         </div>
     );
 }
