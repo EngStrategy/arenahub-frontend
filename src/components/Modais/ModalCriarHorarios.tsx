@@ -110,7 +110,7 @@ const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel,
                     {(fields, { add, remove }) => (
                         <>
                             {fields.map(({ key, name, ...restField }) => (
-                                <div key={key} className="border-b border-gray-200 pb-2 flex w-full items-center gap-2 mb-4">
+                                <div key={key} className="border-b border-green-300 pb-2 flex w-full items-center gap-2 mb-4">
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 flex-grow">
                                         <Form.Item
                                             {...restField}
@@ -145,7 +145,6 @@ const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel,
                                             <TimePicker format="HH:mm" minuteStep={30} placeholder='12:00' style={{ width: '100%' }} />
                                         </Form.Item>
 
-                                        {/* ... Outros Form.Item ... */}
                                         <Form.Item {...restField} name={[name, 'valor']} label="Valor (R$)" rules={[{ required: true, message: 'Obrigatório!' }]}>
                                             <InputNumber prefix="R$ " decimalSeparator="," precision={2} placeholder='100,00' style={{ width: '100%' }} />
                                         </Form.Item>

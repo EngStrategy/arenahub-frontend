@@ -98,3 +98,18 @@ export const deleteArena = async (id: number): Promise<void> => {
     }
     return httpRequests.deleteMethod(`${URLS.ARENAS}/${id}`,);
 };
+
+export const updatePassword = async (
+    currentPassword: string,
+    newPassword: string,
+    confirmNewPassword: string
+): Promise<void> => {
+    return httpRequests.patchMethod<void>(
+        `${URLS.ARENAS}/me/alterar-senha`,
+        { 
+            senhaAtual: currentPassword, 
+            novaSenha: newPassword, 
+            confirmacaoNovaSenha: confirmNewPassword
+        },
+    );
+}

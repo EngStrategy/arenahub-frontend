@@ -24,7 +24,7 @@ type JogoAbertoCardProps = {
 export function JogoAbertoCard({ jogoAberto }: JogoAbertoCardProps) {
     const { notification } = App.useApp();
     return (
-        <div className="flex w-full max-w-md gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:scale-105 transition-all hover:shadow-md cursor-pointer">
+        <div className="flex w-full items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 hover:scale-105 transition-all">
 
             {/* Coluna da Esquerda: Informações do Local */}
             <div className="flex flex-col items-center text-center w-24">
@@ -81,7 +81,7 @@ export function JogoAbertoCard({ jogoAberto }: JogoAbertoCardProps) {
                 >
                     <Button
                         aria-label="Entrar no jogo"
-                        className="!flex !h-10 !w-10 !items-center !justify-center !border-none !rounded-lg !bg-green-100 !text-green-600 hover:scale-110 !transition-colors hover:!bg-green-200"
+                        className="!flex !h-10 !w-10 !items-center !justify-center !border-none !rounded-lg !bg-green-100 !text-green-600 hover:!bg-green-200"
                     >
                         <UserAddOutlined style={{ fontSize: '20px' }} />
                     </Button>
