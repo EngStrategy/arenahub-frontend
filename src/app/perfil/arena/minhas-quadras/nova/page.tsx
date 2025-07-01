@@ -30,7 +30,7 @@ import { useRouter } from 'next/navigation';
 import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
-import ModalCriarHorarios from '@/components/ModalCriarHorarios';
+import ModalCriarHorarios from '@/components/Modais/ModalCriarHorarios';
 import { createQuadra, QuadraCreate, DiaDaSemana, StatusHorario } from '@/app/api/entities/quadra';
 import { formatarDiaSemana } from '@/data/mapeamentoDiaSemana';
 
@@ -200,7 +200,6 @@ export default function CadastrarQuadra() {
                 const key = 'uploading-image';
                 message.loading({ content: 'Carregando...', key, duration: 0 });
                 urlParaSalvar = await uploadToImgur(selectedFile);
-                console.log("URL da imagem carregada:", urlParaSalvar);
                 message.destroy(key);
             }
 

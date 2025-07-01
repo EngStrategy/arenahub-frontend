@@ -86,3 +86,17 @@ export const deleteAtleta = async (id: number): Promise<boolean> => {
     return httpRequests.deleteMethod(`${URLS.ATLETAS}/${id}`,);
 };
 
+export const updatePassword = async (
+    currentPassword: string,
+    newPassword: string,
+    confirmNewPassword: string
+): Promise<void> => {
+    return httpRequests.patchMethod<void>(
+        `${URLS.ATLETAS}/me/alterar-senha`,
+        { 
+            senhaAtual: currentPassword, 
+            novaSenha: newPassword, 
+            confirmacaoNovaSenha: confirmNewPassword
+        },
+    );
+}
