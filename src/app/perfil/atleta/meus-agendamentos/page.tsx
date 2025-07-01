@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, DatePicker, Pagination } from 'antd';
 import { CardAgendamento } from '@/components/Cards/AgendamentoCard';
 import dayjs, { Dayjs } from 'dayjs';
@@ -15,7 +15,7 @@ type Agendamento = {
     endTime: string;
     durationHours: number;
     valor: number;
-    status: 'pendente' | 'solicitado' | 'aceito' | 'ausente';
+    status: 'pendente' | 'solicitado' | 'aceito' | 'ausente' | 'cancelado' | 'pago';
 };
 
 const meusAgendamentos: Agendamento[] = [
@@ -24,9 +24,9 @@ const meusAgendamentos: Agendamento[] = [
         arenaName: 'Arena A',
         quadraName: 'Campo 1',
         date: '2025-06-18',
-        startTime: '18:00',
-        endTime: '19:00',
-        durationHours: 1,
+        startTime: '08:00',
+        endTime: '08:30',
+        durationHours: 0.5,
         valor: 100,
         status: 'pendente',
     },
@@ -46,8 +46,8 @@ const meusAgendamentos: Agendamento[] = [
         arenaName: 'Arena C',
         quadraName: 'Campo 2',
         date: '2025-06-22',
-        startTime: '18:00',
-        endTime: '19:00',
+        startTime: '22:00',
+        endTime: '23:00',
         durationHours: 1,
         valor: 100,
         status: 'aceito',
@@ -57,11 +57,33 @@ const meusAgendamentos: Agendamento[] = [
         arenaName: 'Arena D',
         quadraName: 'Campo Principal',
         date: '2025-05-10',
-        startTime: '18:00',
-        endTime: '19:00',
+        startTime: '10:00',
+        endTime: '11:00',
         durationHours: 1,
         valor: 90,
         status: 'ausente',
+    },
+    {
+        id: '5',
+        arenaName: 'Arena Júnior Bocão',
+        quadraName: 'Quadra 3',
+        date: '2025-05-15',
+        startTime: '16:00',
+        endTime: '18:00',
+        durationHours: 2,
+        valor: 110,
+        status: 'cancelado',
+    },
+    {
+        id: '6',
+        arenaName: 'Arena F',
+        quadraName: 'Quadra 4',
+        date: '2025-05-20',
+        startTime: '20:00',
+        endTime: '21:00',
+        durationHours: 1,
+        valor: 130,
+        status: 'pago',
     },
 ];
 
@@ -70,15 +92,17 @@ export default function MeusAgendamentos() {
     const [dataFinal, setDataFinal] = useState<Dayjs | null>(null);
     const [agendamentosFiltrados, setAgendamentosFiltrados] = useState(meusAgendamentos);
 
-    const handleAplicarFiltro = () => {
+    useEffect(() => {
         const filtered = meusAgendamentos.filter(agendamento => {
             const dataAgendamento = dayjs(agendamento.date);
             const isAfterStart = !dataInicial || dataAgendamento.isAfter(dataInicial.startOf('day')) || dataAgendamento.isSame(dataInicial.startOf('day'));
             const isBeforeEnd = !dataFinal || dataAgendamento.isBefore(dataFinal.endOf('day')) || dataAgendamento.isSame(dataFinal.endOf('day'));
+
             return isAfterStart && isBeforeEnd;
         });
+
         setAgendamentosFiltrados(filtered);
-    };
+    }, [dataInicial, dataFinal]);
 
     const handleLimparFiltro = () => {
         setDataInicial(null);
@@ -90,7 +114,7 @@ export default function MeusAgendamentos() {
         <main className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
             <h1 className="text-lg text-center mb-8 text-gray-800">Meus agendamentos</h1>
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-5 gap-4 mb-8">
                 <DatePicker
                     value={dataInicial}
                     onChange={setDataInicial}
@@ -105,14 +129,6 @@ export default function MeusAgendamentos() {
                     className="w-full"
                     size="large"
                 />
-                <Button
-                    type="primary"
-                    size="large"
-                    className="w-full !bg-green-600 hover:!bg-green-700 !border-green-600"
-                    onClick={handleAplicarFiltro}
-                >
-                    Aplicar filtro
-                </Button>
                 <Button
                     type="primary"
                     danger

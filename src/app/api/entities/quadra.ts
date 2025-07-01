@@ -115,6 +115,14 @@ export const getQuadraById = async (id: number): Promise<Quadra | undefined> => 
     return httpRequests.getMethod<Quadra>(`${URLS.QUADRAS}/${id}`);
 };
 
+export const getHorariosDisponiveisPorQuadra = async (quadraId: number, data: string): Promise<Array<HorarioFuncionamento>> => {
+    if (!quadraId || !data) {
+        console.error("ID da quadra ou data não fornecidos.");
+        return [];
+    }
+    return httpRequests.getMethod<Array<HorarioFuncionamento>>(`${URLS.QUADRAS}/${quadraId}/horarios-disponiveis`, { data });
+}
+
 export const getQuadraByIdArena = async (arenaId: number): Promise<Quadra | undefined> => {
     if (!arenaId) {
         console.error("ID da arena não fornecido.");

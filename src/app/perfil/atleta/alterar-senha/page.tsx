@@ -4,14 +4,8 @@ import React, { useState } from 'react';
 import { Form, Input, App } from 'antd';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
-import { useSession } from "next-auth/react";
-import type { } from 'antd';
-
-// interface PersonalInfoFormValues {
-//     senhaAtual: string;
-//     novaSenha: string;
-//     confirmarSenha: string;
-// }
+import { useSession, signOut } from "next-auth/react";
+import { updatePassword } from '@/app/api/entities/atleta';
 
 export default function AlterarSenha() {
     const { data: session, status } = useSession();
@@ -21,10 +15,23 @@ export default function AlterarSenha() {
 
     const onFinish = async () => {
         if (status !== 'authenticated' || !session?.user?.userId || !session?.user?.accessToken) {
-            message.error('Você não está autenticado.'); return;
+            message.error('Você não está autenticado.');
+            signOut({ callbackUrl: '/login' });
+            return;
         }
         setLoading(true);
-        try { } catch (error: any) {
+        try {
+            const values = form.getFieldsValue();
+            const { senhaAtual, novaSenha, confirmarSenha } = values;
+            if (novaSenha !== confirmarSenha) {
+                message.error('As novas senhas não coincidem.');
+                return;
+            }
+            await updatePassword(senhaAtual, novaSenha, confirmarSenha);
+            message.success('Senha alterada com sucesso!');
+            form.resetFields();
+            signOut({ callbackUrl: '/login' });            
+        } catch (error: any) {
             message.error(`${error instanceof Error ? error.message : 'Tente novamente.'}`);
         } finally { setLoading(false); }
     };
@@ -61,7 +68,10 @@ export default function AlterarSenha() {
                         <Form.Item
                             label="Nova senha"
                             name="novaSenha"
-                            rules={[{ required: true, message: "Por favor, insira sua nova senha!" }]}
+                            rules={[
+                                { required: true, message: "Por favor, insira sua nova senha!" },
+                                { min: 8, message: "A senha deve ter pelo menos 8 caracteres." },
+                            ]}
                             className="sem-asterisco"
                         >
                             <Input.Password placeholder="***********" />
