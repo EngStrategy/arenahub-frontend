@@ -209,9 +209,19 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
         <Drawer placement="right" onClose={onClose} open={open} closable={false}>
             <div className='flex flex-col h-full overflow-y-auto'>
                 <div className='py-2 flex justify-start'>
-                    <Button onClick={onClose} type="text" shape="circle" icon={<IoCloseOutline className="text-black w-6 h-6" />} />
+                    <Button
+                        onClick={onClose}
+                        type="text"
+                        shape="circle"
+                        icon={<IoCloseOutline className="text-black w-6 h-6" />}
+                    />
                 </div>
-                <Form form={form} layout="vertical" onFinish={handleFormSubmit} className="flex flex-col justify-between px-6 pb-6 w-full h-full">
+                <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={handleFormSubmit}
+                    className="flex flex-col justify-between px-6 pb-6 w-full h-full"
+                >
                     <div className="flex flex-col">
                         <div className="flex flex-col mb-4">
                             <h1 className="text-xl font-bold mb-1">{arena.nome}</h1>

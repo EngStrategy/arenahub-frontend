@@ -4,10 +4,9 @@ import { useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { MenuProps } from 'antd';
-
-import { Button, Drawer, Dropdown, Menu, Avatar } from "antd";
+import { Button, Drawer, Dropdown, Menu, Avatar, Skeleton } from "antd";
 import {
   UserOutlined,
   ScheduleOutlined,
@@ -23,7 +22,6 @@ import {
 } from "@ant-design/icons";
 import { FaAngleDown } from "react-icons/fa6";
 import { TbSoccerField } from "react-icons/tb";
-
 import alugailogoverde from "../../public/images/alugailogoverde.png";
 
 interface AppMenuItem {
@@ -37,12 +35,13 @@ interface AppMenuItem {
 const Navbar = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isLoadingSession = status === "loading";
 
   const handleLogin = () => {
-    router.push("/login");
+    router.push(`/login?callbackUrl=${pathname}`);
     if (mobileMenuOpen) setMobileMenuOpen(false);
   };
 
@@ -238,9 +237,7 @@ const Navbar = () => {
     </div >
   );
 
-  // Um loading spinner pode ser exibido enquanto a sessão é carregada
   if (isLoadingSession) {
-    // Pode retornar um skeleton/loading state aqui se desejar
     return (
       <nav className="bg-white px-4 sm:px-6 lg:px-10 py-3 flex justify-between items-center shadow-md animate-pulse">
         <div className="h-8 w-24 bg-gray-200 rounded"></div>
@@ -305,13 +302,12 @@ const Navbar = () => {
             overlayClassName="!mt-2 !w-64 !shadow-lg !rounded-md"
           >
             <button
-              className="flex items-center gap-2 space-x-2 p-1 px-2 rounded-full hover:bg-gray-200 transition-colors duration-200 border border-gray-300 cursor-pointer"
+              className="flex items-center gap-2 py-1 px-2 rounded-full hover:bg-gray-100 transition-colors duration-200 border border-gray-300 cursor-pointer"
             >
               <Avatar
                 size={28}
                 src={session.user.imageUrl}
                 icon={!session.user?.imageUrl && <UserOutlined />}
-                className="transition-shadow duration-300 ease-in-out shadow-[0_0_0_1.5px_#22c55e] hover:shadow-[0_0_0_2px_#16a34a]"
               />
               {(() => {
                 let displayName = "Usuário";
@@ -321,7 +317,7 @@ const Navbar = () => {
                   displayName = session.user.name.split(' ').slice(0, 2).join(' ');
                 }
                 return (
-                  <span className="text-gray-700 font-base  lg:block">
+                  <span className="text-gray-700 font-base lg:block">
                     {displayName}
                   </span>
                 );
@@ -370,7 +366,7 @@ const Navbar = () => {
           </div>
         }
         placement="right"
-        closable={false} // O botão de fechar já está no title
+        closable={false}
         onClose={() => setMobileMenuOpen(false)}
         open={mobileMenuOpen}
         styles={{ body: { padding: 0 } }}

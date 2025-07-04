@@ -60,8 +60,17 @@ const handler = NextAuth({
         token.userId = user.userId;
         token.name = user.name;
         token.role = user.role;
-        token.expiresIn = user.expiresIn;
         token.picture = user.imageUrl;
+
+        const nowInSeconds = Math.floor(Date.now() / 1000);
+        token.exp = nowInSeconds + (user.expiresIn as number);
+
+        return token;
+      }
+
+      if (Date.now() / 1000 > (token.exp as number)) {
+        console.log("Token expirado, limpando sessão.");
+        return {};
       }
 
       if (trigger === "update" && session) {
@@ -69,7 +78,7 @@ const handler = NextAuth({
         token.name = session.name;
         token.picture = session.picture;
       }
-      
+
       return token;
     },
     async session({ session, token }) {
@@ -78,8 +87,7 @@ const handler = NextAuth({
         session.user.userId = token.userId as number;
         session.user.name = token.name as string;
         session.user.role = token.role as string;
-        session.user.expiresIn = token.expiresIn as number;
-        // Mapeamos token.picture para session.user.imageUrl
+        session.user.expiresIn = token.exp as number;
         session.user.imageUrl = token.picture as string;
       }
       return session;

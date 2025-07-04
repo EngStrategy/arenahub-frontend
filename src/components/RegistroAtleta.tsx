@@ -7,6 +7,8 @@ import Link from "next/link";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { createAtleta } from '@/app/api/entities/atleta';
 import { formatarTelefone } from "@/context/functions/formatarTelefone";
+import { ExclamationCircleFilled } from "@ant-design/icons";
+import { useCapsLock } from "@/context/hooks/useCapsLook";
 
 export const RegistroAtleta = ({ className }: { className?: string }) => {
   const { message } = App.useApp();
@@ -14,6 +16,7 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
+  const capsLockEstaAtivado = useCapsLock();
 
   const onFinishFailed = (errorInfo: any) => {
     message.error("Por favor, corrija os erros no formulário.", 5);
@@ -51,7 +54,6 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
       onFinish={handleSubmit}
       onFinishFailed={onFinishFailed}
       className={className}
-      initialValues={{}}
     >
       <div className="flex flex-col md:flex-row md:gap-4">
         <Form.Item
@@ -130,6 +132,13 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
           <Input.Password placeholder="Confirme sua senha" />
         </Form.Item>
       </div>
+
+      {capsLockEstaAtivado && (
+        <div role="alert" className="flex items-center gap-2 text-orange-600 mb-4 transition-opacity duration-300 animate-pulse">
+          <ExclamationCircleFilled />
+          <span className="text-sm font-medium">CapsLock está ativado</span>
+        </div>
+      )}
 
       <ButtonPrimary
         text="Criar conta"

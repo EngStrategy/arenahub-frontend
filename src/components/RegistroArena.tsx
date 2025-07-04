@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
     Form, Input, Select, App, Switch, Avatar,
-    Upload, GetProp, UploadProps, Button, UploadFile
+    Upload, UploadProps, Button, UploadFile
 } from "antd";
 import { Estados } from "@/data/Estados";
 import Link from "next/link";
@@ -17,9 +17,11 @@ import { formatarCNPJ } from "@/context/functions/formatarCNPJ";
 import { formatarCPF } from "@/context/functions/formatarCPF";
 import { formatarCEP } from "@/context/functions/formatarCEP";
 import { createArena, ArenaCreate } from "@/app/api/entities/arena";
-import { PictureOutlined, UploadOutlined } from "@ant-design/icons";
+import { ExclamationCircleFilled, PictureOutlined, UploadOutlined } from "@ant-design/icons";
 import ImgCrop from "antd-img-crop";
 import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
+import { useCapsLock } from "@/context/hooks/useCapsLook";
+const { Option } = Select;
 
 type CITYResponse = {
     id: number;
@@ -36,15 +38,12 @@ export const RegistroArena = ({ className }: { className?: string }) => {
     const [haveCnpj, setHaveCnpj] = useState(true);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
-    const [previewOpen, setPreviewOpen] = useState(false);
-    const [previewImage, setPreviewImage] = useState('');
+    const capsLockEstaAtivado = useCapsLock();
 
     const handlePreview = async (file: UploadFile) => {
         if (!file.url && !file.preview) {
             file.preview = await getBase64(file.originFileObj as FileType);
         }
-        setPreviewImage(file.url ?? (file.preview as string));
-        setPreviewOpen(true);
     };
 
     const beforeUpload = (file: FileType) => {
@@ -87,7 +86,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
             message.error("Por favor, insira um CNPJ válido!", 5);
             return;
         }
-        
+
         message.loading("Consultando CNPJ...");
 
 
@@ -322,6 +321,12 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 </Form.Item>
             </div>
 
+            {capsLockEstaAtivado && (
+                <div role="alert" className="flex items-center gap-2 text-orange-600 mb-4 transition-opacity duration-300 animate-pulse">
+                    <ExclamationCircleFilled />
+                    <span className="text-sm font-medium">CapsLock está ativado</span>
+                </div>
+            )}
 
             <Form.Item
                 label="CNPJ"
@@ -452,11 +457,10 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     className="flex-1"
                 >
                     <Select placeholder="Cidade">
-                        <option value="0">Selecione uma cidade</option>
                         {cities.map((city) => (
-                            <option key={city.id} value={city.nome}>
+                            <Option key={city.id} value={city.nome}>
                                 {city.nome}
-                            </option>
+                            </Option>
                         ))}
                     </Select>
                 </Form.Item>
@@ -504,7 +508,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     <Input placeholder="Insira algo" />
                 </Form.Item>
             </div>
-            
+
             <Form.Item label="Foto ou logomarca da arena" className="!mb-2">
                 <div className="flex items-center gap-4">
                     <div className="relative group cursor-pointer" title="Clique para alterar a foto">
@@ -539,10 +543,15 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 label="Descrição (opcional)"
                 name="descricao"
                 className="flex-1"
+                rules={[{ max: 500, message: 'A descrição deve ter no máximo 500 caracteres.' }]}
             >
                 <Input.TextArea
                     placeholder="Digite algo que descreva sua arena e ajude a atrair mais reservas"
                     autoSize={{ minRows: 3, maxRows: 6 }}
+                    count={{
+                        show: true,
+                        max: 500
+                    }}
                 />
             </Form.Item>
             <div className="flex gap-4 justify-end">
