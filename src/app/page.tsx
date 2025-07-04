@@ -1,16 +1,26 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pagination } from 'antd';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
 import { sportIcons } from '@/data/sportIcons';
-import { Arena, getAllArenas } from './api/entities/arena';
+import { Arena, getAllArenas } from '@/app/api/entities/arena';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import CitySports from '@/components/CitySports';
 
+const ArenaCardSkeleton = () => (
+  <div className="bg-white rounded-lg overflow-hidden shadow-lg border border-gray-200 flex flex-col animate-pulse">
+    <div className="bg-gray-300 h-40 w-full"></div>
+    <div className="p-4 space-y-3">
+      <div className="h-5 bg-gray-300 rounded w-3/5"></div>
+      <div className="h-4 bg-gray-300 rounded w-4/5"></div>
+    </div>
+  </div>
+);
+
 export default function HomePage() {
-  const { data: session } = useSession();
+  const { status } = useSession();
 
   const [selectedSport, setSelectedSport] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,36 +28,93 @@ export default function HomePage() {
   const pageSize = 16;
 
   const [arenas, setArenas] = useState<Arena[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalArenas, setTotalArenas] = useState(0);
 
-  React.useEffect(() => {
+  const isLoadingSession = status === "loading";
+
+  useEffect(() => {
     const fetchArenas = async () => {
+      setLoading(true);
       try {
-        const response = await getAllArenas({ currentPage, pageSize });
+        const response = await getAllArenas({
+          currentPage,
+          pageSize,
+          esporte: selectedSport === 'Todos' ? undefined : selectedSport as any,
+          cidade: searchTerm === '' ? undefined : searchTerm,
+        });
+
         setArenas(response?.content || []);
+        setTotalArenas(response?.totalElements ?? 0);
       } catch (error) {
         console.error("Erro ao buscar arenas:", error);
+        setArenas([]);
+        setTotalArenas(0);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchArenas();
-  }, [currentPage, pageSize, session?.user.accessToken]);
 
-  const filteredArenas = arenas.filter(arena => {
-    const matchesSport = selectedSport === 'Todos' || arena.esportes?.includes(selectedSport);
-    const matchesSearch = searchTerm === '' || arena.endereco.cidade.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSport && matchesSearch;
-  });
+    if (status !== 'loading') {
+      fetchArenas();
+    }
 
-  const paginatedArenas = filteredArenas.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  }, [currentPage, selectedSport, searchTerm, status]);
 
   const allSports = ['Todos', ...Object.keys(sportIcons)];
+
+  const isPageLoading = loading || isLoadingSession;
+
+  let content: React.ReactNode;
+  if (isPageLoading) {
+    content = (
+      <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <ArenaCardSkeleton key={index} />
+        ))}
+      </div>
+    );
+  } else if (arenas.length > 0) {
+    content = (
+      <>
+        <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+          {arenas.map((arena) => (
+            <Link key={arena.id} href={`/quadras-page/${arena.id}`} passHref>
+              <ArenaCard
+                arena={{
+                  ...arena,
+                  avaliacao: arena.avaliacao ?? 1.0,
+                  numeroAvaliacoes: arena.numeroAvaliacoes ?? 10,
+                }}
+                showDescription={false}
+              />
+            </Link>
+          ))}
+        </div>
+        <div className='flex justify-center'>
+          <Pagination
+            current={currentPage}
+            total={totalArenas}
+            pageSize={pageSize}
+            onChange={(page) => setCurrentPage(page)}
+            showSizeChanger={false}
+          />
+        </div>
+      </>
+    );
+  } else {
+    content = (
+      <div className="text-center py-10 text-gray-500">
+        Nenhuma arena encontrada.
+      </div>
+    );
+  }
 
   return (
     <main className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
       <div className="w-full">
         <CitySports
+          loading={isPageLoading}
           selectedSport={selectedSport}
           setSelectedSport={setSelectedSport}
           searchTerm={searchTerm}
@@ -56,40 +123,7 @@ export default function HomePage() {
           allSports={allSports}
           sportIcons={sportIcons}
         />
-
-        {/* Arena Listing */}
-        {paginatedArenas.length > 0 ? (
-          <>
-            <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {paginatedArenas.map((arena) => (
-                <Link key={arena.id} href={`/quadras-page/${arena.id}`} passHref>
-                  <ArenaCard
-                    arena={{
-                      ...arena,
-                      avaliacao: arena.avaliacao ?? 1.0,
-                      numeroAvaliacoes: arena.numeroAvaliacoes ?? 10,
-                    }}
-                    showDescription={false}
-                  />
-                </Link>
-              ))}
-            </div>
-
-            <div className='flex justify-center'>
-              <Pagination
-                current={currentPage}
-                total={filteredArenas.length}
-                pageSize={pageSize}
-                onChange={(page) => setCurrentPage(page)}
-                showSizeChanger={false}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-10 text-gray-500">
-            Nenhuma arena encontrada com os filtros aplicados.
-          </div>
-        )}
+        {content}
       </div>
     </main>
   );

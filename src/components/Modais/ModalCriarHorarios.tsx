@@ -39,14 +39,11 @@ const formatarDiaSemana = (dia: DiaDaSemana) => {
 const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel, onOk, day }) => {
     const [form] = Form.useForm();
 
-    // PASSO 1: UNIFICAR E MELHORAR A LÓGICA DO useEffect
     useEffect(() => {
         if (open && day) {
-            // Se o dia selecionado não tiver horários, iniciamos com um campo vazio
             if (!day.intervalosDeHorario || day.intervalosDeHorario.length === 0) {
                 form.setFieldsValue({ horarios: [{ status: 'DISPONIVEL', valor: null, inicio: null, fim: null }] });
             } else {
-                // Se tiver horários, formatamos e preenchemos o formulário
                 const horariosParaForm = day.intervalosDeHorario.map(h => ({
                     ...h,
                     inicio: h.inicio ? dayjs(h.inicio, 'HH:mm') : null,
@@ -130,13 +127,19 @@ const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel,
                                                 { required: true, message: 'Obrigatório!' },
                                                 ({ getFieldValue }) => ({
                                                     validator(_, value) {
-                                                        const inicioTime = getFieldValue(['horarios', name, 'inicio']);
-                                                        if (!value || !inicioTime) {
+                                                        const inicioValue = getFieldValue(['horarios', name, 'inicio']);
+
+                                                        if (!value || !inicioValue) {
                                                             return Promise.resolve();
                                                         }
-                                                        if (value.isBefore(inicioTime)) {
-                                                            return Promise.reject('Deve ser maior que o início!');
+
+                                                        const fimTime = dayjs.isDayjs(value) ? value : dayjs(value, "HH:mm");
+                                                        const inicioTime = dayjs.isDayjs(inicioValue) ? inicioValue : dayjs(inicioValue, "HH:mm");
+
+                                                        if (fimTime.isBefore(inicioTime) || fimTime.isSame(inicioTime)) {
+                                                            return Promise.reject(new Error('O horário final deve ser maior que o inicial!'));
                                                         }
+
                                                         return Promise.resolve();
                                                     },
                                                 }),

@@ -67,7 +67,7 @@ export const getAllArenas = async (
 
 export const getArenaById = async (id: number): Promise<Arena | undefined> => {
     if (!id) {
-        console.error("ID da arena não fornecido.");
+        console.warn("ID da arena não fornecido.");
         return undefined;
     }
     return httpRequests.getMethod<Arena>(`${URLS.ARENAS}/${id}`,);
@@ -82,7 +82,7 @@ export const updateArena = async (
     updatedArena: Partial<Arena>
 ): Promise<Arena | undefined> => {
     if (!id) {
-        console.error("ID da arena não fornecido.");
+        console.warn("ID da arena não fornecido.");
         return undefined;
     }
     return httpRequests.putMethod<Arena, Partial<Arena>>(
@@ -93,7 +93,7 @@ export const updateArena = async (
 
 export const deleteArena = async (id: number): Promise<void> => {
     if (!id) {
-        console.error("ID da arena não fornecido.");
+        console.warn("ID da arena não fornecido.");
         return;
     }
     return httpRequests.deleteMethod(`${URLS.ARENAS}/${id}`,);

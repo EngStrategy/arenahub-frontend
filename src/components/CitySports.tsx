@@ -1,12 +1,13 @@
 "useClient"
 
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Input } from 'antd';
+import { Button, Input } from 'antd'; // Skeleton foi removido da importação
 import React from 'react'
 
 interface CitySportsProps {
-    readonly selectedSport: string;
-    readonly setSelectedSport: (sport: string) => void;
+    readonly loading?: boolean;
+    readonly selectedSport?: string;
+    readonly setSelectedSport?: (sport: string) => void;
     readonly searchTerm: string;
     readonly setSearchTerm: (term: string) => void;
     readonly setCurrentPage: (page: number) => void;
@@ -15,6 +16,7 @@ interface CitySportsProps {
 }
 
 export default function CitySports({
+    loading,
     selectedSport,
     setSelectedSport,
     searchTerm,
@@ -23,6 +25,20 @@ export default function CitySports({
     allSports,
     sportIcons,
 }: CitySportsProps) {
+
+    if (loading) {
+        return (
+            <div className="animate-pulse">
+                <div className="mb-6 h-10 w-full rounded-full bg-gray-300"></div>
+
+                <div className="w-full mb-8 flex space-x-3">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                        <div key={index} className="h-10 w-28 rounded-full bg-gray-300"></div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <>
@@ -46,7 +62,9 @@ export default function CitySports({
                         key={sport}
                         type={selectedSport === sport ? 'primary' : 'default'}
                         onClick={() => {
-                            setSelectedSport(sport);
+                            if (setSelectedSport) {
+                                setSelectedSport(sport);
+                            }
                             setCurrentPage(1);
                         }}
                         className={`!rounded-full !px-5 !py-2 !h-auto !text-sm flex items-center shadow-sm ${selectedSport === sport

@@ -7,7 +7,7 @@ import { GrSecure } from "react-icons/gr";
 import { IoArrowBackOutline } from "react-icons/io5";
 import Link from "next/link";
 import Image from "next/image";
-import { forgotPassword, verifyResetCode } from "../api/entities/verifyEmail";
+import { forgotPassword, verifyResetCode } from "@/app/api/entities/verifyEmail";
 
 const { useBreakpoint } = Grid;
 
@@ -169,7 +169,14 @@ export default function ForgotPassword() {
                 rules={[{ required: true, message: "Por favor, insira o código." }]}
                 className="flex flex-1 justify-center"
               >
-                <Input.OTP length={6} />
+                <Input.OTP
+                  length={6}
+                  onChange={(code) => {
+                    if (code.length === 6) {
+                      handleVerifyCode(code);
+                    }
+                  }}
+                />
               </Form.Item>
 
               <div className="flex flex-col items-center mb-3">
@@ -183,8 +190,8 @@ export default function ForgotPassword() {
                   disabled={timer > 0 || loading}
                   onClick={resendCode}
                   className={`!h-auto !align-baseline ${timer > 0
-                      ? "!text-gray-500"
-                      : "!text-green-500 hover:!text-green-500 focus:!text-green-500"
+                    ? "!text-gray-500"
+                    : "!text-green-500 hover:!text-green-500 focus:!text-green-500"
                     }`}
                 >
                   Reenviar código

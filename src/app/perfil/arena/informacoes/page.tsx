@@ -60,6 +60,52 @@ const uploadToImgur = async (imageFile: File): Promise<string> => {
     return data.link;
 };
 
+const InformacoesPessoaisArenaSkeleton = () => (
+    <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center my-6">
+        <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl animate-pulse">
+            <div className="h-8 bg-gray-300 rounded w-1/2 mb-3"></div>
+            <div className="space-y-2">
+                <div className="h-4 bg-gray-300 rounded w-full"></div>
+                <div className="h-4 bg-gray-300 rounded w-5/6"></div>
+            </div>
+
+            <div className="mt-10 space-y-6">
+                <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 bg-gray-300 rounded-full"></div>
+                    <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+                        <div className="h-10 bg-gray-300 rounded-lg w-1/2"></div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-6">
+                        <div className="space-y-2"><div className="h-4 bg-gray-300 rounded w-1/4"></div><div className="h-10 bg-gray-300 rounded-lg"></div></div>
+                        <div className="space-y-2"><div className="h-4 bg-gray-300 rounded w-1/4"></div><div className="h-10 bg-gray-300 rounded-lg"></div></div>
+                        <div className="space-y-2"><div className="h-4 bg-gray-300 rounded w-1/4"></div><div className="h-10 bg-gray-300 rounded-lg"></div></div>
+                        <div className="space-y-2"><div className="h-4 bg-gray-300 rounded w-1/4"></div><div className="h-10 bg-gray-300 rounded-lg"></div></div>
+                    </div>
+                    <div className="space-y-6">
+                        <div className="space-y-2"><div className="h-4 bg-gray-300 rounded w-1/4"></div><div className="h-10 bg-gray-300 rounded-lg"></div></div>
+                        <div className="space-y-2"><div className="h-4 bg-gray-300 rounded w-1/4"></div><div className="h-10 bg-gray-300 rounded-lg"></div></div>
+                        <div className="space-y-2"><div className="h-4 bg-gray-300 rounded w-1/4"></div><div className="h-10 bg-gray-300 rounded-lg"></div></div>
+                        <div className="space-y-2"><div className="h-4 bg-gray-300 rounded w-1/4"></div><div className="h-10 bg-gray-300 rounded-lg"></div></div>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+                    <div className="h-24 bg-gray-300 rounded-lg"></div>
+                </div>
+
+                <div className="flex justify-end gap-4 pt-4">
+                    <div className="h-10 w-28 bg-gray-300 rounded-lg"></div>
+                    <div className="h-10 w-40 bg-gray-300 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
 export default function InformacoesPessoaisArena() {
     const { data: session, status, update } = useSession();
@@ -69,9 +115,7 @@ export default function InformacoesPessoaisArena() {
 
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
-    const [previewOpen, setPreviewOpen] = useState(false);
-    const [previewImage, setPreviewImage] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [isFormAltered, setIsFormAltered] = useState(false);
     const [cities, setCities] = useState<CITYResponse[]>([]);
     const DEFAULT_AVATAR_URL = "https://i.imgur.com/p0hVrWq.png";
@@ -119,12 +163,9 @@ export default function InformacoesPessoaisArena() {
 
     const fetchAndSetUserData = useCallback(async () => {
         if (status === 'authenticated' && session?.user?.userId && session?.user?.accessToken) {
-            setLoading(true);
             try {
                 const userData = await getArenaById(session.user.userId);
-                if (!userData) {
-                    return message.warning('Dados do usuário não encontrados.');
-                }
+                if (!userData) return message.warning('Dados do usuário não encontrados.');
                 form.setFieldsValue({
                     nome: userData.nome,
                     telefone: userData.telefone,
@@ -151,15 +192,15 @@ export default function InformacoesPessoaisArena() {
     }, [status, session, form, message]);
 
     useEffect(() => {
-        fetchAndSetUserData();
-    }, [fetchAndSetUserData]);
+        if (status !== 'loading') {
+            fetchAndSetUserData();
+        }
+    }, [status, fetchAndSetUserData]);
 
     const handlePreview = async (file: UploadFile) => {
         if (!file.url && !file.preview) {
             file.preview = await getBase64(file.originFileObj as FileType);
         }
-        setPreviewImage(file.url ?? (file.preview as string));
-        setPreviewOpen(true);
     };
 
     const onFinishFailed = () => {
@@ -203,7 +244,7 @@ export default function InformacoesPessoaisArena() {
             let urlParaSalvar = imageUrl;
             if (selectedFile) {
                 const key = 'uploading-image';
-                message.loading({ content: 'Enviando nova foto...', key, duration: 0 });
+                message.loading({ content: 'Carregando...', key, duration: 0 });
                 urlParaSalvar = await uploadToImgur(selectedFile);
                 message.destroy(key);
             }
@@ -223,14 +264,18 @@ export default function InformacoesPessoaisArena() {
                 urlFoto: urlParaSalvar ?? undefined,
             };
             await updateArena(session.user.userId, updatedData,);
-            message.success('Informações salvas com sucesso!');
-
             await update({
                 name: updatedData.nome,
                 picture: updatedData.urlFoto,
             });
 
+            message.success('Informações salvas com sucesso!');
+            setIsFormAltered(false);
             fetchAndSetUserData();
+            await new Promise(resolve => setTimeout(() => {
+                router.push('/dashboard');
+                resolve(null);
+            }, 2000));
         } catch (error: any) {
             message.error(`${error instanceof Error ? error.message : 'Tente novamente.'}`);
         } finally {
@@ -272,6 +317,9 @@ export default function InformacoesPessoaisArena() {
         });
     }
 
+    if (loading) {
+        return <InformacoesPessoaisArenaSkeleton />;
+    }
 
     return (
         <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center my-6">
@@ -470,20 +518,28 @@ export default function InformacoesPessoaisArena() {
                         label="Descrição (opcional)"
                         name="descricao"
                         className=" flex-1"
+                        rules={[{ max: 500, message: 'A descrição deve ter no máximo 500 caracteres.' }]}
                     >
                         <Input.TextArea
                             placeholder="Digite algo que descreva sua arena e ajude a atrair mais reservas"
                             autoSize={{ minRows: 3, maxRows: 6 }}
+                            count={{
+                                show: true,
+                                max: 500
+                            }}
                         />
                     </Form.Item>
 
                     <Form.Item className="mt-8 flex justify-end">
                         <div className='flex items-center gap-4'>
                             <ButtonCancelar
-                                text="Cancelar"
+                                text={!isFormAltered || loading || status !== 'authenticated' ? 'Voltar' : 'Cancelar'}
                                 onClick={() => {
+                                    if (!isFormAltered || loading || status !== 'authenticated') {
+                                        router.back();
+                                        return;
+                                    }
                                     fetchAndSetUserData();
-                                    router.back();
                                 }}
                             />
                             <ButtonPrimary
@@ -496,16 +552,6 @@ export default function InformacoesPessoaisArena() {
                         </div>
                     </Form.Item>
                 </Form>
-                {previewImage && (
-                    <Image
-                        wrapperStyle={{ display: 'none' }}
-                        preview={{
-                            visible: previewOpen,
-                            onVisibleChange: (visible) => setPreviewOpen(visible), afterOpenChange: (visible) => !visible && setPreviewImage(''),
-                        }}
-                        src={previewImage}
-                    />
-                )}
             </div>
         </div>
     )

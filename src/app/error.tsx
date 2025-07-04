@@ -17,7 +17,7 @@ export default function ErrorPage() {
         <p className='text-gray-500'>Algo deu errado.</p>
 
         <div>
-          <Link href="/" className='text-blue-500 hover:underline'>
+          <Link href="/login" className='text-blue-500 hover:underline'>
             <ButtonPrimary
               text="Voltar para a Página Inicial"
               className='!px-6'

@@ -53,7 +53,7 @@ export const getMyAgendamentos = async (
     id: number
 ): Promise<Agendamento | undefined> => {
     if (!id) {
-        console.error("ID do agendamento não fornecido.");
+        console.warn("ID do agendamento não fornecido.");
         return undefined;
     }
     return httpRequests.getMethod<Agendamento>(`${URLS.AGENDAMENTOS}/meus-agendamentos`);

@@ -1,7 +1,7 @@
 import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 
-export type TipoQuadra = "FUTEBOL_SOCIETY" | "FUTEBOL_SETE" | "FUTEBOL_ONZE" | "FUTSAL" | "BEACHTENIS" | "VOLEI" | "FUTEVOLEI" | "BASQUETE" | "HANDEBOL";
+export type TipoQuadra = "FUTEBOL_SOCIETY" | "FUTEBOL_SETE" | "FUTEBOL_ONZE" | "FUTSAL" | "BEACHTENNIS" | "VOLEI" | "FUTEVOLEI" | "BASQUETE" | "HANDEBOL";
 
 export type DiaDaSemana = "DOMINGO" | "SEGUNDA" | "TERCA" | "QUARTA" | "QUINTA" | "SEXTA" | "SABADO";
 
@@ -90,7 +90,7 @@ export const updateQuadra = async (
     updateQuadra: Partial<QuadraCreate>
 ): Promise<QuadraCreate | undefined> => {
     if (!id) {
-        console.error("ID da quadra não fornecido.");
+        console.warn("ID da quadra não fornecido.");
         return undefined;
     }
     return httpRequests.putMethod<QuadraCreate, Partial<QuadraCreate>>(
@@ -101,7 +101,7 @@ export const updateQuadra = async (
 
 export const deleteQuadra = async (id: number): Promise<void> => {
     if (!id) {
-        console.error("ID da quadra não fornecido.");
+        console.warn("ID da quadra não fornecido.");
         return undefined;
     }
     return httpRequests.deleteMethod(`${URLS.QUADRAS}/${id}`,);
@@ -109,7 +109,7 @@ export const deleteQuadra = async (id: number): Promise<void> => {
 
 export const getQuadraById = async (id: number): Promise<Quadra | undefined> => {
     if (!id) {
-        console.error("ID da quadra não fornecido.");
+        console.warn("ID da quadra não fornecido.");
         return undefined;
     }
     return httpRequests.getMethod<Quadra>(`${URLS.QUADRAS}/${id}`);
@@ -117,7 +117,7 @@ export const getQuadraById = async (id: number): Promise<Quadra | undefined> => 
 
 export const getHorariosDisponiveisPorQuadra = async (quadraId: number, data: string): Promise<Array<HorarioFuncionamento>> => {
     if (!quadraId || !data) {
-        console.error("ID da quadra ou data não fornecidos.");
+        console.warn("ID da quadra ou data não fornecidos.");
         return [];
     }
     return httpRequests.getMethod<Array<HorarioFuncionamento>>(`${URLS.QUADRAS}/${quadraId}/horarios-disponiveis`, { data });
@@ -125,7 +125,7 @@ export const getHorariosDisponiveisPorQuadra = async (quadraId: number, data: st
 
 export const getQuadraByIdArena = async (arenaId: number): Promise<Quadra | undefined> => {
     if (!arenaId) {
-        console.error("ID da arena não fornecido.");
+        console.warn("ID da arena não fornecido.");
         return undefined;
     }
     return httpRequests.getMethod<Quadra>(`${URLS.QUADRAS}/arena/${arenaId}`);

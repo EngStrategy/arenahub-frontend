@@ -52,7 +52,7 @@ export const getAtletaById = async (
     id: number
 ): Promise<Atleta | undefined> => {
     if (!id) {
-        console.error("ID do atleta é obrigatório para buscar por ID.");
+        console.warn("ID do atleta é obrigatório para buscar por ID.");
         return undefined;
     }
     return httpRequests.getMethod<Atleta>(`${URLS.ATLETAS}/${id}`, {},);
@@ -69,7 +69,7 @@ export const updateAtleta = async (
     updatedAtleta: Partial<Atleta>
 ): Promise<Atleta | undefined> => {
     if (!id) {
-        console.error("ID do atleta não fornecido.");
+        console.warn("ID do atleta não fornecido.");
         return undefined;
     }
     return httpRequests.putMethod<Atleta, Partial<Atleta>>(
@@ -80,7 +80,7 @@ export const updateAtleta = async (
 
 export const deleteAtleta = async (id: number): Promise<boolean> => {
     if (!id) {
-        console.error("ID do atleta é obrigatório para deletar.");
+        console.warn("ID do atleta é obrigatório para deletar.");
         return false;
     }
     return httpRequests.deleteMethod(`${URLS.ATLETAS}/${id}`,);

@@ -18,7 +18,7 @@ export default function NotFound() {
         <p className='text-gray-500'>Desculpe, a página que você está procurando não existe.</p>
 
         <div>
-         <Link href="/" className='text-blue-500 hover:underline'>
+         <Link href="/login" className='text-blue-500 hover:underline'>
             <ButtonPrimary
               text="Voltar para a Página Inicial"
               className='!px-6'

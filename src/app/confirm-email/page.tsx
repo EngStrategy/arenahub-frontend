@@ -1,22 +1,46 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button, Input, App } from "antd";
 import Image from "next/image";
 import {
     verifyEmail,
     resendVerificationEmail,
     VerifyEmailPayload
-} from "../api/entities/verifyEmail";
-import Loading from "../loading";
+} from "@/app/api/entities/verifyEmail";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 
-function ConfirmEmailComponent() {
+const ConfirmEmailSkeleton = () => (
+    <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center justify-center animate-pulse">
+        <div className="hidden md:block md:w-2/3 p-4">
+            <div className="h-[300px] w-[300px] bg-gray-300 rounded-full mx-auto"></div>
+        </div>
+        <div className="w-full md:w-1/3 p-4">
+            <div className="h-16 w-16 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <div className="h-8 bg-gray-300 rounded-md w-3/4 mx-auto mb-3"></div>
+            <div className="space-y-2 text-center mx-auto max-w-xs">
+                <div className="h-4 bg-gray-300 rounded w-full"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/2 mx-auto"></div>
+            </div>
+            <div className="flex justify-center my-8 space-x-2">
+                {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={index} className="h-14 w-12 bg-gray-300 rounded-md"></div>
+                ))}
+            </div>
+            <div className="h-4 bg-gray-300 rounded w-full max-w-xs mx-auto mb-4"></div>
+            <div className="h-5 bg-gray-300 rounded w-32 mx-auto mb-4"></div>
+            <div className="h-12 bg-gray-300 rounded-lg w-full"></div>
+        </div>
+    </div>
+);
+
+export default function ConfirmEmailPage() {
     const { message } = App.useApp();
     const router = useRouter();
     const searchParams = useSearchParams();
 
+    const [pageLoading, setPageLoading] = useState(true);
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
     const [code, setCode] = useState("");
@@ -30,19 +54,18 @@ function ConfirmEmailComponent() {
             message.error("Email não fornecido.", 5);
             router.push("/register");
         }
+        setPageLoading(false);
     }, [searchParams, router, message]);
 
     useEffect(() => {
         if (timer <= 0) return;
-
         const intervalId = setInterval(() => {
             setTimer((prevTimer) => prevTimer - 1);
         }, 1000);
-
         return () => clearInterval(intervalId);
     }, [timer]);
 
-    const handleVerifyCode = async () => {
+    const handleVerifyCode = useCallback(async () => {
         if (code.length !== 6) {
             message.warning("Por favor, insira o código de 6 dígitos.");
             return;
@@ -64,7 +87,13 @@ function ConfirmEmailComponent() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [code, email, message, router]);
+
+    useEffect(() => {
+        if (code.length === 6) {
+            handleVerifyCode();
+        }
+    }, [code, handleVerifyCode]);
 
     const handleResendCode = async () => {
         if (!email) return;
@@ -92,8 +121,8 @@ function ConfirmEmailComponent() {
         }
     };
 
-    if (!email) {
-        return <Loading />;
+    if (pageLoading) {
+        return <ConfirmEmailSkeleton />;
     }
 
     return (
@@ -136,7 +165,7 @@ function ConfirmEmailComponent() {
 
                 <div className="text-center text-gray-500 mb-4">
                     {timer > 0 ? (
-                        <span>{`Aguarde ${String(timer).padStart(2, "0")}s para reenviar`}</span>
+                        <span>{`Aguarde ${String(Math.floor(timer / 60)).padStart(2, '0')}:${String(timer % 60).padStart(2, '0')} para reenviar`}</span>
                     ) : (
                         <Button
                             type="link"
@@ -159,13 +188,5 @@ function ConfirmEmailComponent() {
                 />
             </div>
         </div>
-    );
-}
-
-export default function ConfirmEmailPage() {
-    return (
-        <Suspense fallback={<Loading />} >
-            <ConfirmEmailComponent />
-        </Suspense>
     );
 }

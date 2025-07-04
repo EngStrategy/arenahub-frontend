@@ -3,16 +3,41 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect, useCallback } from "react";
 import { Form, Input, App, Grid } from "antd";
-// 1. Importado o ícone de Check (V)
 import { GrSecure } from "react-icons/gr";
 import { IoArrowBackOutline } from "react-icons/io5";
 import Link from "next/link";
 import Image from "next/image";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { resetPassword } from "@/app/api/entities/verifyEmail";
-import { CheckOutlined } from "@ant-design/icons";
+import { CheckOutlined, ExclamationCircleFilled } from "@ant-design/icons";
+import { useCapsLock } from "@/context/hooks/useCapsLook";
 
 const { useBreakpoint } = Grid;
+
+const RedefinirSenhaSkeleton = () => (
+    <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center justify-center animate-pulse">
+        <div className="hidden md:block md:w-2/3 p-4">
+            <div className="h-[300px] w-[300px] bg-gray-300 rounded-full mx-auto"></div>
+        </div>
+        <div className="w-full md:w-1/3 p-4">
+            <div className="h-16 w-16 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <div className="h-7 bg-gray-300 rounded-md w-1/2 mx-auto mb-4"></div>
+            <div className="h-5 bg-gray-300 rounded-md w-3/4 mx-auto mb-6"></div>
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+                    <div className="h-12 bg-gray-300 rounded-lg w-full"></div>
+                </div>
+                <div className="space-y-2">
+                    <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+                    <div className="h-12 bg-gray-300 rounded-lg w-full"></div>
+                </div>
+            </div>
+            <div className="h-12 bg-gray-300 rounded-lg w-full mt-6"></div>
+            <div className="h-5 bg-gray-300 rounded w-1/2 mx-auto mt-4"></div>
+        </div>
+    </div>
+);
 
 export default function RedefinirSenha() {
     const { message } = App.useApp();
@@ -21,86 +46,64 @@ export default function RedefinirSenha() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
+    const [pageLoading, setPageLoading] = useState(true);
     const [loading, setLoading] = useState(false);
     const [userEmail, setUserEmail] = useState("");
     const [isSuccess, setIsSuccess] = useState(false);
     const [countdown, setCountdown] = useState(10);
+    const capsLockEstaAtivado = useCapsLock();
 
     useEffect(() => {
         const emailFromQuery = searchParams.get("email");
         if (emailFromQuery) {
             setUserEmail(decodeURIComponent(emailFromQuery));
         } else {
-            message.error({
-                content: "Email não encontrado. Você será redirecionado.",
-                duration: 3,
-            });
+            message.error({ content: "Email não encontrado. Você será redirecionado.", duration: 3 });
             router.push("/login");
         }
+        setPageLoading(false);
     }, [searchParams, router, message]);
 
     useEffect(() => {
-        if (isSuccess) {
-            if (countdown === 0) {
-                router.push("/login");
-                return;
-            }
-
+        if (isSuccess && countdown > 0) {
             const intervalId = setInterval(() => {
                 setCountdown((prevCountdown) => prevCountdown - 1);
             }, 1000);
-
             return () => clearInterval(intervalId);
+        } else if (isSuccess && countdown === 0) {
+            router.push("/login");
         }
     }, [isSuccess, countdown, router]);
 
-    const handleResetPassword = useCallback(
-        async (values: any) => {
-            setLoading(true);
-            message.loading({
-                content: "Atualizando sua senha...",
-                key: "resetPassword",
+    const handleResetPassword = useCallback(async (values: any) => {
+        setLoading(true);
+        message.loading({ content: "Atualizando sua senha...", key: "resetPassword" });
+        try {
+            await resetPassword({
+                email: userEmail,
+                newPassword: values.password,
+                confirmation: values.confirmPassword,
+                passwordMatch: values.password === values.confirmPassword
             });
-            try {
-                await resetPassword({
-                    email: userEmail,
-                    newPassword: values.password,
-                    confirmation: values.confirmPassword,
-                    passwordMatch: values.password === values.confirmPassword
-                });
+            setIsSuccess(true);
+            message.success({ content: "Senha redefinida com sucesso!", key: "resetPassword", duration: 3 });
+        } catch (error: any) {
+            const errorMessage = error.message ?? "Não foi possível redefinir sua senha.";
+            message.error({ content: errorMessage, key: "resetPassword", duration: 4 });
+        } finally {
+            setLoading(false);
+        }
+    }, [userEmail, message]);
 
-                setIsSuccess(true);
-                message.success({
-                    content: "Senha redefinida com sucesso!",
-                    key: "resetPassword",
-                    duration: 3,
-                });
-
-            } catch (error: any) {
-                const errorMessage = error.message ?? "Não foi possível redefinir sua senha. Tente novamente.";
-                message.error({
-                    content: errorMessage,
-                    key: "resetPassword",
-                    duration: 4,
-                });
-            } finally {
-                setLoading(false);
-            }
-        },
-        [userEmail, router, message] // Removido router daqui, pois não é mais usado diretamente
-    );
+    if (pageLoading) {
+        return <RedefinirSenhaSkeleton />;
+    }
 
     return (
         <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center justify-center">
             {screens.md && (
                 <div className="w-2/3 p-4">
-                    <Image
-                        src="/icons/beachtenis.svg"
-                        alt="Beach Tenis"
-                        width={700}
-                        height={700}
-                        priority
-                    />
+                    <Image src="/icons/beachtenis.svg" alt="Beach Tenis" width={700} height={700} priority />
                 </div>
             )}
             <div className="w-full md:w-1/3 p-4">
@@ -111,22 +114,11 @@ export default function RedefinirSenha() {
                                 <CheckOutlined className="!text-white text-xl" />
                             </div>
                         </div>
-                        <p className="text-center text-gray-600 font-semibold text-lg mb-2">
-                            Senha alterada com sucesso!
-                        </p>
-                        <p className="text-center text-gray-500 mb-4 text-md">
-                            Lembre-se: senhas iguais em vários lugares podem ser um risco. Crie combinações únicas!
-                        </p>
-                        <p className="text-center text-gray-500 mb-6 text-md">
-                            Redirecionando em <strong>{countdown}</strong> segundos.
-                        </p>
+                        <p className="text-center text-gray-600 font-semibold text-lg mb-2">Senha alterada com sucesso!</p>
+                        <p className="text-center text-gray-500 mb-4 text-md">Lembre-se: senhas iguais em vários lugares podem ser um risco.</p>
+                        <p className="text-center text-gray-500 mb-6 text-md">Redirecionando em <strong>{countdown}</strong> segundos.</p>
                         <Link href="/login" className="text-green-primary hover:!text-green-500 mb-4">
-                            <ButtonPrimary
-                                text="Continuar para o Login"
-                                type="primary"
-                                htmlType="button"
-                                className="w-full"
-                            />
+                            <ButtonPrimary text="Continuar para o Login" htmlType="button" className="w-full" />
                         </Link>
                     </div>
                 ) : (
@@ -136,12 +128,8 @@ export default function RedefinirSenha() {
                                 <GrSecure className="text-xl text-white" />
                             </div>
                         </div>
-                        <p className="text-center text-gray-600 font-medium text-lg mb-4">
-                            Redefinir Senha
-                        </p>
-                        <p className="text-center text-gray-500 mb-4 text-md">
-                            Escolha uma nova senha para sua conta.
-                        </p>
+                        <p className="text-center text-gray-600 font-medium text-lg mb-4">Redefinir Senha</p>
+                        <p className="text-center text-gray-500 mb-4 text-md">Escolha uma nova senha para sua conta.</p>
                         <Form
                             form={form}
                             layout="vertical"
@@ -180,18 +168,15 @@ export default function RedefinirSenha() {
                             >
                                 <Input.Password placeholder="Confirme a nova senha" />
                             </Form.Item>
-                            <ButtonPrimary
-                                text="Confirmar e Salvar"
-                                type="primary"
-                                htmlType="submit"
-                                className="w-full"
-                                loading={loading}
-                            />
+                            {capsLockEstaAtivado && (
+                                <div role="alert" className="flex items-center gap-2 text-orange-600 mb-4 transition-opacity duration-300 animate-pulse">
+                                    <ExclamationCircleFilled />
+                                    <span className="text-sm font-medium">CapsLock está ativado</span>
+                                </div>
+                            )}
+                            <ButtonPrimary text="Confirmar e Salvar" type="primary" htmlType="submit" className="w-full" loading={loading} />
                             <p className="text-gray-800 text-sm mt-4">
-                                <Link
-                                    href="/login"
-                                    className="flex flex-row items-center gap-1 text-green-primary hover:!text-green-500"
-                                >
+                                <Link href="/login" className="flex flex-row items-center gap-1 text-green-primary hover:!text-green-500">
                                     <IoArrowBackOutline /> Voltar para a página de login
                                 </Link>
                             </p>

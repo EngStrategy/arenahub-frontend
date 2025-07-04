@@ -19,8 +19,8 @@ import type {
     MaterialFornecido,
 } from '@/app/api/entities/quadra';
 import type { Arena as ArenaOficial } from '@/app/api/entities/arena';
-import Loading from '@/app/loading';
 import { formatarEsporte } from '@/data/mapeamentoEsportes';
+import { useSession } from 'next-auth/react';
 
 
 export interface Horario {
@@ -33,6 +33,60 @@ export interface Horario {
 export interface QuadraComHorarios extends QuadraOficial {
     horarios: Horario[];
 }
+
+const ArenaCardSkeleton = () => (
+    <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 w-full max-w-sm animate-pulse">
+        <div className="flex items-center space-x-4">
+            <div className="h-24 w-24 bg-gray-300 rounded-lg flex-shrink-0"></div>
+            <div className="flex-1 space-y-3">
+                <div className="h-5 bg-gray-300 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-300 rounded w-full"></div>
+                <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+            </div>
+        </div>
+    </div>
+);
+
+const QuadraHorariosSkeleton = () => (
+    <div className="border-2 border-transparent border-b-gray-300 p-4 animate-pulse">
+        <div className="flex gap-4 mb-4">
+            <div className="h-24 min-w-[120px] bg-gray-300 rounded-lg"></div>
+            <div className="flex-1 space-y-2 py-1">
+                <div className="h-6 bg-gray-300 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+                <div className="h-4 bg-gray-300 rounded w-2/4"></div>
+            </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="h-12 w-32 bg-gray-200 rounded-md"></div>
+            ))}
+        </div>
+    </div>
+);
+
+const QuadraPageSkeleton = () => (
+    <div className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
+        <div className='flex flex-row items-start justify-between mb-6'>
+            <ArenaCardSkeleton />
+        </div>
+
+        <div className="animate-pulse">
+            <div className="flex items-center justify-center gap-3 mb-6">
+                <div className="flex gap-2">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                        <div key={index} className="h-16 w-16 bg-gray-200 rounded-md"></div>
+                    ))}
+                </div>
+            </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
+            <QuadraHorariosSkeleton />
+            <QuadraHorariosSkeleton />
+        </div>
+    </div>
+);
 
 const arena: ArenaOficial = {
     id: 1,
@@ -49,7 +103,7 @@ const arena: ArenaOficial = {
         complemento: "Próximo ao IFCE"
     },
     descricao: "Complexo esportivo com quadras de alta qualidade para diversos esportes.",
-    urlFoto: "/arenaesportes.png",
+    urlFoto: "/images/arenaesportes.png",
     dataCriacao: "2023-01-01",
     esportes: ["Futebol Society", "Futsal", "Beach Tennis", "Vôlei", "Futevôlei"],
     avaliacao: 4.8,
@@ -62,7 +116,7 @@ const quadrasPorArena: { [key: number]: QuadraOficial[] } = {
         {
             id: 101,
             nomeQuadra: 'Campo Society 1',
-            urlFotoQuadra: '/arenaesportes.png',
+            urlFotoQuadra: '/images/arenaesportes.png',
             tipoQuadra: ['FUTEBOL_SOCIETY'],
             descricao: 'Campo de grama sintética de alta qualidade, ideal para jogos de society.',
             duracaoReserva: 'TRINTA_MINUTOS',
@@ -120,7 +174,7 @@ const quadrasPorArena: { [key: number]: QuadraOficial[] } = {
         {
             id: 102,
             nomeQuadra: 'Quadra de Areia 1',
-            urlFotoQuadra: '/arenaesportes.png',
+            urlFotoQuadra: '/images/arenaesportes.png',
             tipoQuadra: ['BEACHTENIS', 'VOLEI', 'FUTEVOLEI'],
             descricao: 'Quadra de areia perfeita para esportes de praia, com iluminação para jogos noturnos.',
             duracaoReserva: 'UMA_HORA',
@@ -258,6 +312,7 @@ const subDuration = (time: string, durationMinutes: number): string => {
 };
 
 export default function QuadraPage() {
+    const { status } = useSession();
     const params = useParams();
     const [loading, setLoading] = useState(true);
     const [quadras, setQuadras] = useState<QuadraComHorarios[]>([]);
@@ -267,7 +322,7 @@ export default function QuadraPage() {
     const [selectedHorarios, setSelectedHorarios] = useState<string[]>([]);
     const [isDrawerVisible, setIsDrawerVisible] = useState(false);
     const [quadraSelecionada, setQuadraSelecionada] = useState<QuadraComHorarios | null>(null);
-    
+
     const allDates = Array.from({ length: 30 }, (_, i) => addDays(new Date(), i));
     const VISIBLE_DATES_WINDOW_SIZE = 10;
 
@@ -277,13 +332,14 @@ export default function QuadraPage() {
         const arenaId = Number(params?.arenaId as string) || 1;
         const quadrasRaw = quadrasPorArena[arenaId] || [];
 
-        const quadrasData = quadrasRaw.map((q) => ({
-            ...q,
-            horarios: gerarHorarios(q.horariosFuncionamento, q.duracaoReserva),
-        }));
-
-        setQuadras(quadrasData);
-        setLoading(false);
+        setTimeout(() => {
+            const quadrasData = quadrasRaw.map((q) => ({
+                ...q,
+                horarios: gerarHorarios(q.horariosFuncionamento, q.duracaoReserva),
+            }));
+            setQuadras(quadrasData);
+            setLoading(false);
+        }, 1000);
     }, [params?.arenaId]);
 
 
@@ -343,12 +399,8 @@ export default function QuadraPage() {
         }).reduce((acc, preco) => acc + preco, 0);
     };
 
-    if (loading) {
-        return (
-            <div className='flex justify-center items-center h-screen'>
-                <Loading />
-            </div>
-        );
+    if (loading || status === "loading") {
+        return <QuadraPageSkeleton />;
     }
 
     return (
