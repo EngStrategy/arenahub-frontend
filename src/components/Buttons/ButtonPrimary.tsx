@@ -44,7 +44,7 @@ export function ButtonPrimary(
         <Button
             type={type}
             htmlType={htmlType}
-            className={`!py-4 bg-green-primary ${!disabled ? "hover:!bg-green-500" : ""} !shadow-none ${className} `}
+            className={`!py-4 bg-green-primary !border-0 !shadow-none ${className} `}
             disabled={disabled}
             loading={loading}
             danger={danger}

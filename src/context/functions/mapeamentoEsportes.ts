@@ -5,7 +5,7 @@ const mapeamentoEsportes: Record<TipoQuadra, string> = {
   FUTEBOL_SETE: "Futebol 7",
   FUTEBOL_ONZE: "Futebol 11",
   FUTSAL: "Futsal",
-  BEACHTENIS: "Beach Tennis",
+  BEACHTENNIS: "Beach Tennis",
   VOLEI: "Vôlei",
   FUTEVOLEI: "Futevôlei",
   BASQUETE: "Basquete",

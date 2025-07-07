@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Form, Input, App } from 'antd';
+import { Form, Input, App, Space, Flex, Typography, Col, Row, Card } from 'antd';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from 'next/navigation';
 import { updatePassword } from '@/app/api/entities/arena';
-import { ExclamationCircleFilled } from '@ant-design/icons';
 import { useCapsLock } from '@/context/hooks/useCapsLook';
+import CapsLock from '@/components/Alerts/CapsLock';
 
 const AlterarSenhaSkeleton = () => (
     <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center mt-6">
@@ -46,24 +46,23 @@ export default function AlterarSenha() {
     const { data: session, status } = useSession();
     const { message } = App.useApp();
     const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
-    const [isFormAltered, setIsFormAltered] = useState(false);
     const router = useRouter();
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isFormAltered, setIsFormAltered] = useState(false);
     const capsLockEstaAtivado = useCapsLock();
 
-    const onFinish = async () => {
-        if (status !== 'authenticated' || !session?.user?.userId || !session?.user?.accessToken) {
+    const onFinish = async (values: any) => {
+        if (status !== 'authenticated' || !session?.user?.userId) {
             message.error('Você não está autenticado.');
             signOut({ callbackUrl: '/login' });
             return;
         }
-        setLoading(true);
+        setIsSubmitting(true);
         try {
-            const values = form.getFieldsValue();
             const { senhaAtual, novaSenha, confirmarSenha } = values;
             if (novaSenha !== confirmarSenha) {
-                setLoading(false);
+                setIsSubmitting(false);
                 message.error('As novas senhas não coincidem.');
                 return;
             }
@@ -76,8 +75,10 @@ export default function AlterarSenha() {
                 resolve(null);
             }, 2000));
         } catch (error: any) {
-            message.error(`${error instanceof Error ? error.message : 'Tente novamente.'}`);
-        } finally { setLoading(false); }
+            message.error(`${error instanceof Error ? error.message : 'Ocorreu um erro ao alterar a senha.'}`);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const onFinishFailed = () => {
@@ -85,14 +86,14 @@ export default function AlterarSenha() {
     };
 
     const handleValuesChange = (_: any, allValues: any) => {
-        const { senhaAtual, novaSenha, confirmarSenha } = allValues;
-        const hasValues = !!(senhaAtual ?? novaSenha ?? confirmarSenha);
+        const hasValues = Object.values(allValues).some(value => !!value);
         setIsFormAltered(hasValues);
     };
 
     const handleCancelClick = () => {
         if (isFormAltered) {
             form.resetFields();
+            setIsFormAltered(false);
         } else {
             router.back();
         }
@@ -103,12 +104,21 @@ export default function AlterarSenha() {
     }
 
     return (
-        <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center mt-6">
-            <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
-                <h1 className="text-2xl font-semibold text-gray-800 mb-2">Alterar senha</h1>
-                <p className="text-gray-600 mb-8">
-                    Use pelo menos 8 caracteres. Não use a senha de outro site ou algo muito óbvio, como o nome do seu animal de estimação.
-                </p>
+        <Flex justify='center' align='start' className="sm:!px-10 lg:!px-40 !px-4 !my-6">
+            <Card
+                title={
+                    <>
+                        <Typography.Title level={3} className="!mb-2">
+                            Alterar senha
+                        </Typography.Title>
+                        <Typography.Paragraph type="secondary" style={{ whiteSpace: 'normal' }}>
+                            Use pelo menos 8 caracteres. Não use a senha de outro site ou algo muito óbvio, como o nome do seu animal de estimação.
+                        </Typography.Paragraph>
+                    </>
+                }
+                className="w-full max-w-2xl shadow-xl !pt-6"
+                styles={{ header: { borderBottom: 0 } }}
+            >
                 <Form
                     form={form}
                     name="alterar-senha"
@@ -117,74 +127,77 @@ export default function AlterarSenha() {
                     onFinishFailed={onFinishFailed}
                     onValuesChange={handleValuesChange}
                     autoComplete="off"
-                    disabled={loading || status !== 'authenticated'}
+                    disabled={isSubmitting || status !== 'authenticated'}
                 >
                     <Form.Item
                         label="Senha atual"
                         name="senhaAtual"
                         rules={[{ required: true, message: 'Por favor, insira sua senha atual!' }]}
-                        className='sem-asterisco'
                     >
-                        <Input.Password placeholder="***********" />
+                        <Input.Password placeholder="Digite sua senha atual" />
                     </Form.Item>
-                    <div className="grid grid-cols-1 md:grid-cols-2 md:gap-6">
-                        <Form.Item
-                            label="Nova senha"
-                            name="novaSenha"
-                            rules={[
-                                { required: true, message: "Por favor, insira sua nova senha!" },
-                                { min: 8, message: "A senha deve ter pelo menos 8 caracteres." },
-                            ]}
-                            className="sem-asterisco"
-                            hasFeedback
-                        >
-                            <Input.Password placeholder="***********" />
-                        </Form.Item>
-                        <Form.Item
-                            label="Confirmar nova senha"
-                            name="confirmarSenha"
-                            dependencies={['novaSenha']} // Adiciona dependência para revalidar
-                            rules={[
-                                { required: true, message: "Por favor, digite novamente sua senha!" },
-                                ({ getFieldValue }) => ({
-                                    validator(_, value) {
-                                        if (!value || getFieldValue('novaSenha') === value) {
-                                            return Promise.resolve();
+
+                    <Row gutter={24}>
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                label="Nova senha"
+                                name="novaSenha"
+                                rules={[
+                                    { required: true, message: "Por favor, insira sua nova senha!" },
+                                    { min: 8, message: "A senha deve ter pelo menos 8 caracteres." },
+                                ]}
+                                hasFeedback
+                            >
+                                <Input.Password placeholder="Digite a nova senha" />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                label="Confirmar nova senha"
+                                name="confirmarSenha"
+                                dependencies={['novaSenha']}
+                                rules={[
+                                    { required: true, message: "Por favor, digite novamente sua senha!" },
+                                    ({ getFieldValue }) => ({
+                                        validator(_, value) {
+                                            if (!value || getFieldValue('novaSenha') === value) {
+                                                return Promise.resolve();
+                                            }
+                                            return Promise.reject(new Error("As senhas não coincidem!"));
                                         }
-                                        return Promise.reject(new Error("As senhas não coincidem!"));
-                                    }
-                                }),
-                            ]}
-                            className="sem-asterisco"
-                            hasFeedback
-                        >
-                            <Input.Password placeholder="***********" />
-                        </Form.Item>
-                    </div>
+                                    }),
+                                ]}
+                                hasFeedback
+                            >
+                                <Input.Password placeholder="Confirme a nova senha" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
 
                     {capsLockEstaAtivado && (
-                        <div role="alert" className="flex items-center gap-2 text-orange-600 mb-4 transition-opacity duration-300 animate-pulse">
-                            <ExclamationCircleFilled />
-                            <span className="text-sm font-medium">CapsLock está ativado</span>
-                        </div>
+                        <CapsLock />
                     )}
 
-                    <Form.Item className="mt-8 flex justify-end">
-                        <div className='flex items-center gap-4'>
+                    <Flex justify="end" className="mt-8">
+                        <Space size="middle">
                             <ButtonCancelar
                                 text={isFormAltered ? "Cancelar" : "Voltar"}
+                                type="default"
+                                htmlType="button"
                                 onClick={handleCancelClick}
+                                disabled={isSubmitting}
                             />
                             <ButtonPrimary
-                                text='Alterar senha'
+                                text="Alterar senha"
+                                type="primary"
                                 htmlType="submit"
-                                loading={loading}
-                                disabled={loading || status !== 'authenticated' || !isFormAltered}
+                                loading={isSubmitting}
+                                disabled={isSubmitting || status !== 'authenticated' || !isFormAltered}
                             />
-                        </div>
-                    </Form.Item>
+                        </Space>
+                    </Flex>
                 </Form>
-            </div>
-        </div>
+            </Card>
+        </Flex>
     );
 }

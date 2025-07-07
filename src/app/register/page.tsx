@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { RegistroAtleta } from "@/components/RegistroAtleta";
 import { RegistroArena } from "@/components/RegistroArena";
 import Image from "next/image";
+import { Flex } from "antd";
 
 const RegisterPageSkeleton = () => (
   <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center md:items-start justify-center animate-pulse">
@@ -59,7 +60,7 @@ const RegisterPage = () => {
     setTimeout(() => {
       setAccountType(type);
       setIsFading(false);
-    }, 500);
+    }, 300);
   };
 
   useEffect(() => {
@@ -73,54 +74,60 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center md:items-start justify-center">
-      <div className="hidden md:block md:w-2/3 p-4">
-        <div className="sticky top-0 flex h-screen items-center">
-          <Image src="/icons/beachtenis.svg" alt="Beach Tenis" width={700} height={700} />
-        </div>
-      </div>
-      <div className="w-full md:w-1/3 p-4">
-        <div className="flex w-full flex-col justify-center md:min-h-screen">
-          <p className="text-center text-gray-600 font-medium text-lg mb-4">
-            Cadastre-se abaixo
-          </p>
-          <div className="flex justify-center mb-4 w-full max-w-full md:max-w-none">
-            <button
-              className={`px-4 py-2 border-b-2 cursor-pointer hover:text-green-600 w-1/2 ${accountType === "atleta"
-                ? "border-green-primary text-green-primary"
-                : "border-transparent text-gray-500"
-                }`}
-              onClick={() => handleAccountTypeChange("atleta")}
-              disabled={isFading}
-            >
-              Atleta
-            </button>
-            <button
-              className={`px-4 py-2 border-b-2 cursor-pointer hover:text-green-600 w-1/2 ${accountType === "arena"
-                ? "border-green-primary text-green-primary"
-                : "border-transparent text-gray-500 hover:text-green-primary"
-                }`}
-              onClick={() => handleAccountTypeChange("arena")}
-              disabled={isFading}
-            >
-              Arena
-            </button>
-          </div>
+    <Flex align="flex-center" justify="center" className="!flex-1 sm:!px-10 lg:!px-40">
+      <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
+        <Image
+          src="/icons/beachtenis.svg"
+          alt="Beach Tenis"
+          width={400}
+          height={400}
+          className="!sticky !top-20 !w-full !object-cover"
+        />
+      </Flex>
 
-          {accountType === "atleta" && (
-            <RegistroAtleta
-              className={`w-full transition-opacity duration-400 ease-in-out ${isFading ? "opacity-30" : "opacity-100"}`}
-            />
-          )}
+      <Flex align="center" justify="center" className="!w-full md:!w-1/3">
+        <div className="p-6 sm:p-8 w-full">
+          <Flex justify="center" vertical>
+            <p className="text-center text-gray-600 font-medium text-lg mb-4">
+              Cadastre-se abaixo
+            </p>
+            <div className="flex justify-center mb-6 w-full">
+              <button
+                className={`cursor-pointer px-4 py-2 border-b-2 font-semibold w-1/2 transition-colors duration-200 ${accountType === "atleta"
+                  ? "border-green-primary text-green-primary"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  }`}
+                onClick={() => handleAccountTypeChange("atleta")}
+                disabled={isFading}
+              >
+                Atleta
+              </button>
+              <button
+                className={`cursor-pointer px-4 py-2 border-b-2 font-semibold w-1/2 transition-colors duration-200 ${accountType === "arena"
+                  ? "border-green-primary text-green-primary"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  }`}
+                onClick={() => handleAccountTypeChange("arena")}
+                disabled={isFading}
+              >
+                Arena
+              </button>
+            </div>
 
-          {accountType === "arena" && (
-            <RegistroArena
-              className={`w-full transition-opacity duration-400 ease-in-out ${isFading ? "opacity-30" : "opacity-100"}`}
-            />
-          )}
+            {accountType === "atleta" && (
+              <RegistroAtleta
+                className={`w-full transition-opacity duration-300 ${isFading ? "opacity-0" : "opacity-100"}`}
+              />
+            )}
+            {accountType === "arena" && (
+              <RegistroArena
+                className={`w-full transition-opacity duration-300 ${isFading ? "opacity-0" : "opacity-100"}`}
+              />
+            )}
+          </Flex>
         </div>
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 };
 

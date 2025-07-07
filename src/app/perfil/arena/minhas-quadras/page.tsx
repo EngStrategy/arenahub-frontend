@@ -1,18 +1,19 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Select, Typography, Row, Col, Modal, message } from 'antd';
+import { Select, Typography, Row, Col, Modal, message, Flex, Empty, Layout } from 'antd';
 import { PlusOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import CourtCard from '@/components/Cards/CourtCard';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { getQuadraByIdArena, Quadra } from '@/app/api/entities/quadra';
+import { getQuadraByIdArena, Quadra, TipoQuadra, deleteQuadra } from '@/app/api/entities/quadra';
+import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 
 const { Title } = Typography;
 const { confirm } = Modal;
+const { Content } = Layout;
 
-// --- NOVOS SKELETONS COM HTML E TAILWIND ---
 const CourtCardSkeleton = () => (
   <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden animate-pulse">
     <div className="h-48 bg-gray-300"></div>
@@ -40,33 +41,28 @@ const MinhasQuadrasPageSkeleton = () => (
       </div>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {Array.from({ length: 3 }).map((_, index) => (
-        <CourtCardSkeleton key={index} />
-      ))}
+      {Array.from({ length: 3 }).map(() => {
+        const uniqueKey = Math.random().toString(36).slice(2, 11);
+        return <CourtCardSkeleton key={uniqueKey} />;
+      })}
     </div>
   </main>
 );
-// --- FIM DOS NOVOS SKELETONS ---
 
 const MinhasQuadrasPage: React.FC = () => {
   const { data: session, status } = useSession();
 
   const [courts, setCourts] = useState<Quadra[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const [sportFilter, setSportFilter] = useState('all');
 
   useEffect(() => {
     const fetchCourts = async () => {
-      if (session?.user?.accessToken && session?.user?.userId) {
-        setLoading(true); // Garante que o skeleton apareça em re-buscas
+      if (session?.user?.userId) {
+        setLoading(true);
         try {
           const arenaData = await getQuadraByIdArena(session.user.userId);
-          if (arenaData) {
-            setCourts(Array.isArray(arenaData) ? arenaData : [arenaData]);
-          } else {
-            setCourts([]);
-          }
+          setCourts(Array.isArray(arenaData) ? arenaData : arenaData ? [arenaData] : []);
         } catch (error) {
           console.error('Erro ao buscar quadras:', error);
           message.error('Erro ao carregar quadras.');
@@ -81,83 +77,67 @@ const MinhasQuadrasPage: React.FC = () => {
     fetchCourts();
   }, [session, status]);
 
-  const deleteCourt = (id: number) => {
-    setCourts(prev => prev.filter(court => court.id !== id));
-    message.success('Quadra excluída.');
-  };
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteQuadra(id);
 
-  const handleDelete = (id: number) => {
-    confirm({
-      title: 'Deseja excluir esta quadra?',
-      icon: <ExclamationCircleFilled />,
-      content: 'A ação não pode ser desfeita.',
-      okText: 'Excluir',
-      okType: 'danger',
-      cancelText: 'Cancelar',
-      onOk() {
-        deleteCourt(id);
-      },
-    });
+      setCourts(prev => prev.filter(court => court.id !== id));
+      message.success('Quadra excluída com sucesso.');
+    } catch (error) {
+      console.error("Erro ao excluir quadra:", error);
+      message.error('Não foi possível excluir a quadra. Tente novamente.');
+    }
   };
 
   const filteredCourts = useMemo(() => {
-    return courts.filter(court => {
-      const matchesSearch = court.nomeQuadra.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesSport = sportFilter === 'all' || court.tipoQuadra?.includes(sportFilter as any);
-      return matchesSearch && matchesSport;
-    });
-  }, [courts, searchTerm, sportFilter]);
+    return courts.filter(court =>
+      sportFilter === 'all' || court.tipoQuadra?.includes(sportFilter as any)
+    );
+  }, [courts, sportFilter]);
+
+  const sportOptions = useMemo(() => {
+    const uniqueSports = Array.from(new Set(courts.flatMap(court => court.tipoQuadra)));
+    return uniqueSports.map(sport => ({
+      value: sport,
+      label: formatarEsporte(sport as TipoQuadra),
+    }));
+  }, [courts]);
 
   if (loading || status === 'loading') {
     return <MinhasQuadrasPageSkeleton />;
   }
 
   return (
-    <main className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
+    <Content className="px-4 sm:px-10 lg:px-40 py-8">
       <Title level={3}>Minhas quadras</Title>
 
-      <div className="mb-6">
-        <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <Select
-            value={sportFilter}
-            className="w-full sm:w-auto sm:min-w-[200px]"
-            onChange={(value) => setSportFilter(value)}
-            showSearch
-            options={[
-              { value: 'all', label: 'Filtrar por esporte' },
-              ...Array.from(new Set(courts.flatMap(court => court.tipoQuadra))).map(sport => ({
-                value: sport,
-                label: sport,
-              }))
-            ]}
-          />
-          <Link key="button-nova-quadra" href="/perfil/arena/minhas-quadras/nova">
-            <ButtonPrimary
-              text='Adicionar quadra'
-              type="primary"
-              icon={<PlusOutlined />}
-              className='w-full sm:w-auto'
-            />
-          </Link>
-        </div>
-      </div>
+      <Flex justify="space-between" align="center" gap="middle" wrap="wrap" className="!mb-6">
+        <Select
+          value={sportFilter}
+          style={{ minWidth: 200 }}
+          onChange={(value) => setSportFilter(value)}
+          options={[
+            { value: 'all', label: 'Todos os esportes' },
+            ...sportOptions,
+          ]}
+        />
+        <Link href="/perfil/arena/minhas-quadras/nova">
+          <ButtonPrimary text='Adicionar quadra' icon={<PlusOutlined />} />
+        </Link>
+      </Flex>
 
       <Row gutter={[24, 24]}>
         {filteredCourts.map(court => (
-          <Col key={court.id} xs={24} md={12} xl={8}>
-            <CourtCard
-              court={court}
-              onDelete={handleDelete}
-            />
+          <Col key={court.id} xs={24} sm={12} md={8} xl={6}>
+            <CourtCard court={court} onDelete={handleDelete} />
           </Col>
         ))}
       </Row>
+
       {filteredCourts.length === 0 && !loading && (
-        <div className="text-center py-10 text-gray-500">
-          Nenhuma quadra encontrada.
-        </div>
+        <Empty description="Nenhuma quadra encontrada." className="py-10" />
       )}
-    </main>
+    </Content>
   );
 };
 

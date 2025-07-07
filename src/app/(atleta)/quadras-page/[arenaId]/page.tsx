@@ -19,7 +19,7 @@ import type {
     MaterialFornecido,
 } from '@/app/api/entities/quadra';
 import type { Arena as ArenaOficial } from '@/app/api/entities/arena';
-import { formatarEsporte } from '@/data/mapeamentoEsportes';
+import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { useSession } from 'next-auth/react';
 
 
@@ -175,7 +175,7 @@ const quadrasPorArena: { [key: number]: QuadraOficial[] } = {
             id: 102,
             nomeQuadra: 'Quadra de Areia 1',
             urlFotoQuadra: '/images/arenaesportes.png',
-            tipoQuadra: ['BEACHTENIS', 'VOLEI', 'FUTEVOLEI'],
+            tipoQuadra: ['BEACHTENNIS', 'VOLEI', 'FUTEVOLEI'],
             descricao: 'Quadra de areia perfeita para esportes de praia, com iluminação para jogos noturnos.',
             duracaoReserva: 'UMA_HORA',
             cobertura: false,

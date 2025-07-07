@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
-import { StarFilled } from '@ant-design/icons';
+import { PictureOutlined, StarFilled } from '@ant-design/icons';
 import Image from 'next/image';
 import { Arena } from '@/app/api/entities/arena';
-import { formatarEsporte } from '@/data/mapeamentoEsportes';
+import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 
 interface ArenaCardProps {
   arena: Arena;

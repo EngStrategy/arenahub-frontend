@@ -1,8 +1,22 @@
 import React from 'react';
-import { Button, Image, Tooltip, Tag, Popconfirm } from 'antd';
-import { EditOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import {
+    Button, Tooltip, Tag, Popconfirm, Flex, Divider,
+    Typography, Avatar, Card, Space
+} from 'antd';
+import {
+    EditOutlined,
+    DeleteOutlined,
+    QuestionCircleOutlined,
+    PictureOutlined,
+    CheckCircleOutlined,
+    TagOutlined,
+    CalendarOutlined,
+} from '@ant-design/icons';
 import Link from 'next/link';
-import { Quadra } from '@/app/api/entities/quadra';
+import { Quadra, TipoQuadra } from '@/app/api/entities/quadra';
+import Image from 'next/image';
+import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
+import { formatarDiaSemanaAbreviado } from '@/context/functions/mapeamentoDiaSemana';
 
 interface CourtCardProps {
     court: Quadra;
@@ -12,85 +26,115 @@ interface CourtCardProps {
 const CourtCard: React.FC<CourtCardProps> = ({ court, onDelete }) => {
 
     const amenities = [];
-    if (court.cobertura) {
-        amenities.push('Cobertura');
-    }
-    if (court.iluminacaoNoturna) {
-        amenities.push('Iluminação');
-    }
+    if (court.cobertura) amenities.push('Coberta');
+    if (court.iluminacaoNoturna) amenities.push('Iluminação Noturna');
+
+    const diasFuncionamento = court.horariosFuncionamento
+        ?.filter(h => h.intervalosDeHorario?.length > 0 && h.intervalosDeHorario.some(i => i.inicio && i.fim))
+        .map(h => formatarDiaSemanaAbreviado(h.diaDaSemana))
+        .join(', ');
+
+    const TagSection = ({ title, icon, tags, color, formatter }: { title: string, icon: React.ReactNode, tags?: string[], color: string, formatter?: (tag: any) => string }) => {
+        if (!tags || tags.length === 0) return null;
+        return (
+            <Flex vertical align="start">
+                <Space size="small" align="center">
+                    {icon}
+                    <Typography.Text type="secondary" strong>{title}</Typography.Text>
+                </Space>
+                <Flex wrap="wrap" gap={4} className="!mt-1">
+                    {tags.map(item => (
+                        <Tag key={item} color={color}>
+                            {formatter ? formatter(item) : item}
+                        </Tag>
+                    ))}
+                </Flex>
+            </Flex>
+        );
+    };
 
     return (
-        <div className="flex w-full max-w-lg gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:scale-105 transition-all hover:shadow-md cursor-pointer">
+        <Card
+            hoverable
+            style={{ height: '100%' }}
+            styles={{ body: { padding: 16, height: '100%', display: 'flex', flexDirection: 'column' } }}
+        >
+            <Flex vertical flex={1}>
+                <Flex gap="middle" align="start">
+                    <Avatar shape="square" size={64} src={court.urlFotoQuadra || undefined} icon={<PictureOutlined />} />
+                    <Flex vertical>
+                        <Typography.Title level={5} style={{ margin: 0 }}>
+                            {court.nomeQuadra}
+                        </Typography.Title>
 
-            {/* Coluna da Esquerda: Informações do Local */}
-            <div className="flex flex-col items-center justify-center text-center w-24">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-400 overflow-hidden">
-                    <Image
-                        src={court.urlFotoQuadra || '/images/imagem-default.png'}
-                        alt={`Logo de ${court.nomeQuadra}`}
-                        width={64}
-                        height={64}
-                        style={{ objectFit: 'cover' }}
-                        fallback='/images/imagem-default.png'
-                        preview={false}
+                        {diasFuncionamento && (
+                            <Typography.Text type="secondary" style={{ fontSize: 12, display: 'flex', alignItems: 'center' }}>
+                                <CalendarOutlined style={{ marginRight: 6 }} />
+                                {diasFuncionamento}
+                            </Typography.Text>
+                        )}
+                    </Flex>
+                </Flex>
+
+                <Divider style={{ margin: '12px 0' }} />
+
+                <Flex vertical gap="middle">
+                    <TagSection
+                        title="Esportes"
+                        icon={<Image src="/icons/corrida.svg" alt="Ícone de esportes" width={16} height={16} />}
+                        tags={court.tipoQuadra}
+                        color="green"
+                        formatter={(sport) => formatarEsporte(sport as TipoQuadra)}
                     />
-                </div>
-                <p className="mt-2 font-semibold text-gray-800 text-sm break-words">
-                    {court.nomeQuadra}
-                </p>
-            </div>
+                    <TagSection
+                        title="Materiais Inclusos"
+                        icon={<TagOutlined />}
+                        tags={court.materiaisFornecidos}
+                        color="default"
+                    />
+                    <TagSection
+                        title="Comodidades"
+                        icon={<CheckCircleOutlined />}
+                        tags={amenities}
+                        color="cyan"
+                    />
+                </Flex>
+            </Flex>
 
-            <div className="w-px self-stretch" />
+            <Divider style={{ margin: '12px 0' }} />
 
-            {/* Coluna Central: Detalhes da jogoAberto */}
-            <div className="w-40 flex-grow space-y-1 self-center">
-                <p className="text-sm text-gray-700">
-                    {court.tipoQuadra.map(sport => <Tag key={sport} color="green">{sport}</Tag>)}
-                </p>
-                <p className="text-sm text-gray-700">
-                    {court.materiaisFornecidos?.map(item => <Tag key={item} color="default">{item}</Tag>)}
-                </p>
-                <p className="text-sm text-gray-700">
-                    {amenities.map(item => <Tag key={item} color="cyan">{item}</Tag>)}
-                </p>
-            </div>
-
-            {/* Coluna da Direita: Botão de Ação */}
-            <div className="w-10 flex-col self-center space-y-3">
-                <Tooltip title="Excluir" trigger={['hover']} placement="top" >
-                    <Popconfirm
-                        title="Remover quadra"
-                        description={`Tem certeza que deseja excluir esta quadra permanentemente?`}
-                        okText='Sim'
-                        cancelText="Não"
-                        cancelButtonProps={{ type: 'text', className: '!text-gray-600' }}
-                        okButtonProps={{ type: 'primary', className: '!bg-red-500 hover:!bg-red-600 !shadow-none' }}
-                        onConfirm={() => onDelete(court.id)}
-                        placement="topLeft"
-                        icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
-                    >
-                        <Button
-                            shape="circle"
-                            icon={<DeleteOutlined />}
-                            className="!bg-red-100 !text-red-600 !border-none hover:!bg-red-200"
-                        />
-                    </Popconfirm>
-                </Tooltip>
-                <Tooltip
-                    title="Editar"
-                    trigger={['hover']}
-                    placement="bottom"
-                >
-                    <Link href={`/perfil/arena/minhas-quadras/editar/${court.id}`}>
-                        <Button
-                            shape="circle"
-                            icon={<EditOutlined />}
-                            className="!bg-blue-100 !text-blue-600 !border-none hover:!bg-blue-200"
-                        />
-                    </Link>
-                </Tooltip>
-            </div>
-        </div>
+            <Flex justify="end" align="center">
+                <Space>
+                    <Tooltip title="Excluir">
+                        <Popconfirm
+                            title="Remover quadra?"
+                            description="Esta ação não pode ser desfeita."
+                            okText='Sim, excluir'
+                            cancelText="Cancelar"
+                            cancelButtonProps={{ style: { border: 0 } }}
+                            okButtonProps={{ danger: true }}
+                            onConfirm={() => onDelete(court.id)}
+                            icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                        >
+                            <Button
+                                shape="circle"
+                                icon={<DeleteOutlined />}
+                                className="!bg-red-100 !text-red-600 !border-none hover:!bg-red-200"
+                            />
+                        </Popconfirm>
+                    </Tooltip>
+                    <Tooltip title="Editar">
+                        <Link href={`/perfil/arena/minhas-quadras/editar/${court.id}`}>
+                            <Button
+                                shape="circle"
+                                icon={<EditOutlined />}
+                                className="!bg-blue-100 !text-blue-600 !border-none hover:!bg-blue-200"
+                            />
+                        </Link>
+                    </Tooltip>
+                </Space>
+            </Flex>
+        </Card>
     );
 };
 

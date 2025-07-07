@@ -1,10 +1,12 @@
 "use client";
-
-import React, { useEffect, useState } from 'react';
-import { Button, DatePicker, Pagination } from 'antd';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Button, DatePicker, Pagination, Layout, Typography, Row, Col, Flex, Skeleton, Empty } from 'antd';
 import { CardAgendamento } from '@/components/Cards/AgendamentoCard';
 import dayjs, { Dayjs } from 'dayjs';
 import { useSession } from 'next-auth/react';
+
+const { Title } = Typography;
+const { Content } = Layout;
 
 type Agendamento = {
     id: string;
@@ -60,80 +62,102 @@ const MeusAgendamentosSkeleton = () => (
     </main>
 );
 
-export default function MeusAgendamentos() {
-    const { status} = useSession();
+export default function Agendamentos() {
+    const { status } = useSession();
     const [dataInicial, setDataInicial] = useState<Dayjs | null>(null);
     const [dataFinal, setDataFinal] = useState<Dayjs | null>(null);
-    const [agendamentosFiltrados, setAgendamentosFiltrados] = useState(meusAgendamentos);
 
-    useEffect(() => {
-        const filtered = meusAgendamentos.filter(agendamento => {
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 16;
+
+    const agendamentosFiltrados = useMemo(() => {
+        return meusAgendamentos.filter(agendamento => {
             const dataAgendamento = dayjs(agendamento.date);
             const isAfterStart = !dataInicial || dataAgendamento.isAfter(dataInicial.startOf('day')) || dataAgendamento.isSame(dataInicial.startOf('day'));
             const isBeforeEnd = !dataFinal || dataAgendamento.isBefore(dataFinal.endOf('day')) || dataAgendamento.isSame(dataFinal.endOf('day'));
             return isAfterStart && isBeforeEnd;
         });
-        setAgendamentosFiltrados(filtered);
+    }, [dataInicial, dataFinal]);
+
+    useEffect(() => {
+        setCurrentPage(1);
     }, [dataInicial, dataFinal]);
 
     const handleLimparFiltro = () => {
         setDataInicial(null);
         setDataFinal(null);
-        setAgendamentosFiltrados(meusAgendamentos);
     };
+
+    const paginatedAgendamentos = agendamentosFiltrados.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    );
 
     if (status === 'loading') {
         return <MeusAgendamentosSkeleton />;
     }
 
     return (
-        <main className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
-            <h1 className="text-lg text-center mb-8 text-gray-800">Meus agendamentos</h1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-                <DatePicker
-                    value={dataInicial}
-                    onChange={setDataInicial}
-                    placeholder="Data inicial"
-                    className="w-full lg:col-span-2"
-                    size="large"
-                />
-                <DatePicker
-                    value={dataFinal}
-                    onChange={setDataFinal}
-                    placeholder="Data final"
-                    className="w-full lg:col-span-2"
-                    size="large"
-                />
-                <Button
-                    type="primary"
-                    danger
-                    size="large"
-                    className="w-full"
-                    onClick={handleLimparFiltro}
-                >
-                    Limpar filtro
-                </Button>
-            </div>
-            {agendamentosFiltrados.length > 0 ? (
+        <Content className="!px-4 sm:!px-10 lg:!px-40 !py-8">
+            <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>Meus agendamentos</Title>
+
+            <Row gutter={[16, 16]} align="middle" className="mb-8">
+                <Col xs={9} lg={5}>
+                    <DatePicker
+                        value={dataInicial}
+                        onChange={setDataInicial}
+                        placeholder="Data inicial"
+                        size="large"
+                        style={{ width: '100%' }}
+                    />
+                </Col>
+                <Col xs={9} lg={5}>
+                    <DatePicker
+                        value={dataFinal}
+                        onChange={setDataFinal}
+                        placeholder="Data final"
+                        size="large"
+                        style={{ width: '100%' }}
+                    />
+                </Col>
+                <Col xs={6} lg={3}>
+                    <Button
+                        type="primary"
+                        danger
+                        size="large"
+                        style={{ width: '100%' }}
+                        onClick={handleLimparFiltro}
+                    >
+                        Limpar
+                    </Button>
+                </Col>
+            </Row>
+
+            {paginatedAgendamentos.length > 0 ? (
                 <>
-                    <div className="w-full mb-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {agendamentosFiltrados.map((agendamento) => (
-                            <CardAgendamento key={agendamento.id} agendamento={agendamento} />
+                    <Row gutter={[24, 24]}>
+                        {paginatedAgendamentos.map((agendamento) => (
+                            <Col key={agendamento.id} xs={24} md={12} lg={8}>
+                                <CardAgendamento agendamento={agendamento} />
+                            </Col>
                         ))}
-                    </div>
-                    <div className='flex justify-center'>
+                    </Row>
+                    <Flex justify='center' className="!mt-8">
                         <Pagination
+                            current={currentPage}
                             total={agendamentosFiltrados.length}
+                            pageSize={pageSize}
+                            onChange={(page) => setCurrentPage(page)}
                             showSizeChanger={false}
-                            defaultPageSize={5}
                         />
-                    </div>
+                    </Flex>
                 </>
             ) : (
-                <div className="text-center text-gray-500 mt-10 bg-white p-8 rounded-lg border">
-                    Nenhum agendamento encontrado para o período selecionado.
-                </div>
+                <Empty
+                    description="Nenhum agendamento encontrado para o período selecionado."
+                    className="mt-10 bg-white p-8 rounded-lg"
+                />
             )}
-        </main>
+        </Content>
     );
 }

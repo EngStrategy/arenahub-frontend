@@ -2,13 +2,59 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Form, Input, App } from "antd";
+import { Form, Input, App, Progress, Popover, Flex } from "antd";
 import Link from "next/link";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { createAtleta } from '@/app/api/entities/atleta';
 import { formatarTelefone } from "@/context/functions/formatarTelefone";
 import { ExclamationCircleFilled } from "@ant-design/icons";
 import { useCapsLock } from "@/context/hooks/useCapsLook";
+import CapsLock from "./Alerts/CapsLock";
+
+const PasswordStrengthIndicator = ({ password = '' }: { password?: string }) => {
+  const evaluatePassword = () => {
+    let score = 0;
+    if (password.length >= 8) score += 25;
+    if (/\d/.test(password)) score += 25;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 25;
+    if (/[^A-Za-z0-9]/.test(password)) score += 25;
+    return score;
+  };
+
+  const score = evaluatePassword();
+  let color = 'red';
+  let text = 'Fraca';
+
+  if (score >= 75) {
+    color = 'green';
+    text = 'Forte';
+  } else if (score >= 50) {
+    color = 'orange';
+    text = 'Média';
+  }
+
+  return (
+    <div className="w-full">
+      <p className="mb-2 font-medium">Força da senha: {text}</p>
+      <Progress percent={score} showInfo={false} strokeColor={color} />
+      <ul className="text-xs text-gray-500 mt-2 list-disc list-inside">
+        <li className={password.length >= 8 ? 'text-green-600' : ''}>
+          Pelo menos 8 caracteres
+        </li>
+        <li className={/\d/.test(password) ? 'text-green-600' : ''}>
+          Pelo menos um número
+        </li>
+        <li className={/[a-z]/.test(password) && /[A-Z]/.test(password) ? 'text-green-600' : ''}>
+          Letras maiúsculas e minúsculas
+        </li>
+        <li className={/[^A-Za-z0-9]/.test(password) ? 'text-green-600' : ''}>
+          Pelo menos um caractere especial
+        </li>
+      </ul>
+    </div>
+  );
+};
+
 
 export const RegistroAtleta = ({ className }: { className?: string }) => {
   const { message } = App.useApp();
@@ -16,6 +62,8 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState('');
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const capsLockEstaAtivado = useCapsLock();
 
   const onFinishFailed = (errorInfo: any) => {
@@ -55,7 +103,7 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
       onFinishFailed={onFinishFailed}
       className={className}
     >
-      <div className="flex flex-col md:flex-row md:gap-4">
+      <Flex vertical className="md:!flex-row" gap="middle">
         <Form.Item
           label="Nome"
           name="nome"
@@ -64,9 +112,9 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
         >
           <Input placeholder="Insira o seu nome" />
         </Form.Item>
-      </div>
+      </Flex>
 
-      <div className="flex flex-col md:flex-row md:gap-4">
+      <Flex vertical className="md:!flex-row" gap="middle">
         <Form.Item
           label="Email"
           name="email"
@@ -89,7 +137,7 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
                 if (!value) return Promise.resolve();
                 const digits = value.replace(/\D/g, "");
                 if (digits.length !== 11) {
-                  return Promise.reject("Telefone inválido");
+                  return Promise.reject(new Error("Telefone inválido"));
                 }
                 return Promise.resolve();
               },
@@ -104,9 +152,9 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
             }}
           />
         </Form.Item>
-      </div>
+      </Flex>
 
-      <div className="flex flex-col md:flex-row md:gap-4">
+      <Flex vertical className="md:!flex-row" gap="middle">
         <Form.Item
           label="Senha"
           name="senha"
@@ -116,28 +164,49 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
           ]}
           className="sem-asterisco flex-1"
         >
-          <Input.Password placeholder="Insira sua senha" />
+          <Popover
+            content={<PasswordStrengthIndicator password={password} />}
+            placement="right"
+            open={isPasswordFocused}
+            getPopupContainer={triggerNode => triggerNode.parentNode as HTMLElement}
+          >
+            <Input.Password
+              placeholder="Insira sua senha"
+              onFocus={() => setIsPasswordFocused(true)}
+              onBlur={() => setIsPasswordFocused(false)}
+              onChange={(e) => {
+                const newPassword = e.target.value;
+                setPassword(newPassword);
+                form.setFieldsValue({ senha: newPassword });
+              }}
+            />
+          </Popover>
         </Form.Item>
 
         <Form.Item
           label="Confirme sua senha"
           name="confirmPassword"
-          dependencies={["password"]}
+          dependencies={["senha"]}
+          hasFeedback
           rules={[
             { required: true, message: "Confirme sua senha!" },
-            { min: 8, message: "Pelo menos 8 caracteres!" },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue("senha") === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("As senhas não coincidem!"));
+              }
+            }),
           ]}
           className="sem-asterisco flex-1"
         >
           <Input.Password placeholder="Confirme sua senha" />
         </Form.Item>
-      </div>
+      </Flex>
 
       {capsLockEstaAtivado && (
-        <div role="alert" className="flex items-center gap-2 text-orange-600 mb-4 transition-opacity duration-300 animate-pulse">
-          <ExclamationCircleFilled />
-          <span className="text-sm font-medium">CapsLock está ativado</span>
-        </div>
+        <CapsLock />
       )}
 
       <ButtonPrimary

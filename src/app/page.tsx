@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Pagination } from 'antd';
+import { Col, Flex, Grid, Pagination, Row } from 'antd';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
 import { sportIcons } from '@/data/sportIcons';
 import { Arena, getAllArenas } from '@/app/api/entities/arena';
@@ -77,21 +77,23 @@ export default function HomePage() {
   } else if (arenas.length > 0) {
     content = (
       <>
-        <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+        <Row gutter={[24, 24]} className="mb-10">
           {arenas.map((arena) => (
-            <Link key={arena.id} href={`/quadras-page/${arena.id}`} passHref>
-              <ArenaCard
-                arena={{
-                  ...arena,
-                  avaliacao: arena.avaliacao ?? 1.0,
-                  numeroAvaliacoes: arena.numeroAvaliacoes ?? 10,
-                }}
-                showDescription={false}
-              />
-            </Link>
+            <Col key={arena.id} xs={24} sm={12} lg={12}>
+              <Link href={`/quadras-page/${arena.id}`} passHref>
+                <ArenaCard
+                  arena={{
+                    ...arena,
+                    avaliacao: arena.avaliacao ?? 1.0,
+                    numeroAvaliacoes: arena.numeroAvaliacoes ?? 10,
+                  }}
+                  showDescription={false}
+                />
+              </Link>
+            </Col>
           ))}
-        </div>
-        <div className='flex justify-center'>
+        </Row>
+        <Flex justify='center'>
           <Pagination
             current={currentPage}
             total={totalArenas}
@@ -99,7 +101,7 @@ export default function HomePage() {
             onChange={(page) => setCurrentPage(page)}
             showSizeChanger={false}
           />
-        </div>
+        </Flex>
       </>
     );
   } else {
@@ -111,7 +113,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
+    <Flex vertical className="!px-4 sm:!px-10 lg:!px-40 !py-8">
       <div className="w-full">
         <CitySports
           loading={isPageLoading}
@@ -125,6 +127,6 @@ export default function HomePage() {
         />
         {content}
       </div>
-    </main>
+    </Flex>
   );
 };
