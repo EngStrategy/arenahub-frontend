@@ -2,25 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useCallback } from "react";
-import { Button, Form, Input, App, Grid } from "antd";
+import { Button, Form, Input, App, Flex } from "antd";
 import { GrSecure } from "react-icons/gr";
 import { IoArrowBackOutline } from "react-icons/io5";
 import Link from "next/link";
 import Image from "next/image";
 import { forgotPassword, verifyResetCode } from "@/app/api/entities/verifyEmail";
 
-const { useBreakpoint } = Grid;
-
 export default function ForgotPassword() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
-  const screens = useBreakpoint();
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [userEmail, setUserEmail] = useState("");
-  const [timer, setTimer] = useState(45);
+  const [timer, setTimer] = useState(10);
 
   useEffect(() => {
     if (!emailSent || timer <= 0) return;
@@ -46,10 +43,8 @@ export default function ForgotPassword() {
       setEmailSent(true);
       setTimer(45);
     } catch (err: any) {
-      const errorMessage =
-        err.response ?? "Erro inesperado ao enviar o email.";
       message.error({
-        content: errorMessage,
+        content: err.message,
         key: "sendEmail",
         duration: 4,
       });
@@ -90,28 +85,32 @@ export default function ForgotPassword() {
   }, [userEmail, message, router]);
 
   const resendCode = useCallback(async () => {
-    await handleSendEmail({ email: userEmail });
-  }, [handleSendEmail, userEmail]);
+    message.info({
+      content: "Reenviando código...",
+      key: "resendCode",
+      duration: 2,
+    });
+    setLoading(true);
+  }, [message]);
 
   return (
-    <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center justify-center">
-      {screens.md && (
-        <div className="w-2/3 p-4">
-          <Image
-            src="/icons/beachtenis.svg"
-            alt="Beach Tenis"
-            width={700}
-            height={700}
-            priority
-          />
-        </div>
-      )}
-      <div className="w-full md:w-1/3 p-4">
-        <div className="flex items-center justify-center mb-4">
-          <div className="flex items-center justify-center p-3 rounded-full bg-green-primary">
+    <Flex align="center" justify="center" className="flex-1 sm:!px-10 lg:!px-40">
+      <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
+        <Image
+          src="/icons/beachtenis.svg"
+          alt="Beach Tenis"
+          width={400}
+          height={400}
+          className="!sticky !top-20 !w-full !object-cover"
+        />
+      </Flex>
+
+      <Flex align="center" justify="center" vertical className="w-full md:w-1/3 !p-6">
+        <Flex justify="center" align="center" className="!mb-4">
+          <Flex justify="center" align="center" className="!p-3 rounded-full bg-green-primary">
             <GrSecure className="text-xl text-white" />
-          </div>
-        </div>
+          </Flex>
+        </Flex>
         <p className="text-center text-gray-600 font-medium text-lg mb-4">
           Esqueceu sua senha?
         </p>
@@ -179,7 +178,7 @@ export default function ForgotPassword() {
                 />
               </Form.Item>
 
-              <div className="flex flex-col items-center mb-3">
+              <Flex justify="space-between" align="center" className="!mb-4">
                 <span className="text-gray-500">
                   {timer > 0
                     ? `Reenviar código em ${String(timer).padStart(2, "0")}s`
@@ -196,7 +195,7 @@ export default function ForgotPassword() {
                 >
                   Reenviar código
                 </Button>
-              </div>
+              </Flex>
 
               <Button
                 type="primary"
@@ -210,7 +209,7 @@ export default function ForgotPassword() {
             </Form>
           </>
         )}
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 }

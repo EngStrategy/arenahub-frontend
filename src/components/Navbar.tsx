@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import type { MenuProps } from 'antd';
-import { Button, Drawer, Dropdown, Menu, Avatar, Skeleton } from "antd";
+import { Button, Drawer, Dropdown, Menu, Avatar } from "antd";
 import {
   UserOutlined,
   ScheduleOutlined,
@@ -59,15 +59,15 @@ const Navbar = () => {
     {
       key: "info",
       icon: <UserOutlined className="!text-sm" />,
-      label: "Informações pessoais",
+      label: "Meus dados",
       onClick: () => navigateTo("/perfil/atleta/informacoes"),
       className: "!py-2.5 hover:!bg-gray-100",
     },
     {
       key: "agendamentos",
-      icon: <ScheduleOutlined className="!text-sm" />,
-      label: "Meus agendamentos",
-      onClick: () => navigateTo("/perfil/atleta/meus-agendamentos"),
+      icon: <Image src="/icons/agenda.svg" alt="Imagem quadra" width={16} height={16} />,
+      label: "Agendamentos",
+      onClick: () => navigateTo("/perfil/atleta/agendamentos"),
       className: "!py-2.5 hover:!bg-gray-100",
     },
     {
@@ -79,7 +79,7 @@ const Navbar = () => {
     },
     {
       key: "alterar-senha",
-      icon: <KeyOutlined className="!text-sm" />,
+      icon: <Image src="/icons/redefinir-senha.svg" alt="Imagem quadra" width={16} height={16} />,
       label: "Alterar senha",
       onClick: () => navigateTo("/perfil/atleta/alterar-senha"),
       className: "!py-2.5 hover:!bg-gray-100",
@@ -90,21 +90,21 @@ const Navbar = () => {
     {
       key: "info-arena",
       icon: <UserOutlined className="!text-sm" />,
-      label: "Informações da arena",
+      label: "Meus dados",
       onClick: () => navigateTo("/perfil/arena/informacoes"),
       className: "!py-2.5 hover:!bg-gray-100",
     },
     {
       key: "agendamentos-arena",
-      icon: <ScheduleOutlined className="!text-sm" />,
-      label: "Meus agendamentos",
+      icon: <Image src="/icons/agenda.svg" alt="Imagem quadra" width={16} height={16} />,
+      label: "Agendamentos",
       onClick: () => navigateTo("/perfil/arena/meus-agendamentos"),
       className: "!py-2.5 hover:!bg-gray-100",
     },
     {
       key: "minhas-quadras",
-      icon: <TbSoccerField className="!text-sm" />,
-      label: "Minhas quadras",
+      icon: <Image src="/icons/quadra-de-basquete.svg" alt="Imagem quadra" width={14} height={14} />,
+      label: "Quadras",
       onClick: () => navigateTo("/perfil/arena/minhas-quadras"),
       className: "!py-2.5 hover:!bg-gray-100",
     },
@@ -117,7 +117,7 @@ const Navbar = () => {
     },
     {
       key: "alterar-senha-arena",
-      icon: <KeyOutlined className="!text-sm" />,
+      icon: <Image src="/icons/redefinir-senha.svg" alt="Imagem quadra" width={16} height={16} />,
       label: "Alterar senha",
       onClick: () => navigateTo("/perfil/arena/alterar-senha"),
       className: "!py-2.5 hover:!bg-gray-100",

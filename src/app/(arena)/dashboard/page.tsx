@@ -15,6 +15,8 @@ import {
 import { FaWhatsapp } from 'react-icons/fa';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import Link from 'next/link';
+import Image from 'next/image';
+import { GiSoccerField } from 'react-icons/gi';
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -106,10 +108,26 @@ export default function Dashboard() {
     { time: "20:00 - 21:00", court: "Quadra 4", client: "Neymar Júnior", avatar: "https://api.dicebear.com/7.x/miniavs/svg?seed=2", phoneNumber: "85991943490" },
   ];
   const quickAccessLinks = [
-    { label: "Gerenciar Quadras", icon: <SettingOutlined />, path: "/perfil/arena/minhas-quadras" },
-    { label: "Agendamentos", icon: <ScheduleOutlined />, path: "/perfil/arena/meus-agendamentos" },
-    { label: "Relatórios Financeiros", icon: <BarChartOutlined />, path: "/perfil/arena/relatorios" },
-    { label: "Gestão de Clientes", icon: <TeamOutlined />, path: "/perfil/arena/clientes" },
+    {
+      label: "Gerenciar Quadras",
+      icon: <GiSoccerField />,
+      path: "/perfil/arena/minhas-quadras"
+    },
+    {
+      label: "Agendamentos",
+      icon: <ScheduleOutlined />,
+      path: "/perfil/arena/agendamentos"
+    },
+    {
+      label: "Relatórios Financeiros",
+      icon: <BarChartOutlined />,
+      path: "/perfil/arena/relatorios"
+    },
+    {
+      label: "Gestão de Clientes",
+      icon: <TeamOutlined />,
+      path: "/perfil/arena/clientes"
+    },
   ];
 
   if (status === 'loading') {

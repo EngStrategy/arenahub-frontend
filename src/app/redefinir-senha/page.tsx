@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect, useCallback } from "react";
-import { Form, Input, App, Grid } from "antd";
+import { Form, Input, App, Grid, Flex } from "antd";
 import { GrSecure } from "react-icons/gr";
 import { IoArrowBackOutline } from "react-icons/io5";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { resetPassword } from "@/app/api/entities/verifyEmail";
 import { CheckOutlined, ExclamationCircleFilled } from "@ant-design/icons";
 import { useCapsLock } from "@/context/hooks/useCapsLook";
+import CapsLock from "@/components/Alerts/CapsLock";
 
 const { useBreakpoint } = Grid;
 
@@ -100,7 +101,7 @@ export default function RedefinirSenha() {
     }
 
     return (
-        <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center justify-center">
+        <Flex align="center" justify="center" className="sm:!px-10 lg:!px-40 flex-1">
             {screens.md && (
                 <div className="w-2/3 p-4">
                     <Image src="/icons/beachtenis.svg" alt="Beach Tenis" width={700} height={700} priority />
@@ -109,11 +110,11 @@ export default function RedefinirSenha() {
             <div className="w-full md:w-1/3 p-4">
                 {isSuccess ? (
                     <div className="text-center">
-                        <div className="flex items-center justify-center mb-4">
-                            <div className="flex items-center justify-center p-3 rounded-full bg-green-primary">
+                        <Flex align="center" justify="center" className="!mb-4">
+                            <Flex align="center" justify="center" className="!p-2 rounded-full bg-green-primary">
                                 <CheckOutlined className="!text-white text-xl" />
-                            </div>
-                        </div>
+                            </Flex>
+                        </Flex>
                         <p className="text-center text-gray-600 font-semibold text-lg mb-2">Senha alterada com sucesso!</p>
                         <p className="text-center text-gray-500 mb-4 text-md">Lembre-se: senhas iguais em vários lugares podem ser um risco.</p>
                         <p className="text-center text-gray-500 mb-6 text-md">Redirecionando em <strong>{countdown}</strong> segundos.</p>
@@ -123,12 +124,12 @@ export default function RedefinirSenha() {
                     </div>
                 ) : (
                     <>
-                        <div className="flex items-center justify-center mb-4">
-                            <div className="flex items-center justify-center p-3 rounded-full bg-green-primary">
+                        <Flex align="center" justify="center" className="!mb-4">
+                            <Flex align="center" justify="center" className="!p-2 rounded-full bg-green-primary">
                                 <GrSecure className="text-xl text-white" />
-                            </div>
-                        </div>
-                        <p className="text-center text-gray-600 font-medium text-lg mb-4">Redefinir Senha</p>
+                            </Flex>
+                        </Flex>
+                        <p className="text-center text-gray-600 font-medium text-lg">Redefinir Senha</p>
                         <p className="text-center text-gray-500 mb-4 text-md">Escolha uma nova senha para sua conta.</p>
                         <Form
                             form={form}
@@ -149,6 +150,7 @@ export default function RedefinirSenha() {
                             >
                                 <Input.Password placeholder="Digite a nova senha" />
                             </Form.Item>
+
                             <Form.Item
                                 name="confirmPassword"
                                 label="Confirmar Nova Senha"
@@ -168,12 +170,11 @@ export default function RedefinirSenha() {
                             >
                                 <Input.Password placeholder="Confirme a nova senha" />
                             </Form.Item>
+
                             {capsLockEstaAtivado && (
-                                <div role="alert" className="flex items-center gap-2 text-orange-600 mb-4 transition-opacity duration-300 animate-pulse">
-                                    <ExclamationCircleFilled />
-                                    <span className="text-sm font-medium">CapsLock está ativado</span>
-                                </div>
+                                <CapsLock />
                             )}
+
                             <ButtonPrimary text="Confirmar e Salvar" type="primary" htmlType="submit" className="w-full" loading={loading} />
                             <p className="text-gray-800 text-sm mt-4">
                                 <Link href="/login" className="flex flex-row items-center gap-1 text-green-primary hover:!text-green-500">
@@ -184,6 +185,6 @@ export default function RedefinirSenha() {
                     </>
                 )}
             </div>
-        </div>
+        </Flex>
     );
 }

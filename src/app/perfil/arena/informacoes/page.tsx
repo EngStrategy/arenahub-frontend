@@ -1,12 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Form, Input, Upload, Avatar, App, Image, Button, Select, Dropdown, type MenuProps } from 'antd';
+import {
+    Form, Input, Upload,
+    Avatar, App, Button,
+    Select, Dropdown, Flex,
+    Col, Row, Card, Typography, 
+    Space, type MenuProps, type GetProp,
+    type UploadFile, type UploadProps
+} from 'antd';
 import { PictureOutlined, UploadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { useSession } from "next-auth/react";
-import type { GetProp, UploadFile, UploadProps } from 'antd';
 import ImgCrop from 'antd-img-crop';
 import {
     getArenaById,
@@ -115,8 +121,9 @@ export default function InformacoesPessoaisArena() {
 
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFormAltered, setIsFormAltered] = useState(false);
+    const [isPageLoading, setIsPageLoading] = useState(true);
     const [cities, setCities] = useState<CITYResponse[]>([]);
     const DEFAULT_AVATAR_URL = "https://i.imgur.com/p0hVrWq.png";
 
@@ -186,14 +193,17 @@ export default function InformacoesPessoaisArena() {
                 console.error('Erro ao carregar dados do usuário:', error);
                 message.error('Erro ao carregar dados do usuário.');
             } finally {
-                setLoading(false);
+                setIsSubmitting(false);
             }
         }
     }, [status, session, form, message]);
 
     useEffect(() => {
         if (status !== 'loading') {
-            fetchAndSetUserData();
+            setIsPageLoading(true);
+            fetchAndSetUserData().finally(() => {
+                setIsPageLoading(false);
+            });
         }
     }, [status, fetchAndSetUserData]);
 
@@ -226,7 +236,7 @@ export default function InformacoesPessoaisArena() {
         }
     };
 
-    const uploadButton = (<Button loading={loading} > <UploadOutlined className="mr-2" /> Escolher foto </Button>);
+    const uploadButton = (<Button loading={isSubmitting} > <UploadOutlined className="mr-2" /> Escolher foto </Button>);
 
     const handleRemoveImage = () => {
         setImageUrl(DEFAULT_AVATAR_URL);
@@ -239,7 +249,7 @@ export default function InformacoesPessoaisArena() {
         if (status !== 'authenticated' || !session?.user?.userId || !session?.user?.accessToken) {
             message.error('Você não está autenticado.'); return;
         }
-        setLoading(true);
+        setIsSubmitting(true);
         try {
             let urlParaSalvar = imageUrl;
             if (selectedFile) {
@@ -279,7 +289,7 @@ export default function InformacoesPessoaisArena() {
         } catch (error: any) {
             message.error(`${error instanceof Error ? error.message : 'Tente novamente.'}`);
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -295,7 +305,7 @@ export default function InformacoesPessoaisArena() {
                         maxCount={1}
                         multiple={false}
                         accept="image/jpeg,image/png"
-                        disabled={loading || status !== 'authenticated'}
+                        disabled={isSubmitting ?? status !== 'authenticated'}
                     >
                         <div className="flex items-center w-full">
                             <UploadOutlined className="mr-2" />
@@ -317,17 +327,26 @@ export default function InformacoesPessoaisArena() {
         });
     }
 
-    if (loading) {
+    if (isPageLoading) {
         return <InformacoesPessoaisArenaSkeleton />;
     }
 
     return (
-        <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center my-6">
-            <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
-                <h1 className="text-2xl font-semibold text-gray-800 mb-2">Informações da arena</h1>
-                <p className="text-gray-600 mb-8">
-                    Gerencie suas informações pessoais e salve as alterações caso realize alguma mudança.
-                </p>
+        <Flex justify='center' align='start' className="sm:!px-10 lg:!px-40 !px-4 !my-6">
+            <Card
+                title={
+                    <>
+                        <Typography.Title level={3} className="!mb-2">
+                            Informações da arena
+                        </Typography.Title>
+                        <Typography.Paragraph type="secondary" style={{ whiteSpace: 'normal' }}>
+                            Gerencie suas informações pessoais e salve as alterações caso realize alguma mudança.
+                        </Typography.Paragraph>
+                    </>
+                }
+                className="w-full max-w-2xl shadow-xl !pt-6"
+                styles={{ header: { borderBottom: 0 } }}
+            >
                 <Form
                     form={form}
                     name="personal_arena_info"
@@ -336,12 +355,12 @@ export default function InformacoesPessoaisArena() {
                     onFinishFailed={onFinishFailed}
                     autoComplete="off"
                     onValuesChange={() => setIsFormAltered(true)}
-                    disabled={loading || status !== 'authenticated'}
+                    disabled={isPageLoading || isSubmitting || status !== 'authenticated'}
                 >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="col-span-1 md:col-span-2">
+                    <Row gutter={[24, 24]}>
+                        <Col span={24}>
                             <Form.Item label="Foto ou logomarca da arena" className="!mb-2">
-                                <div className="flex items-center gap-4">
+                                <Flex align="center" gap="middle">
                                     <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomLeft">
                                         <div className="relative group cursor-pointer" title="Clique para alterar a foto">
                                             <Avatar
@@ -355,8 +374,10 @@ export default function InformacoesPessoaisArena() {
                                             </div>
                                         </div>
                                     </Dropdown>
-                                    <div className='flex rounded-md flex-col gap-2 w-full'>
-                                        <span className="text-gray-500 text-xs">Tamanho máximo: 5MB</span>
+                                    <Flex vertical>
+                                        <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
+                                            Tamanho máximo: 5MB
+                                        </Typography.Text>
                                         <ImgCrop rotationSlider>
                                             <Upload
                                                 showUploadList={false}
@@ -366,176 +387,160 @@ export default function InformacoesPessoaisArena() {
                                                 maxCount={1}
                                                 multiple={false}
                                                 accept="image/jpeg,image/png"
-                                                disabled={loading || status !== 'authenticated'}
+                                                disabled={isSubmitting ?? status !== 'authenticated'}
                                             >
                                                 {uploadButton}
                                             </Upload>
                                         </ImgCrop>
-                                    </div>
-                                </div>
+                                    </Flex>
+                                </Flex>
                             </Form.Item>
-                        </div>
+                        </Col>
 
-                        <Form.Item
-                            label="Nome da Arena"
-                            name="nome"
-                            rules={[{ required: true, message: "Insira o nome da sua arena" }]}
-                            className=""
-                        >
-                            <Input placeholder="Insira o nome da sua arena" />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Telefone"
-                            name="telefone"
-                            rules={[
-                                { required: true, message: "Insira seu telefone" },
-                                {
-                                    validator: (_, value) => {
-                                        if (!value) return Promise.resolve();
-                                        const digits = value.replace(/\D/g, "");
-                                        if (digits.length !== 11) {
-                                            return Promise.reject("Telefone inválido");
-                                        }
-                                        return Promise.resolve();
-                                    },
-                                },
-                            ]}
-                            className=" flex-1"
-                        >
-                            <Input
-                                placeholder="(99) 99999-9999"
-                                onChange={(e) => {
-                                    form.setFieldsValue({ telefone: formatarTelefone(e.target.value) });
-                                }}
-                            />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="CEP"
-                            name="cep"
-                            rules={[
-                                { required: true, message: "Insira o CEP da sua arena" },
-                                {
-                                    validator: (_, value) => {
-                                        if (!value) return Promise.resolve();
-                                        const cep = value.replace(/\D/g, "");
-                                        if (cep.length !== 8) {
-                                            return Promise.reject("CEP deve ter 8 dígitos");
-                                        }
-                                        return Promise.resolve();
-                                    },
-                                },
-                            ]}
-                            className=" flex-1"
-                        >
-                            <Input
-                                placeholder="Insira o CEP da sua arena"
-                                onChange={(e) => {
-                                    form.setFieldsValue({ cep: formatarCEP(e.target.value) });
-                                }}
-                                onBlur={e => {
-                                    consultarCep(e.target.value);
-                                }}
-                            />
-                        </Form.Item>
-
-                        <div className="flex flex-row gap-4">
+                        <Col xs={24} md={12}>
                             <Form.Item
-                                label="Estado"
-                                name="estado"
-                                rules={[
-                                    { required: true, message: "Selecione o estado da sua arena" },
-                                ]}
-                                className=" flex-1"
+                                label="Nome da Arena"
+                                name="nome"
+                                rules={[{ required: true, message: "Insira o nome da sua arena" }]}
                             >
-                                <Select placeholder="Estado" options={Estados} />
+                                <Input placeholder="Insira o nome da sua arena" />
                             </Form.Item>
+                        </Col>
 
+                        <Col xs={24} md={12}>
                             <Form.Item
-                                label="Cidade"
-                                name="cidade"
+                                label="Telefone"
+                                name="telefone"
                                 rules={[
-                                    { required: true, message: "Selecione a cidade da sua arena" },
+                                    { required: true, message: "Insira seu telefone" },
+                                    {
+                                        validator: (_, value) => {
+                                            if (!value) return Promise.resolve();
+                                            const digits = value.replace(/\D/g, "");
+                                            if (digits.length !== 11) {
+                                                return Promise.reject(new Error("Telefone inválido"));
+                                            }
+                                            return Promise.resolve();
+                                        },
+
+                                    },
                                 ]}
-                                className=" flex-1"
                             >
-                                <Select placeholder="Cidade">
-                                    <option value="0">Selecione uma cidade</option>
-                                    {cities.map((city) => (
-                                        <option key={city.id} value={city.nome}>
-                                            {city.nome}
-                                        </option>
-                                    ))}
-                                </Select>
+                                <Input
+                                    placeholder="(99) 99999-9999"
+                                    onChange={(e) => {
+                                        form.setFieldsValue({ telefone: formatarTelefone(e.target.value) });
+                                    }}
+                                />
                             </Form.Item>
-                        </div>
+                        </Col>
 
-                        <Form.Item
-                            label="Bairro"
-                            name="bairro"
-                            rules={[
-                                { required: true, message: "Insira o bairro da sua arena" },
-                            ]}
-                            className=" flex-1"
-                        >
-                            <Input placeholder="Insirao o bairro da sua arena" />
-                        </Form.Item>
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                label="CEP"
+                                name="cep"
+                                rules={[
+                                    { required: true, message: "Insira o CEP da sua arena" },
+                                    {
+                                        validator: (_, value) => {
+                                            if (!value) return Promise.resolve();
+                                            const cep = value.replace(/\D/g, "");
+                                            if (cep.length !== 8) {
+                                                return Promise.reject(new Error("CEP deve ter 8 dígitos"));
+                                            }
+                                            return Promise.resolve();
+                                        },
+                                    },
+                                ]}
+                            >
+                                <Input
+                                    placeholder="Insira o CEP da sua arena"
+                                    onChange={(e) => {
+                                        form.setFieldsValue({ cep: formatarCEP(e.target.value) });
+                                    }}
+                                    onBlur={e => {
+                                        consultarCep(e.target.value);
+                                    }}
+                                />
+                            </Form.Item>
+                        </Col>
 
-                        <Form.Item
-                            label="Rua"
-                            name="rua"
-                            rules={[
-                                { required: true, message: "Insira o Rua da sua arena" },
-                            ]}
-                            className=" flex-1"
-                        >
-                            <Input placeholder="Insira o rua da sua arena" />
-                        </Form.Item>
+                        <Col xs={24} md={12}>
+                            <Row gutter={16}>
+                                <Col span={12}>
+                                    <Form.Item
+                                        label="Estado"
+                                        name="estado"
+                                        rules={[{ required: true, message: "Selecione o estado" }]}
+                                    >
+                                        <Select placeholder="Estado" options={Estados} />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={12}>
+                                    <Form.Item
+                                        label="Cidade"
+                                        name="cidade"
+                                        rules={[{ required: true, message: "Selecione a cidade" }]}
+                                    >
+                                        <Select
+                                            placeholder="Cidade"
+                                            options={cities.map(city => ({
+                                                label: city.nome,
+                                                value: city.nome,
+                                                key: city.id
+                                            }))}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                        </Col>
 
-                        <Form.Item
-                            label="Número"
-                            name="numero"
-                            rules={[
-                                { required: true, message: "Insira o número" },
-                            ]}
-                            className=" flex-1"
-                        >
-                            <Input placeholder="Nº" />
-                        </Form.Item>
 
-                        <Form.Item
-                            label="Complemento (opcional)"
-                            name="complemento"
-                            className=" flex-1"
-                        >
-                            <Input placeholder="Insira algo" />
-                        </Form.Item>
+                        <Col xs={24} md={12}>
+                            <Form.Item label="Bairro" name="bairro" rules={[{ required: true, message: "Insira o bairro" }]}>
+                                <Input placeholder="Insira o bairro da sua arena" />
+                            </Form.Item>
+                        </Col>
 
-                    </div>
+                        <Col xs={24} md={12}>
+                            <Form.Item label="Rua" name="rua" rules={[{ required: true, message: "Insira a rua" }]}>
+                                <Input placeholder="Insira a rua da sua arena" />
+                            </Form.Item>
+                        </Col>
 
-                    <Form.Item
-                        label="Descrição (opcional)"
-                        name="descricao"
-                        className=" flex-1"
-                        rules={[{ max: 500, message: 'A descrição deve ter no máximo 500 caracteres.' }]}
-                    >
-                        <Input.TextArea
-                            placeholder="Digite algo que descreva sua arena e ajude a atrair mais reservas"
-                            autoSize={{ minRows: 3, maxRows: 6 }}
-                            count={{
-                                show: true,
-                                max: 500
-                            }}
-                        />
-                    </Form.Item>
+                        <Col xs={24} md={12}>
+                            <Form.Item label="Número" name="numero" rules={[{ required: true, message: "Insira o número" }]}>
+                                <Input placeholder="Nº" />
+                            </Form.Item>
+                        </Col>
 
-                    <Form.Item className="mt-8 flex justify-end">
-                        <div className='flex items-center gap-4'>
+                        <Col xs={24} md={12}>
+                            <Form.Item label="Complemento (opcional)" name="complemento">
+                                <Input placeholder="Ex: Bloco A, Apto 101" />
+                            </Form.Item>
+                        </Col>
+
+                        <Col span={24}>
+                            <Form.Item
+                                label="Descrição (opcional)"
+                                name="descricao"
+                                rules={[{ max: 500, message: 'A descrição deve ter no máximo 500 caracteres.' }]}
+                            >
+                                <Input.TextArea
+                                    placeholder="Digite algo que descreva sua arena e ajude a atrair mais reservas"
+                                    autoSize={{ minRows: 3, maxRows: 6 }}
+                                    count={{ show: true, max: 500 }}
+                                />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Flex justify="end" className="mt-8">
+                        <Space size="middle">
                             <ButtonCancelar
-                                text={!isFormAltered || loading || status !== 'authenticated' ? 'Voltar' : 'Cancelar'}
+                                text={!isFormAltered ? 'Voltar' : 'Cancelar'}
                                 onClick={() => {
-                                    if (!isFormAltered || loading || status !== 'authenticated') {
+                                    if (!isFormAltered || isSubmitting || status !== 'authenticated') {
                                         router.back();
                                         return;
                                     }
@@ -544,15 +549,15 @@ export default function InformacoesPessoaisArena() {
                             />
                             <ButtonPrimary
                                 text='Salvar alterações'
-                                htmlType="button"
-                                onClick={() => form.submit()}
-                                loading={loading}
-                                disabled={!isFormAltered || loading || status !== 'authenticated'}
+                                type="primary"
+                                htmlType="submit"
+                                loading={isSubmitting}
+                                disabled={!isFormAltered || isSubmitting || status !== 'authenticated'}
                             />
-                        </div>
-                    </Form.Item>
+                        </Space>
+                    </Flex>
                 </Form>
-            </div>
-        </div>
+            </Card>
+        </Flex>
     )
 }

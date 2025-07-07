@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect, useCallback } from "react";
-import { Button, Input, App } from "antd";
+import { Button, Input, App, Flex } from "antd";
 import Image from "next/image";
 import {
     verifyEmail,
@@ -126,21 +126,28 @@ export default function ConfirmEmailPage() {
     }
 
     return (
-        <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center justify-center">
-            <div className="hidden md:block md:w-2/3 p-4">
-                <Image src="/icons/beachtenis.svg" alt="Beach Tenis" width={700} height={700} />
-            </div>
-            <div className="w-full md:w-1/3 p-4">
-                <div className="flex items-center justify-center mb-4">
-                    <div className="flex items-center justify-center p-3 rounded-full bg-green-primary">
+        <Flex align="center" justify="center" className="flex-1 sm:!px-10 lg:!px-40">
+            <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
+                <Image
+                    src="/icons/beachtenis.svg"
+                    alt="Beach Tenis"
+                    width={400}
+                    height={400}
+                    className="!sticky !top-20 !w-full !object-cover"
+                />
+            </Flex>
+
+            <Flex align="center" vertical justify="center" className="!w-full md:!w-1/3 !p-6">
+                <Flex align="center" justify="center" className="!mb-4">
+                    <Flex align="center" justify="center" className="!p-2 rounded-full bg-green-primary">
                         <Image
                             src="/icons/email.svg"
                             alt="Email Icon"
                             width={24}
                             height={24}
                         />
-                    </div>
-                </div>
+                    </Flex>
+                </Flex>
                 <p className="text-center text-gray-800 font-semibold text-2xl mb-2">
                     Confirme seu e-mail
                 </p>
@@ -150,14 +157,14 @@ export default function ConfirmEmailPage() {
                     Insira-o abaixo:
                 </p>
 
-                <div className="flex justify-center mb-4">
+                <Flex justify="center" className="!mb-4">
                     <Input.OTP
                         length={6}
                         value={code}
                         onChange={setCode}
                         disabled={loading}
                     />
-                </div>
+                </Flex>
                 <p className="mb-4 text-center text-sm text-gray-500">
                     Não recebeu o código? Verifique sua caixa de lixo eletrônico (SPAM)
                     ou aguarde para reenviar.
@@ -186,7 +193,7 @@ export default function ConfirmEmailPage() {
                     disabled={code.length !== 6 || loading}
                     className="w-full"
                 />
-            </div>
-        </div>
+            </Flex>
+        </Flex>
     );
 }

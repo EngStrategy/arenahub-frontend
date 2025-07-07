@@ -1,8 +1,9 @@
-import { PictureOutlined, UserAddOutlined } from '@ant-design/icons';
-import { Button, App, Popconfirm } from 'antd';
-import Image from 'next/image';
 import React from 'react';
+import { Button, App, Popconfirm, Card, Flex, Avatar, Typography, Tag, Divider } from 'antd';
+import { PictureOutlined, UserAddOutlined } from '@ant-design/icons';
 import { formatarData } from '@/context/functions/formatarData';
+
+const { Text, Title } = Typography;
 
 type JogoAberto = {
     id: string;
@@ -23,70 +24,58 @@ type JogoAbertoCardProps = {
 
 export function JogoAbertoCard({ jogoAberto }: JogoAbertoCardProps) {
     const { notification } = App.useApp();
+
     return (
-        <div className="flex w-full items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 hover:scale-105 transition-all">
+        <Card
+            hoverable
+            style={{ height: '100%' }}
+            styles={{ body: { padding: 16, height: "100%" } }}
+        >
+            <Flex vertical justify="space-between" className="h-full">
 
-            {/* Coluna da Esquerda: Informações do Local */}
-            <div className="flex flex-col items-center text-center w-24">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-400 overflow-hidden">
-                    {jogoAberto.localImageUrl ? (
-                        <Image
-                            src={jogoAberto.localImageUrl}
-                            alt={`Logo de ${jogoAberto.arenaName}`}
-                            fill
-                            style={{ objectFit: 'cover' }}
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                    ) : (
-                        <PictureOutlined style={{ fontSize: '24px' }} />
-                    )}
-                </div>
-                <p className="mt-2 font-semibold text-gray-800 text-sm break-words">
-                    {jogoAberto.arenaName}
-                </p>
-                <p className="text-xs text-gray-500 break-words">{jogoAberto.quadraName}</p>
-            </div>
+                <Flex vertical>
+                    <Flex gap="middle" align="start">
+                        <Avatar shape="square" size={64} src={jogoAberto.localImageUrl} icon={<PictureOutlined />} />
+                        <Flex vertical>
+                            <Title level={5} style={{ margin: 0 }}>{jogoAberto.arenaName}</Title>
+                            <Text type="secondary">{jogoAberto.quadraName}</Text>
+                        </Flex>
+                    </Flex>
 
-            <div className="w-px self-stretch bg-gray-200" />
+                    <Divider style={{ margin: '12px 0' }} />
 
-            {/* Coluna Central: Detalhes da jogoAberto */}
-            <div className="flex-grow space-y-1 self-center">
-                <p className="text-sm text-gray-700">{formatarData(jogoAberto.date)}</p>
+                    <Flex vertical gap={4}>
+                        <Text strong>{formatarData(jogoAberto.date)}</Text>
+                        <Text type="secondary">
+                            {`${jogoAberto.startTime} às ${jogoAberto.endTime} (${jogoAberto.durationHours}h)`}
+                        </Text>
+                        <Text strong className="text-green-600">{jogoAberto.sport}</Text>
+                    </Flex>
+                </Flex>
 
-                <p className="text-sm text-gray-700">
-                    {jogoAberto.startTime} às {jogoAberto.endTime} ({jogoAberto.durationHours} {jogoAberto.durationHours === 1 ? 'hora' : 'horas'})
-                </p>
-                <p className="font-semibold text-green-600">{jogoAberto.sport}</p>
-                <div className="inline-block rounded-md bg-blue-100 px-2 py-1 text-xs font-semibold text-sky-500">
-                    {jogoAberto.vagasDisponiveis} vagas
-                </div>
-            </div>
-
-            {/* Coluna da Direita: Botão de Ação */}
-            <div className="ml-auto self-center">
-                <Popconfirm
-                    title="Confirmar solicitação"
-                    description={`Tem certeza que deseja solicitar entrada neste jogo?`}
-                    okText='Confirmar'
-                    cancelText="Cancelar"
-                    cancelButtonProps={{ type: 'text', className: '!text-gray-600'}}
-                    okButtonProps={{ type: 'primary' }}
-                    onConfirm={() => notification.success({
-                        message: 'Solicitação Enviada!',
-                        description: `Seu pedido para entrar no jogo de ${jogoAberto.sport} foi enviado.`,
-                        duration: 8,
-                    })}
-                    placement="topLeft"
-                    icon={null}
-                >
-                    <Button
-                        aria-label="Entrar no jogo"
-                        className="!flex !h-10 !w-10 !items-center !justify-center !border-none !rounded-lg !bg-green-100 !text-green-600 hover:!bg-green-200"
+                <Flex justify="space-between" align="center" className="mt-4">
+                    <Tag color="blue" style={{ fontWeight: 'bold' }}>
+                        {jogoAberto.vagasDisponiveis} vagas
+                    </Tag>
+                    <Popconfirm
+                        title="Confirmar solicitação?"
+                        description="Deseja solicitar entrada neste jogo?"
+                        okText='Confirmar'
+                        cancelText="Cancelar"
+                        cancelButtonProps={{ style: { border: 0 } }}
+                        onConfirm={() => notification.success({
+                            message: 'Solicitação Enviada!',
+                            description: `Seu pedido para o jogo de ${jogoAberto.sport} foi enviado.`,
+                            duration: 5,
+                        })}
+                        placement="topRight"
                     >
-                        <UserAddOutlined style={{ fontSize: '20px' }} />
-                    </Button>
-                </Popconfirm>
-            </div>
-        </div>
+                        <Button type="primary" ghost icon={<UserAddOutlined />} className='hover:!bg-green-500 hover:!text-green-50 hover:!border-green-500'>
+                            Entrar
+                        </Button>
+                    </Popconfirm>
+                </Flex>
+            </Flex>
+        </Card>
     )
 }

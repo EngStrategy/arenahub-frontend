@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Form, Input, Upload, Avatar, App, Image, Button, Dropdown } from 'antd';
+import { Form, Input, Upload, Avatar, App, Button, Dropdown, Flex, Card, Typography, Row, Col, Space } from 'antd';
 import { UserOutlined, UploadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
@@ -98,14 +98,13 @@ export default function InformacoesPessoaisAtleta() {
 
     const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
     const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
-    const [previewOpen, setPreviewOpen] = useState(false);
-    const [previewImage, setPreviewImage] = useState('');
-    const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFormAltered, setIsFormAltered] = useState(false);
+    const [isPageLoading, setIsPageLoading] = useState(true);
 
     const fetchAndSetUserData = useCallback(async () => {
         if (status === 'authenticated' && session?.user?.userId && session?.user?.accessToken) {
-            setLoading(true);
+            setIsSubmitting(true);
             try {
                 const userData = await getAtletaById(session.user.userId);
                 if (!userData) {
@@ -119,14 +118,17 @@ export default function InformacoesPessoaisAtleta() {
                 console.error('Erro ao carregar dados do usuário:', error);
                 message.error('Erro ao carregar dados do usuário.');
             } finally {
-                setLoading(false);
+                setIsSubmitting(false);
             }
         }
     }, [status, session, form, message]);
 
     useEffect(() => {
         if (status !== 'loading') {
-            fetchAndSetUserData();
+            setIsPageLoading(true);
+            fetchAndSetUserData().finally(() => {
+                setIsPageLoading(false);
+            });
         }
     }, [status, fetchAndSetUserData]);
 
@@ -134,15 +136,13 @@ export default function InformacoesPessoaisAtleta() {
         if (!file.url && !file.preview) {
             file.preview = await getBase64(file.originFileObj as FileType);
         }
-        setPreviewImage(file.url ?? (file.preview as string));
-        setPreviewOpen(true);
     };
 
     const onFinish = async (values: PersonalInfoFormValues) => {
         if (status !== 'authenticated' || !session?.user?.userId || !session?.user?.accessToken) {
             message.error('Você não está autenticado.'); return;
         }
-        setLoading(true);
+        setIsSubmitting(true);
         try {
             let urlParaSalvar = imageUrl;
             if (selectedFile) {
@@ -172,7 +172,7 @@ export default function InformacoesPessoaisAtleta() {
         } catch (error: any) {
             message.error(`${error instanceof Error ? error.message : 'Tente novamente.'}`);
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -199,7 +199,7 @@ export default function InformacoesPessoaisAtleta() {
         }
     };
 
-    const uploadButton = (<Button loading={loading} > <UploadOutlined className="mr-2" /> Escolher foto </Button>);
+    const uploadButton = (<Button loading={isSubmitting} > <UploadOutlined className="mr-2" /> Escolher foto </Button>);
 
     const handleRemoveImage = () => {
         setImageUrl(undefined);
@@ -220,7 +220,7 @@ export default function InformacoesPessoaisAtleta() {
                         maxCount={1}
                         multiple={false}
                         accept="image/jpeg,image/png"
-                        disabled={loading || status !== 'authenticated'}
+                        disabled={isSubmitting || status !== 'authenticated'}
                     >
                         <div className="flex items-center w-full">
                             <UploadOutlined className="mr-2" />
@@ -242,17 +242,26 @@ export default function InformacoesPessoaisAtleta() {
         });
     }
 
-    if (loading) {
+    if (isPageLoading) {
         return <InformacoesPessoaisArenaSkeleton />;
     }
 
     return (
-        <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center my-6">
-            <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
-                <h1 className="text-2xl font-semibold text-gray-800 mb-2">Informações pessoais</h1>
-                <p className="text-gray-600 mb-8">
-                    Gerencie suas informações pessoais e salve as alterações caso realize alguma mudança.
-                </p>
+        <Flex justify='center' align='start' className="sm:!px-10 lg:!px-40 !px-4 !my-6">
+            <Card
+                title={
+                    <>
+                        <Typography.Title level={3} className="!mb-2">
+                            Informações pessoais
+                        </Typography.Title>
+                        <Typography.Paragraph type="secondary" style={{ whiteSpace: 'normal' }}>
+                            Gerencie suas informações pessoais e salve as alterações caso realize alguma mudança.
+                        </Typography.Paragraph>
+                    </>
+                }
+                className="w-full max-w-2xl shadow-xl !pt-6"
+                styles={{ header: { borderBottom: 0 } }}
+            >
                 <Form
                     form={form}
                     name="personal_atleta_info"
@@ -261,12 +270,12 @@ export default function InformacoesPessoaisAtleta() {
                     onFinishFailed={onFinishFailed}
                     autoComplete="off"
                     onValuesChange={() => setIsFormAltered(true)}
-                    disabled={loading || status !== 'authenticated'}
+                    disabled={isPageLoading || isSubmitting || status !== 'authenticated'}
                 >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="col-span-1 md:col-span-2">
+                    <Row gutter={[24, 24]}>
+                        <Col span={24}>
                             <Form.Item label="Foto de perfil" className="!mb-2">
-                                <div className="flex items-center gap-4">
+                                <Flex align="center" gap="middle">
                                     <Dropdown
                                         menu={{ items: menuItems }}
                                         trigger={['click']}
@@ -285,8 +294,10 @@ export default function InformacoesPessoaisAtleta() {
                                             </div>
                                         </div>
                                     </Dropdown>
-                                    <div className='flex rounded-md flex-col gap-2 w-full'>
-                                        <span className="text-gray-500 text-xs">Tamanho máximo: 5MB</span>
+                                    <Flex vertical>
+                                        <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
+                                            Tamanho máximo: 5MB
+                                        </Typography.Text>
                                         <ImgCrop rotationSlider>
                                             <Upload
                                                 showUploadList={false}
@@ -296,79 +307,82 @@ export default function InformacoesPessoaisAtleta() {
                                                 maxCount={1}
                                                 multiple={false}
                                                 accept="image/jpeg,image/png"
-                                                disabled={loading || status !== 'authenticated'}
+                                                disabled={isSubmitting ?? status !== 'authenticated'}
                                             >
                                                 {uploadButton}
                                             </Upload>
                                         </ImgCrop>
-                                    </div>
-                                </div>
+                                    </Flex>
+                                </Flex>
                             </Form.Item>
-                        </div>
+                        </Col>
 
-                        <Form.Item
-                            label="Nome"
-                            name="name"
-                            rules={[{ required: true, message: 'Por favor, insira seu nome!' }]}
-                            className='sem-asterisco'
-                        >
-                            <Input placeholder="Seu nome completo" />
-                        </Form.Item>
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                label="Nome"
+                                name="name"
+                                rules={[{ required: true, message: 'Por favor, insira seu nome!' }]}
+                                className='sem-asterisco'
+                            >
+                                <Input placeholder="Seu nome completo" />
+                            </Form.Item>
+                        </Col>
 
-                        <Form.Item
-                            label="Telefone"
-                            name="phone"
-                            rules={
-                                [{ required: true, message: "Por favor, insira seu telefone!" },
-                                {
-                                    validator: (_, value) => {
-                                        if (!value) return Promise.resolve();
-                                        const digits = value.replace(/\D/g, "");
-                                        if (digits.length !== 11) { return Promise.reject("Telefone inválido"); }
-                                        return Promise.resolve();
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                label="Telefone"
+                                name="phone"
+                                rules={[
+                                    { required: true, message: "Por favor, insira seu telefone!" },
+                                    {
+                                        validator: (_, value) => {
+                                            if (!value) return Promise.resolve();
+                                            const digits = value.replace(/\D/g, "");
+                                            if (digits.length !== 11) {
+                                                return Promise.reject(new Error("Telefone inválido"));
+                                            }
+                                            return Promise.resolve();
+                                        },
+
                                     },
-                                }]
-                            }
-                            className="sem-asterisco"
-                        >
-                            <Input
-                                placeholder="(99) 99999-9999"
-                                onChange={(e) => {
-                                    form.setFieldsValue({ phone: formatarTelefone(e.target.value) });
-                                }}
-                            />
-                        </Form.Item>
-                    </div>
-                    <Form.Item className="mt-8 flex justify-end">
-                        <div className='flex items-center gap-4'>
+                                ]}
+                                className="sem-asterisco"
+                            >
+                                <Input
+                                    placeholder="(99) 99999-9999"
+                                    onChange={(e) => {
+                                        form.setFieldsValue({ phone: formatarTelefone(e.target.value) });
+                                    }}
+                                />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Flex justify="end" className="mt-8">
+                        <Space size="middle">
                             <ButtonCancelar
-                                text="Cancelar"
+                                text={!isFormAltered ? 'Voltar' : 'Cancelar'}
                                 onClick={() => {
+                                    if (!isFormAltered || isSubmitting || status !== 'authenticated') {
+                                        router.back();
+                                        return;
+                                    }
                                     fetchAndSetUserData();
-                                    router.back();
                                 }}
+                                disabled={isSubmitting}
                             />
+
                             <ButtonPrimary
                                 text='Salvar alterações'
-                                htmlType="button"
-                                onClick={() => form.submit()}
-                                loading={loading}
-                                disabled={!isFormAltered || loading || status !== 'authenticated'}
+                                type="primary"
+                                htmlType="submit"
+                                loading={isSubmitting}
+                                disabled={!isFormAltered || isSubmitting || status !== 'authenticated'}
                             />
-                        </div>
-                    </Form.Item>
+                        </Space>
+                    </Flex>
                 </Form>
-                {previewImage && (
-                    <Image
-                        wrapperStyle={{ display: 'none' }}
-                        preview={{
-                            visible: previewOpen,
-                            onVisibleChange: (visible) => setPreviewOpen(visible), afterOpenChange: (visible) => !visible && setPreviewImage(''),
-                        }}
-                        src={previewImage}
-                    />
-                )}
-            </div>
-        </div>
+            </Card>
+        </Flex>
     );
 }

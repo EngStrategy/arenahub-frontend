@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
     Form, Input, Select, App, Switch, Avatar,
-    Upload, UploadProps, Button, UploadFile
+    Upload, UploadProps, Button, UploadFile,
+    Progress, Flex, Popover,
+    Typography
 } from "antd";
 import { Estados } from "@/data/Estados";
 import Link from "next/link";
@@ -21,11 +23,58 @@ import { ExclamationCircleFilled, PictureOutlined, UploadOutlined } from "@ant-d
 import ImgCrop from "antd-img-crop";
 import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
 import { useCapsLock } from "@/context/hooks/useCapsLook";
+import CapsLock from "./Alerts/CapsLock";
+
 const { Option } = Select;
+const { Text } = Typography;
 
 type CITYResponse = {
     id: number;
     nome: string;
+};
+
+const PasswordStrengthIndicator = ({ password = '' }: { password?: string }) => {
+    const evaluatePassword = () => {
+        let score = 0;
+        if (password.length >= 8) score += 25;
+        if (/\d/.test(password)) score += 25;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 25;
+        if (/[^A-Za-z0-9]/.test(password)) score += 25;
+        return score;
+    };
+
+    const score = evaluatePassword();
+    let color = 'red';
+    let text = 'Fraca';
+
+    if (score >= 75) {
+        color = 'green';
+        text = 'Forte';
+    } else if (score >= 50) {
+        color = 'orange';
+        text = 'Média';
+    }
+
+    return (
+        <div className="w-full">
+            <p className="mb-2 font-medium">Força da senha: {text}</p>
+            <Progress percent={score} showInfo={false} strokeColor={color} />
+            <ul className="text-xs text-gray-500 mt-2 list-disc list-inside">
+                <li className={password.length >= 8 ? 'text-green-600' : ''}>
+                    Pelo menos 8 caracteres
+                </li>
+                <li className={/\d/.test(password) ? 'text-green-600' : ''}>
+                    Pelo menos um número
+                </li>
+                <li className={/[a-z]/.test(password) && /[A-Z]/.test(password) ? 'text-green-600' : ''}>
+                    Letras maiúsculas e minúsculas
+                </li>
+                <li className={/[^A-Za-z0-9]/.test(password) ? 'text-green-600' : ''}>
+                    Pelo menos um caractere especial
+                </li>
+            </ul>
+        </div>
+    );
 };
 
 export const RegistroArena = ({ className }: { className?: string }) => {
@@ -34,6 +83,8 @@ export const RegistroArena = ({ className }: { className?: string }) => {
     const router = useRouter();
 
     const [loading, setLoading] = useState(false);
+    const [password, setPassword] = useState('');
+    const [isPasswordFocused, setIsPasswordFocused] = useState(false);
     const [cities, setCities] = useState<CITYResponse[]>([]);
     const [haveCnpj, setHaveCnpj] = useState(true);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -227,7 +278,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
             onFinishFailed={onFinishFailed}
             className={className}
         >
-            <div className="flex flex-col md:flex-row md:gap-4">
+            <Flex vertical className="md:!flex-row" gap="middle">
                 <Form.Item
                     label="Email"
                     name="email"
@@ -239,9 +290,9 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 >
                     <Input placeholder="Insira seu email" />
                 </Form.Item>
-            </div>
+            </Flex>
 
-            <div className="flex flex-col md:flex-row md:gap-4">
+            <Flex vertical className="md:!flex-row" gap="middle">
                 <Form.Item
                     label="CPF do proprietário"
                     name="cpfProprietario"
@@ -251,7 +302,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                             validator: (_, value) => {
                                 if (!value) return Promise.resolve();
                                 if (!validarCPF(value)) {
-                                    return Promise.reject("CPF inválido!");
+                                    return Promise.reject(new Error("CPF inválido!"));
                                 }
                                 return Promise.resolve();
                             },
@@ -277,7 +328,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                                 if (!value) return Promise.resolve();
                                 const digits = value.replace(/\D/g, "");
                                 if (digits.length !== 11) {
-                                    return Promise.reject("Telefone inválido");
+                                    return Promise.reject(new Error("Telefone inválido"));
                                 }
                                 return Promise.resolve();
                             },
@@ -292,9 +343,9 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                         }}
                     />
                 </Form.Item>
-            </div>
+            </Flex>
 
-            <div className="flex flex-col md:flex-row md:gap-4">
+            <Flex vertical className="md:!flex-row" gap="middle">
                 <Form.Item
                     label="Senha"
                     name="senha"
@@ -304,28 +355,49 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     ]}
                     className="flex-1"
                 >
-                    <Input.Password placeholder="Insira sua senha" />
+                    <Popover
+                        content={<PasswordStrengthIndicator password={password} />}
+                        placement="right"
+                        open={isPasswordFocused}
+                        getPopupContainer={triggerNode => triggerNode.parentNode as HTMLElement}
+                    >
+                        <Input.Password
+                            placeholder="Insira sua senha"
+                            onFocus={() => setIsPasswordFocused(true)}
+                            onBlur={() => setIsPasswordFocused(false)}
+                            onChange={(e) => {
+                                const newPassword = e.target.value;
+                                setPassword(newPassword);
+                                form.setFieldsValue({ senha: newPassword });
+                            }}
+                        />
+                    </Popover>
                 </Form.Item>
 
                 <Form.Item
                     label="Confirme sua senha"
                     name="confirmPassword"
-                    dependencies={["password"]}
+                    dependencies={["senha"]}
+                    hasFeedback
                     rules={[
                         { required: true, message: "Confirme sua senha!" },
-                        { min: 8, message: "Pelo menos 8 caracteres!" },
+                        ({ getFieldValue }) => ({
+                            validator(_, value) {
+                                if (!value || getFieldValue("senha") === value) {
+                                    return Promise.resolve();
+                                }
+                                return Promise.reject(new Error("As senhas não coincidem!"));
+                            }
+                        }),
                     ]}
                     className="flex-1"
                 >
                     <Input.Password placeholder="Confirme sua senha" />
                 </Form.Item>
-            </div>
+            </Flex>
 
             {capsLockEstaAtivado && (
-                <div role="alert" className="flex items-center gap-2 text-orange-600 mb-4 transition-opacity duration-300 animate-pulse">
-                    <ExclamationCircleFilled />
-                    <span className="text-sm font-medium">CapsLock está ativado</span>
-                </div>
+                <CapsLock />
             )}
 
             <Form.Item
@@ -351,7 +423,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                             }
                             let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
                             if (resultado !== parseInt(digitos.charAt(0))) {
-                                return Promise.reject("CNPJ inválido");
+                                return Promise.reject(new Error("CNPJ inválido"));
                             }
                             tamanho = tamanho + 1;
                             numeros = cnpj.substring(0, tamanho);
@@ -363,7 +435,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                             }
                             resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
                             if (resultado !== parseInt(digitos.charAt(1))) {
-                                return Promise.reject("CNPJ inválido");
+                                return Promise.reject(new Error("CNPJ inválido"));
                             }
                             return Promise.resolve();
                         },
@@ -382,14 +454,14 @@ export const RegistroArena = ({ className }: { className?: string }) => {
             </Form.Item>
 
             <Form.Item className="flex flex-col">
-                <div className="flex flex-row flex-wrap justify-between items-center gap-x-4 gap-y-2 bg-gray-200 p-2 rounded-md border border-gray-300">
+                <Flex align="center" justify="space-between" className="w-full bg-gray-200 !p-2 rounded-md border border-gray-300">
                     <span>Minha arena não tem CNPJ</span>
                     <Switch
                         size="small"
                         checked={!haveCnpj}
                         onChange={(checked) => setHaveCnpj(!checked)}
                     />
-                </div>
+                </Flex>
                 <p className="text-gray-500 mt-1 mb-0">
                     Utilizaremos seu CPF em vez do CNPJ caso selecione esta opção
                 </p>
@@ -436,7 +508,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 />
             </Form.Item>
 
-            <div className="flex flex-row gap-4">
+            <Flex vertical className="md:!flex-row" gap="middle">
                 <Form.Item
                     label="Estado"
                     name="estado"
@@ -464,7 +536,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                         ))}
                     </Select>
                 </Form.Item>
-            </div>
+            </Flex>
 
             <Form.Item
                 label="Bairro"
@@ -488,7 +560,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 <Input placeholder="Insira a rua da sua arena" />
             </Form.Item>
 
-            <div className="flex flex-row gap-4">
+            <Flex vertical className="md:!flex-row" gap="middle">
                 <Form.Item
                     label="Número"
                     name="numero"
@@ -501,17 +573,17 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 </Form.Item>
 
                 <Form.Item
-                    label="Complemento (opcional)"
+                    label="Complemento"
                     name="complemento"
                     className="flex-1"
                 >
                     <Input placeholder="Insira algo" />
                 </Form.Item>
-            </div>
+            </Flex>
 
             <Form.Item label="Foto ou logomarca da arena" className="!mb-2">
-                <div className="flex items-center gap-4">
-                    <div className="relative group cursor-pointer" title="Clique para alterar a foto">
+                <Flex align="center" className="gap-4">
+                    <div className="relative group">
                         <Avatar
                             size={64}
                             src={imageUrl ?? undefined}
@@ -519,8 +591,10 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                             className="flex-shrink-0"
                         />
                     </div>
-                    <div className='flex rounded-md flex-col gap-2 w-full'>
-                        <span className="text-gray-500 text-xs">Tamanho máximo: 5MB</span>
+                    <Flex vertical className="gap-2">
+                        <Typography.Text type="secondary" className="!mb-0 !text-xs">
+                            Recomendamos uma imagem quadrada para melhor visualização
+                        </Typography.Text>
                         <ImgCrop rotationSlider>
                             <Upload
                                 showUploadList={false}
@@ -535,14 +609,14 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                                 {uploadButton}
                             </Upload>
                         </ImgCrop>
-                    </div>
-                </div>
+                    </Flex>
+                </Flex>
             </Form.Item>
 
             <Form.Item
                 label="Descrição (opcional)"
                 name="descricao"
-                className="flex-1"
+                className="!mt-5"
                 rules={[{ max: 500, message: 'A descrição deve ter no máximo 500 caracteres.' }]}
             >
                 <Input.TextArea
@@ -554,13 +628,15 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     }}
                 />
             </Form.Item>
-            <div className="flex gap-4 justify-end">
+
+            <Flex className="gap-2">
                 <ButtonCancelar
                     text="Cancelar"
                     type="primary"
                     onClick={router.back}
                     className="w-50"
                 />
+
                 <ButtonPrimary
                     text="Cadastrar arena"
                     type="primary"
@@ -569,7 +645,8 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     loading={loading}
                     disabled={loading}
                 />
-            </div>
+            </Flex>
+
             <p className="text-gray-800 text-sm mt-4">
                 Já possui uma conta?{" "}
                 <Link

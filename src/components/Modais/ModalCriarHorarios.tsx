@@ -155,7 +155,7 @@ const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel,
                                             <Select placeholder="Selecione" style={{ width: '100%' }} options={[{ value: 'DISPONIVEL', label: 'Disponível' }, { value: 'INDISPONIVEL', label: 'Indisponível' }, { value: 'MANUTENCAO', label: 'Manutenção' }]} />
                                         </Form.Item>
                                     </div>
-                                    <Button type="text" danger icon={<CloseOutlined />} onClick={() => remove(name)} className="self-center mt-6" />
+                                    <Button type="text" danger icon={<CloseOutlined />} onClick={() => remove(name)} className='mt-1'/>
                                 </div>
                             ))}
                             <Form.Item>

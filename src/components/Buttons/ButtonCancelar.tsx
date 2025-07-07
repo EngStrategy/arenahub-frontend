@@ -44,7 +44,7 @@ export function ButtonCancelar(
         <Button
             type={type}
             htmlType={htmlType}
-            className={`!bg-gray-200 !text-gray-700 hover:!bg-gray-300 !py-4 !shadow-none ${className}`}
+            className={`!bg-gray-200 !border-0 !text-gray-700 hover:!bg-gray-300 !py-4 !shadow-none ${className}`}
             disabled={disabled}
             loading={loading}
             danger={danger}

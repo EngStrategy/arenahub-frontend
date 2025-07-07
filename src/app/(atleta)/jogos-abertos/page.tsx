@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState } from 'react';
-import { sportIcons } from '@/data/sportIcons';
-import { Pagination } from 'antd';
+import React, { useState, useMemo } from 'react';
+import { Pagination, Layout, Typography, Row, Col, Flex, Empty } from 'antd';
 import { JogoAbertoCard } from '@/components/Cards/JogoAbertoCard';
 import CitySports from '@/components/CitySports';
 import { useSession } from 'next-auth/react';
+import { sportIcons } from '@/data/sportIcons';
+
+const { Title } = Typography;
+const { Content } = Layout;
 
 type JogoAberto = {
     id: string;
@@ -43,76 +46,92 @@ const JogoAbertoCardSkeleton = () => (
     </div>
 );
 
+const JogoAbertoSkeleton = () => (
+    <div className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
+        <div className="h-7 bg-gray-300 rounded-md w-48 mx-auto mb-8 animate-pulse"></div>
+
+        <div className="w-full">
+            <div className="mb-8 flex overflow-x-auto whitespace-nowrap space-x-3 pb-3">
+                {Array.from({ length: 10 }).map((_, index) => (
+                    <div key={index} className="bg-gray-300 h-10 w-28 rounded-full animate-pulse"></div>
+                ))}
+            </div>
+
+            <div className="w-full mb-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, index) => (
+                    <JogoAbertoCardSkeleton key={index} />
+                ))}
+            </div>
+        </div>
+    </div>
+)
+
 
 export default function JogosAbertos() {
     const { status } = useSession();
     const [selectedSport, setSelectedSport] = useState('Todos');
-    const filteredJogos = jogosAbertos.filter(jogo =>
-        selectedSport === 'Todos' || jogo.sport === selectedSport
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 6;
+
+    const filteredJogos = useMemo(() => {
+        return jogosAbertos.filter(jogo =>
+            selectedSport === 'Todos' || jogo.sport === selectedSport
+        );
+    }, [selectedSport]);
+
+    const paginatedJogos = filteredJogos.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
     );
+
+    const handleSportChange = (sport: string) => {
+        setSelectedSport(sport);
+        setCurrentPage(1);
+    };
 
     const allSports = ['Todos', ...Object.keys(sportIcons)];
 
     if (status === 'loading') {
-        return (
-            <main className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
-                <div className="h-7 bg-gray-300 rounded-md w-48 mx-auto mb-8 animate-pulse"></div>
-
-                <div className="w-full">
-                    <div className="mb-8 flex overflow-x-auto whitespace-nowrap space-x-3 pb-3">
-                        {Array.from({ length: 10 }).map((_, index) => (
-                            <div key={index} className="bg-gray-300 h-10 w-28 rounded-full animate-pulse"></div>
-                        ))}
-                    </div>
-
-                    <div className="w-full mb-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Array.from({ length: 6 }).map((_, index) => (
-                            <JogoAbertoCardSkeleton key={index} />
-                        ))}
-                    </div>
-                </div>
-            </main>
-        )
+        return <JogoAbertoSkeleton />;
     }
 
     return (
-        <main className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
-            <h1 className='text-lg text-center mb-8'>Jogos abertos</h1>
-            <div className="w-full">
-                <CitySports
-                    selectedSport={selectedSport}
-                    setSelectedSport={setSelectedSport}
-                    searchTerm=""
-                    setSearchTerm={() => { }}
-                    setCurrentPage={() => { }}
-                    allSports={allSports}
-                    sportIcons={sportIcons}
-                />
+        <Content className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
+            <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>Jogos abertos</Title>
 
-                {filteredJogos.length > 0 ? (
-                    <>
-                        <div className="w-full mb-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredJogos.map((jogo) => (
-                                <JogoAbertoCard key={jogo.id} jogoAberto={jogo} />
-                            ))}
-                        </div>
+            <CitySports
+                selectedSport={selectedSport}
+                setSelectedSport={handleSportChange}
+                searchTerm=""
+                setSearchTerm={() => { }}
+                setCurrentPage={() => { }}
+                allSports={allSports}
+                sportIcons={sportIcons}
+            />
 
-                        <div className='flex justify-center'>
-                            <Pagination
-                                total={filteredJogos.length}
-                                showSizeChanger={false}
-                                showQuickJumper={false}
-                                defaultPageSize={10}
-                                defaultCurrent={1}
-                            />
-                        </div>
-                    </>
-                ) : (
-                    <div className="text-center text-gray-500 mt-10">
-                        Nenhum jogo encontrado para o esporte selecionado.
-                    </div>
-                )}
-            </div>
-        </main>
-    )
+            {paginatedJogos.length > 0 ? (
+                <>
+                    <Row gutter={[24, 24]} className="mb-10">
+                        {paginatedJogos.map((jogo) => (
+                            <Col key={jogo.id} xs={24} sm={12} md={8} lg={6}>
+                                <JogoAbertoCard jogoAberto={jogo} />
+                            </Col>
+                        ))}
+                    </Row>
+                    <Flex justify='center'>
+                        <Pagination
+                            current={currentPage}
+                            total={filteredJogos.length}
+                            pageSize={pageSize}
+                            onChange={(page) => setCurrentPage(page)}
+                            showSizeChanger={false}
+                        />
+                    </Flex>
+                </>
+            ) : (
+                <Empty description="Nenhum jogo aberto encontrado para o esporte selecionado." className="mt-10" />
+            )}
+        </Content>
+    );
 }

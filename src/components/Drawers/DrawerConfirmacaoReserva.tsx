@@ -10,7 +10,7 @@ import type {
 } from '@/app/api/entities/quadra';
 import type { Arena as ArenaOficial } from '@/app/api/entities/arena';
 import type { QuadraComHorarios, Horario } from '@/app/(atleta)/quadras-page/[arenaId]/page';
-import { formatarEsporte } from '@/data/mapeamentoEsportes';
+import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 
 const { Text } = Typography;
 
