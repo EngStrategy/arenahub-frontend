@@ -24,6 +24,7 @@ import {
     updateQuadra, getQuadraById, QuadraCreate, DiaDaSemana,
 } from '@/app/api/entities/quadra';
 import { formatarDiaSemanaCompleto } from '@/context/functions/mapeamentoDiaSemana';
+import { useTheme } from '@/context/ThemeProvider';
 
 const { Title, Text } = Typography;
 
@@ -125,6 +126,7 @@ const EditarQuadraSkeleton = () => (
 export default function EditarQuadra() {
     const params = useParams();
     const quadraId = Number(params?.quadraId as string);
+    const { isDarkMode } = useTheme();
 
     const [form] = Form.useForm();
     const { message } = App.useApp();
@@ -210,12 +212,13 @@ export default function EditarQuadra() {
                 message.destroy(key);
             }
 
-            const horariosParaEnviar = horarios
-                .filter(h => h.intervalosDeHorario.length > 0 && h.intervalosDeHorario.some(i => i.inicio && i.fim))
-                .map(h => ({
+            const horariosParaEnviar = horarios.map(h => {
+                const intervalosValidos = h.intervalosDeHorario.filter(i => i.inicio && i.fim);
+                return {
                     diaDaSemana: h.diaDaSemana,
-                    intervalosDeHorario: h.intervalosDeHorario.map(({ id, ...resto }) => resto)
-                }));
+                    intervalosDeHorario: intervalosValidos.map(({ id, ...resto }) => resto)
+                };
+            });
 
             const updatePayload: Partial<QuadraCreate> = {
                 ...values,
@@ -232,9 +235,9 @@ export default function EditarQuadra() {
             } else {
                 throw new Error("A atualização não retornou dados.");
             }
-        } catch (error) {
-            console.error("Erro ao atualizar quadra:", error);
-            message.error("Ocorreu um erro ao salvar as alterações. Tente novamente.");
+        } catch (error: any) {
+            console.error("Erro ao atualizar quadra:", error.message || error);
+            message.error(error.message ?? "Ocorreu um erro ao salvar as alterações.", 7);
         } finally {
             setIsSubmitting(false);
         }
@@ -333,7 +336,10 @@ export default function EditarQuadra() {
     }
 
     return (
-        <Layout.Content className="flex items-start justify-center px-4 sm:px-10 lg:px-40 my-6">
+        <Layout.Content
+            className="flex items-start justify-center px-4 sm:px-10 lg:px-40 py-6 flex-1"
+            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        >
             <Card
                 title={
                     <>
@@ -501,14 +507,13 @@ export default function EditarQuadra() {
                                 return (
                                     <List.Item
                                         actions={[
-                                            <Tooltip key={`edit-tooltip-${item.diaDaSemana}`} title="Editar" placement="bottom">
+                                            <Tooltip key={`edit-tooltip-${item.diaDaSemana}`} title="Editar" placement="top">
                                                 <Button
                                                     key={`edit-${item.diaDaSemana}`}
                                                     type="primary"
                                                     shape='circle'
                                                     icon={<EditOutlined />}
                                                     onClick={() => showModal(item)}
-                                                    className="!bg-gray-100 !text-gray-600 !border-none hover:!bg-gray-300"
                                                     ghost
                                                 />
                                             </Tooltip>

@@ -24,6 +24,7 @@ import ImgCrop from "antd-img-crop";
 import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
 import { useCapsLock } from "@/context/hooks/useCapsLook";
 import CapsLock from "./Alerts/CapsLock";
+import { useTheme } from "@/context/ThemeProvider";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -81,6 +82,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
     const { message } = App.useApp();
     const [form] = Form.useForm();
     const router = useRouter();
+    const { isDarkMode } = useTheme();
 
     const [loading, setLoading] = useState(false);
     const [password, setPassword] = useState('');
@@ -528,7 +530,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     ]}
                     className="flex-1"
                 >
-                    <Select placeholder="Cidade">
+                    <Select placeholder="Cidade" showSearch>
                         {cities.map((city) => (
                             <Option key={city.id} value={city.nome}>
                                 {city.nome}
@@ -629,33 +631,32 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 />
             </Form.Item>
 
-            <Flex className="gap-2">
+            <Flex className="gap-2 !mb-4">
                 <ButtonCancelar
                     text="Cancelar"
                     type="primary"
                     onClick={router.back}
-                    className="w-50"
+                    className="w-100"
                 />
 
                 <ButtonPrimary
                     text="Cadastrar arena"
                     type="primary"
                     htmlType="submit"
-                    className="w-50"
+                    className="w-100"
                     loading={loading}
                     disabled={loading}
                 />
             </Flex>
 
-            <p className="text-gray-800 text-sm mt-4">
+            <Typography.Text>
                 Já possui uma conta?{" "}
                 <Link
                     href="/login"
-                    className="!underline underline-offset-4 text-green-primary hover:!text-green-500"
-                >
+                    className="!underline !underline-offset-4 !text-green-500 hover:!text-green-500 ">
                     Entrar
                 </Link>
-            </p>
+            </Typography.Text>
         </Form>
     );
 };

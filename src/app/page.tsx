@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Col, Flex, Grid, Pagination, Row } from 'antd';
+import { Col, Flex, Pagination, Row } from 'antd';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
 import { sportIcons } from '@/data/sportIcons';
-import { Arena, getAllArenas } from '@/app/api/entities/arena';
+import { type Arena, getAllArenas, type ArenaQueryParams } from '@/app/api/entities/arena';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import CitySports from '@/components/CitySports';
+import { useTheme } from '@/context/ThemeProvider';
 
 const ArenaCardSkeleton = () => (
   <div className="bg-white rounded-lg overflow-hidden shadow-lg border border-gray-200 flex flex-col animate-pulse">
@@ -19,11 +20,27 @@ const ArenaCardSkeleton = () => (
   </div>
 );
 
+const sportNameToBackendEnum: { [key: string]: ArenaQueryParams['esporte'] } = {
+  'Futebol society': 'FUTEBOL_SOCIETY',
+  'Futebol Sete': 'FUTEBOL_SETE',
+  'Futebol 11': 'FUTEBOL_ONZE',
+  'Futsal': 'FUTSAL',
+  'Beach Tennis': 'BEACHTENNIS',
+  'Vôlei': 'VOLEI',
+  'Futevôlei': 'FUTEVOLEI',
+  'Basquete': 'BASQUETE',
+  'Handebol': 'HANDEBOL',
+};
+
 export default function HomePage() {
   const { status } = useSession();
+  const { isDarkMode } = useTheme();
+
 
   const [selectedSport, setSelectedSport] = useState('Todos');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [committedSearchTerm, setCommittedSearchTerm] = useState('');
+  const [inputValue, setInputValue] = useState('');
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 16;
 
@@ -37,11 +54,13 @@ export default function HomePage() {
     const fetchArenas = async () => {
       setLoading(true);
       try {
+        const backendSport = selectedSport === 'Todos' ? undefined : sportNameToBackendEnum[selectedSport];
+
         const response = await getAllArenas({
-          currentPage,
-          pageSize,
-          esporte: selectedSport === 'Todos' ? undefined : selectedSport as any,
-          cidade: searchTerm === '' ? undefined : searchTerm,
+          page: currentPage - 1,
+          size: pageSize,
+          esporte: backendSport,
+          cidade: committedSearchTerm === '' ? undefined : committedSearchTerm,
         });
 
         setArenas(response?.content || []);
@@ -59,7 +78,12 @@ export default function HomePage() {
       fetchArenas();
     }
 
-  }, [currentPage, selectedSport, searchTerm, status]);
+  }, [currentPage, selectedSport, committedSearchTerm, status]);
+
+  const handleSearchCommit = () => {
+    setCommittedSearchTerm(inputValue);
+    setCurrentPage(1);
+  };
 
   const allSports = ['Todos', ...Object.keys(sportIcons)];
 
@@ -79,8 +103,8 @@ export default function HomePage() {
       <>
         <Row gutter={[24, 24]} className="mb-10">
           {arenas.map((arena) => (
-            <Col key={arena.id} xs={24} sm={12} lg={12}>
-              <Link href={`/quadras-page/${arena.id}`} passHref>
+            <Col key={arena.id} xs={24} sm={24} lg={12}>
+              <Link href={`/quadras/${arena.id}`} passHref>
                 <ArenaCard
                   arena={{
                     ...arena,
@@ -113,14 +137,19 @@ export default function HomePage() {
   }
 
   return (
-    <Flex vertical className="!px-4 sm:!px-10 lg:!px-40 !py-8">
+    <Flex
+      vertical
+      className="!px-4 sm:!px-10 lg:!px-40 !py-8 flex-1"
+      style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+    >
       <div className="w-full">
         <CitySports
           loading={isPageLoading}
           selectedSport={selectedSport}
           setSelectedSport={setSelectedSport}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
+          inputValue={inputValue}
+          setInputValue={setInputValue}
+          handleSearchCommit={handleSearchCommit}
           setCurrentPage={setCurrentPage}
           allSports={allSports}
           sportIcons={sportIcons}

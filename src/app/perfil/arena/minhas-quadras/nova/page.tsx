@@ -5,6 +5,7 @@ import {
     Form, Input, Select, Button, Typography, Upload,
     Avatar, App, UploadProps, UploadFile, Switch, MenuProps, Dropdown,
     Layout, Card, Row, Col, Flex, List, Tag, Space,
+    Tooltip,
 } from 'antd';
 import {
     PictureOutlined, UploadOutlined, EditOutlined, DeleteOutlined,
@@ -20,6 +21,7 @@ import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import ModalCriarHorarios from '@/components/Modais/ModalCriarHorarios';
 import { createQuadra, QuadraCreate, DiaDaSemana, StatusHorario } from '@/app/api/entities/quadra';
 import { formatarDiaSemanaCompleto } from '@/context/functions/mapeamentoDiaSemana';
+import { useTheme } from '@/context/ThemeProvider';
 
 const { Title, Text } = Typography;
 
@@ -134,6 +136,7 @@ export default function CadastrarQuadra() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [arena, setArena] = useState<Arena>();
+    const { isDarkMode } = useTheme();
 
     const [pageLoading, setPageLoading] = useState(true);
     const [loading, setLoading] = useState(false);
@@ -310,7 +313,10 @@ export default function CadastrarQuadra() {
     }
 
     return (
-        <Layout.Content className="flex items-start justify-center px-4 sm:px-10 lg:px-40 my-6">
+        <Layout.Content
+            className="flex items-start justify-center px-4 sm:px-10 lg:px-40 py-6 !flex-1"
+            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        >
             <Card
                 title={
                     <>
@@ -487,12 +493,16 @@ export default function CadastrarQuadra() {
                                 return (
                                     <List.Item
                                         actions={[
-                                            <Button
-                                                key={`edit-${item.diaDaSemana}`}
-                                                type="text"
-                                                icon={<EditOutlined />}
-                                                onClick={() => showModal(item)}
-                                            />
+                                            <Tooltip key={`edit-tooltip-${item.diaDaSemana}`} title="Editar" placement="top">
+                                                <Button
+                                                    key={`edit-${item.diaDaSemana}`}
+                                                    type="primary"
+                                                    shape='circle'
+                                                    icon={<EditOutlined />}
+                                                    onClick={() => showModal(item)}
+                                                    ghost
+                                                />
+                                            </Tooltip>
                                         ]}
                                     >
                                         <List.Item.Meta

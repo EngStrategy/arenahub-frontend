@@ -51,8 +51,7 @@ export interface ArenaQueryParams {
     sort?: string;
     direction?: 'asc' | 'desc';
     cidade?: string;
-    esporte?: "FUTEBOL_SOCIETY" | "FUTEBOL_SETE" | "FUTEBOL_ONZE" | "FUTSAL" | "BEACHTENIS" | "VOLEI" | "FUTEVOLEI" | "BASQUETE" | "HANDEBOL";
-    [key: string]: any; // Escolher um tipo melhor
+    esporte?: "FUTEBOL_SOCIETY" | "FUTEBOL_SETE" | "FUTEBOL_ONZE" | "FUTSAL" | "BEACHTENNIS" | "VOLEI" | "FUTEVOLEI" | "BASQUETE" | "HANDEBOL";
 }
 
 export const getAllArenas = async (

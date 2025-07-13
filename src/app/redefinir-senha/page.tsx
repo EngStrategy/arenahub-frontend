@@ -2,16 +2,17 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect, useCallback } from "react";
-import { Form, Input, App, Grid, Flex } from "antd";
+import { Form, Input, App, Grid, Flex, Typography } from "antd";
 import { GrSecure } from "react-icons/gr";
 import { IoArrowBackOutline } from "react-icons/io5";
 import Link from "next/link";
 import Image from "next/image";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { resetPassword } from "@/app/api/entities/verifyEmail";
-import { CheckOutlined, ExclamationCircleFilled } from "@ant-design/icons";
+import { CheckOutlined } from "@ant-design/icons";
 import { useCapsLock } from "@/context/hooks/useCapsLook";
 import CapsLock from "@/components/Alerts/CapsLock";
+import { useTheme } from "@/context/ThemeProvider";
 
 const { useBreakpoint } = Grid;
 
@@ -46,6 +47,7 @@ export default function RedefinirSenha() {
     const screens = useBreakpoint();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { isDarkMode } = useTheme();
 
     const [pageLoading, setPageLoading] = useState(true);
     const [loading, setLoading] = useState(false);
@@ -101,90 +103,105 @@ export default function RedefinirSenha() {
     }
 
     return (
-        <Flex align="center" justify="center" className="sm:!px-10 lg:!px-40 flex-1">
-            {screens.md && (
-                <div className="w-2/3 p-4">
-                    <Image src="/icons/beachtenis.svg" alt="Beach Tenis" width={700} height={700} priority />
-                </div>
-            )}
-            <div className="w-full md:w-1/3 p-4">
-                {isSuccess ? (
-                    <div className="text-center">
-                        <Flex align="center" justify="center" className="!mb-4">
-                            <Flex align="center" justify="center" className="!p-2 rounded-full bg-green-primary">
-                                <CheckOutlined className="!text-white text-xl" />
-                            </Flex>
-                        </Flex>
-                        <p className="text-center text-gray-600 font-semibold text-lg mb-2">Senha alterada com sucesso!</p>
-                        <p className="text-center text-gray-500 mb-4 text-md">Lembre-se: senhas iguais em vários lugares podem ser um risco.</p>
-                        <p className="text-center text-gray-500 mb-6 text-md">Redirecionando em <strong>{countdown}</strong> segundos.</p>
-                        <Link href="/login" className="text-green-primary hover:!text-green-500 mb-4">
-                            <ButtonPrimary text="Continuar para o Login" htmlType="button" className="w-full" />
-                        </Link>
+        <Flex
+            align="center"
+            justify="center"
+            className="sm:!px-10 lg:!px-40 flex-1"
+            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        >
+            {
+                screens.md && (
+                    <div className="w-2/3 p-4">
+                        <Image src="/icons/beachtenis.svg" alt="Beach Tenis" width={700} height={700} priority />
                     </div>
-                ) : (
-                    <>
-                        <Flex align="center" justify="center" className="!mb-4">
-                            <Flex align="center" justify="center" className="!p-2 rounded-full bg-green-primary">
-                                <GrSecure className="text-xl text-white" />
+                )
+            }
+            < div className="w-full md:w-1/3 p-4" >
+                {
+                    isSuccess ? (
+                        <div className="text-center" >
+                            <Flex align="center" justify="center" className="!mb-4">
+                                <Flex align="center" justify="center" className="!p-2 rounded-full bg-green-primary">
+                                    <CheckOutlined className="!text-white text-xl" />
+                                </Flex>
                             </Flex>
-                        </Flex>
-                        <p className="text-center text-gray-600 font-medium text-lg">Redefinir Senha</p>
-                        <p className="text-center text-gray-500 mb-4 text-md">Escolha uma nova senha para sua conta.</p>
-                        <Form
-                            form={form}
-                            layout="vertical"
-                            name="reset_password"
-                            onFinish={handleResetPassword}
-                            autoComplete="off"
-                            className="w-full"
-                        >
-                            <Form.Item
-                                name="password"
-                                label="Nova Senha"
-                                rules={[
-                                    { required: true, message: "Por favor, insira sua nova senha!" },
-                                    { min: 8, message: "A senha deve ter no mínimo 8 caracteres." },
-                                ]}
-                                hasFeedback
+                            <Typography.Title level={4} className="mb-2">Senha alterada com sucesso!</Typography.Title>
+
+                            <Flex align="center" justify="center" vertical className="!mb-4">
+                                <Typography.Text type="secondary">Lembre-se: senhas iguais em vários lugares podem ser um risco.</Typography.Text>
+                                <Typography.Text>Redirecionando em <strong>{countdown}</strong> segundos.</Typography.Text>
+                            </Flex>
+
+                            <Link href="/login" className="text-green-primary hover:!text-green-500">
+                                <ButtonPrimary text="Continuar para o Login" htmlType="button" className="w-full" size="large" />
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="text-center">
+                            <Flex align="center" justify="center" className="!mb-4">
+                                <Flex align="center" justify="center" className="!p-2 rounded-full bg-green-primary">
+                                    <GrSecure className="text-xl text-white" />
+                                </Flex>
+                            </Flex>
+                            <Flex align="center" justify="center" vertical className="!mb-4">
+                                <Typography.Title level={4}>Redefinir Senha</Typography.Title>
+                                <Typography.Text type="secondary">Escolha uma nova senha para sua conta.</Typography.Text>
+                            </Flex>
+                            <Form
+                                form={form}
+                                layout="vertical"
+                                name="reset_password"
+                                onFinish={handleResetPassword}
+                                autoComplete="off"
+                                className="w-full"
                             >
-                                <Input.Password placeholder="Digite a nova senha" />
-                            </Form.Item>
+                                <Form.Item
+                                    name="password"
+                                    label="Nova Senha"
+                                    rules={[
+                                        { required: true, message: "Por favor, insira sua nova senha!" },
+                                        { min: 8, message: "A senha deve ter no mínimo 8 caracteres." },
+                                    ]}
+                                    hasFeedback
+                                >
+                                    <Input.Password placeholder="Digite a nova senha" />
+                                </Form.Item>
 
-                            <Form.Item
-                                name="confirmPassword"
-                                label="Confirmar Nova Senha"
-                                dependencies={["password"]}
-                                hasFeedback
-                                rules={[
-                                    { required: true, message: "Confirme sua nova senha!" },
-                                    ({ getFieldValue }) => ({
-                                        validator(_, value) {
-                                            if (!value || getFieldValue("password") === value) {
-                                                return Promise.resolve();
-                                            }
-                                            return Promise.reject(new Error("As senhas não coincidem!"));
-                                        },
-                                    }),
-                                ]}
-                            >
-                                <Input.Password placeholder="Confirme a nova senha" />
-                            </Form.Item>
+                                <Form.Item
+                                    name="confirmPassword"
+                                    label="Confirmar Nova Senha"
+                                    dependencies={["password"]}
+                                    hasFeedback
+                                    rules={[
+                                        { required: true, message: "Confirme sua nova senha!" },
+                                        ({ getFieldValue }) => ({
+                                            validator(_, value) {
+                                                if (!value || getFieldValue("password") === value) {
+                                                    return Promise.resolve();
+                                                }
+                                                return Promise.reject(new Error("As senhas não coincidem!"));
+                                            },
+                                        }),
+                                    ]}
+                                >
+                                    <Input.Password placeholder="Confirme a nova senha" />
+                                </Form.Item>
 
-                            {capsLockEstaAtivado && (
-                                <CapsLock />
-                            )}
+                                {capsLockEstaAtivado && (
+                                    <CapsLock />
+                                )}
 
-                            <ButtonPrimary text="Confirmar e Salvar" type="primary" htmlType="submit" className="w-full" loading={loading} />
-                            <p className="text-gray-800 text-sm mt-4">
-                                <Link href="/login" className="flex flex-row items-center gap-1 text-green-primary hover:!text-green-500">
-                                    <IoArrowBackOutline /> Voltar para a página de login
-                                </Link>
-                            </p>
-                        </Form>
-                    </>
-                )}
-            </div>
-        </Flex>
+                                <ButtonPrimary text="Confirmar e Salvar" type="primary" htmlType="submit" className="w-full" loading={loading} />
+                                <p className="text-gray-800 text-sm mt-4">
+                                    <Link href="/login" className="flex flex-row items-center gap-1 text-green-primary hover:!text-green-500">
+                                        <IoArrowBackOutline /> Voltar para a página de login
+                                    </Link>
+                                </p>
+                            </Form>
+                        </div>
+                    )
+                }
+            </div >
+        </Flex >
     );
 }

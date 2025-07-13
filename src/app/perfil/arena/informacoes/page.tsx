@@ -5,7 +5,7 @@ import {
     Form, Input, Upload,
     Avatar, App, Button,
     Select, Dropdown, Flex,
-    Col, Row, Card, Typography, 
+    Col, Row, Card, Typography,
     Space, type MenuProps, type GetProp,
     type UploadFile, type UploadProps
 } from 'antd';
@@ -24,6 +24,7 @@ import { formatarTelefone } from '@/context/functions/formatarTelefone';
 import { formatarCEP } from '@/context/functions/formatarCEP';
 import axios from 'axios';
 import { Estados } from '@/data/Estados'
+import { useTheme } from '@/context/ThemeProvider';
 
 type CITYResponse = {
     id: number;
@@ -118,6 +119,7 @@ export default function InformacoesPessoaisArena() {
     const { message } = App.useApp();
     const [form] = Form.useForm();
     const router = useRouter();
+    const { isDarkMode } = useTheme();
 
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
@@ -332,7 +334,12 @@ export default function InformacoesPessoaisArena() {
     }
 
     return (
-        <Flex justify='center' align='start' className="sm:!px-10 lg:!px-40 !px-4 !my-6">
+        <Flex
+            justify='center'
+            align='start'
+            className="sm:!px-10 lg:!px-40 !px-4 !py-6"
+            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        >
             <Card
                 title={
                     <>

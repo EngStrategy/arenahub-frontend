@@ -15,6 +15,7 @@ import {
 } from '@/app/api/entities/atleta';
 import { useRouter } from 'next/navigation';
 import { formatarTelefone } from '@/context/functions/formatarTelefone';
+import { useTheme } from '@/context/ThemeProvider';
 
 interface PersonalInfoFormValues {
     name: string;
@@ -95,6 +96,7 @@ export default function InformacoesPessoaisAtleta() {
     const { message } = App.useApp();
     const [form] = Form.useForm();
     const router = useRouter();
+    const { isDarkMode } = useTheme();
 
     const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
     const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
@@ -247,7 +249,12 @@ export default function InformacoesPessoaisAtleta() {
     }
 
     return (
-        <Flex justify='center' align='start' className="sm:!px-10 lg:!px-40 !px-4 !my-6">
+        <Flex
+            justify='center'
+            align='start'
+            className="sm:!px-10 lg:!px-40 !px-4 !py-6 !flex-1"
+            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        >
             <Card
                 title={
                     <>

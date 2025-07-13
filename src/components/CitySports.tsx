@@ -1,15 +1,16 @@
 "useClient"
 
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Input } from 'antd'; // Skeleton foi removido da importação
+import { Button, Input } from 'antd';
 import React from 'react'
 
 interface CitySportsProps {
     readonly loading?: boolean;
     readonly selectedSport?: string;
     readonly setSelectedSport?: (sport: string) => void;
-    readonly searchTerm: string;
-    readonly setSearchTerm: (term: string) => void;
+    readonly inputValue: string;
+    readonly setInputValue: (value: string) => void;
+    readonly handleSearchCommit?: () => void;
     readonly setCurrentPage: (page: number) => void;
     readonly allSports: readonly string[];
     readonly sportIcons: Readonly<Record<string, React.ReactNode>>;
@@ -19,9 +20,10 @@ export default function CitySports({
     loading,
     selectedSport,
     setSelectedSport,
-    searchTerm,
-    setSearchTerm,
+    inputValue,
+    setInputValue,
     setCurrentPage,
+    handleSearchCommit,
     allSports,
     sportIcons,
 }: CitySportsProps) {
@@ -45,13 +47,17 @@ export default function CitySports({
             <div className="mb-6">
                 <Input
                     size="large"
-                    placeholder="Digite o nome da cidade"
-                    value={searchTerm}
-                    onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        setCurrentPage(1);
-                    }}
-                    suffix={<SearchOutlined className="!text-gray-400" />}
+                    placeholder="Digite o nome da cidade para buscar"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onPressEnter={handleSearchCommit}
+                    onBlur={handleSearchCommit}
+                    suffix={
+                        <SearchOutlined
+                            onClick={handleSearchCommit}
+                            className="!text-gray-400 cursor-pointer hover:!text-green-primary transition-colors"
+                        />
+                    }
                     className="w-full !rounded-full"
                 />
             </div>

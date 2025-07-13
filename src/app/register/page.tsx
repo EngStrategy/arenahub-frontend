@@ -6,7 +6,8 @@ import { useState, useEffect } from "react";
 import { RegistroAtleta } from "@/components/RegistroAtleta";
 import { RegistroArena } from "@/components/RegistroArena";
 import Image from "next/image";
-import { Flex } from "antd";
+import { Flex, Typography } from "antd";
+import { useTheme } from "@/context/ThemeProvider";
 
 const RegisterPageSkeleton = () => (
   <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center md:items-start justify-center animate-pulse">
@@ -53,6 +54,7 @@ const RegisterPage = () => {
   const [accountType, setAccountType] = useState<"atleta" | "arena">("atleta");
   const [isFading, setIsFading] = useState(false);
   const router = useRouter();
+  const { isDarkMode } = useTheme();
 
   const handleAccountTypeChange = (type: "atleta" | "arena") => {
     if (accountType === type) return;
@@ -74,7 +76,12 @@ const RegisterPage = () => {
   }
 
   return (
-    <Flex align="flex-center" justify="center" className="!flex-1 sm:!px-10 lg:!px-40">
+    <Flex
+      align="flex-center"
+      justify="center"
+      className="!flex-1 sm:!px-10 lg:!px-40"
+      style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+    >
       <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
         <Image
           src="/icons/beachtenis.svg"
@@ -88,9 +95,9 @@ const RegisterPage = () => {
       <Flex align="center" justify="center" className="!w-full md:!w-1/3">
         <div className="p-6 sm:p-8 w-full">
           <Flex justify="center" vertical>
-            <p className="text-center text-gray-600 font-medium text-lg mb-4">
+            <Typography.Title level={4} className="text-center !mb-4">
               Cadastre-se abaixo
-            </p>
+            </Typography.Title>
             <div className="flex justify-center mb-6 w-full">
               <button
                 className={`cursor-pointer px-4 py-2 border-b-2 font-semibold w-1/2 transition-colors duration-200 ${accountType === "atleta"
