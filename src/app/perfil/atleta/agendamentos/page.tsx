@@ -10,6 +10,7 @@ import {
     type AgendamentoNormal
 } from '@/app/api/entities/agendamento';
 import { useTheme } from '@/context/ThemeProvider';
+import { ButtonDelete } from '@/components/Buttons/ButtonDelete';
 
 const { Title } = Typography;
 const { Content } = Layout;
@@ -52,7 +53,7 @@ export default function Agendamentos() {
     const [agendamentos, setAgendamentos] = useState<AgendamentoNormal[]>([]);
     const [loading, setLoading] = useState(true);
 
-    
+
     const [dataInicial, setDataInicial] = useState<Dayjs | null>(null);
     const [dataFinal, setDataFinal] = useState<Dayjs | null>(null);
     const [tipoAgendamento, setTipoAgendamento] = useState<'NORMAL' | 'FIXO' | 'AMBOS'>('AMBOS');
@@ -137,7 +138,7 @@ export default function Agendamentos() {
             };
         });
     }, [agendamentos]);
-    
+
     if (sessionStatus === 'loading') {
         return <MeusAgendamentosSkeleton />;
     }
@@ -177,21 +178,21 @@ export default function Agendamentos() {
         contentToRender = (
             <Empty
                 description="Nenhum agendamento encontrado para o período selecionado."
-                className="mt-10 bg-white p-8 rounded-lg"
+                className="mt-10 p-8 rounded-lg"
             />
         );
     }
 
     return (
-        <Content 
-        className="!px-4 sm:!px-10 lg:!px-40 !py-8 !flex-1"
-        style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        <Content
+            className="!px-4 sm:!px-10 lg:!px-40 !py-8 !flex-1"
+            style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>Meus agendamentos</Title>
 
-            <Row gutter={[16, 16]} align="middle" className="mb-8">
-                <Col xs={9} lg={5}>
-                    <Select 
+            <Row gutter={[24, 24]} align="middle" className="mb-8">
+                <Col xs={12} lg={4}>
+                    <Select
                         value={tipoAgendamento}
                         onChange={setTipoAgendamento}
                         options={[
@@ -199,38 +200,34 @@ export default function Agendamentos() {
                             { label: 'Normais', value: 'NORMAL' },
                             { label: 'Fixos', value: 'FIXO' }
                         ]}
-                        size="large"
                         style={{ width: '100%' }}
                     />
                 </Col>
-                <Col xs={9} lg={5}>
+                <Col xs={12} lg={4}>
                     <DatePicker
                         value={dataInicial}
                         onChange={setDataInicial}
                         placeholder="Data inicial"
-                        size="large"
                         style={{ width: '100%' }}
+                        format="DD/MM/YYYY"
+                        readOnly 
                     />
                 </Col>
-                <Col xs={9} lg={5}>
+                <Col xs={12} lg={4}>
                     <DatePicker
                         value={dataFinal}
                         onChange={setDataFinal}
                         placeholder="Data final"
-                        size="large"
                         style={{ width: '100%' }}
+                        format="DD/MM/YYYY"
+                        readOnly 
                     />
                 </Col>
-                <Col xs={6} lg={3}>
-                    <Button
-                        type="primary"
-                        danger
-                        size="large"
-                        style={{ width: '100%' }}
+                <Col xs={12} lg={4}>
+                    <ButtonDelete
+                        text='Limpar filtros'
                         onClick={handleLimparFiltro}
-                    >
-                        Limpar filtros
-                    </Button>
+                    />
                 </Col>
             </Row>
             {contentToRender}

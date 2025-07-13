@@ -48,7 +48,7 @@ export default function Login() {
     const { isDarkMode } = useTheme();
 
     const capsLockEstaAtivado = useCapsLock();
-    const authRoutes = ["/login", "/register", "/forgot-password"];
+    const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/confirm-email", "redefinir-senha"];
     const callbackUrl = searchParams.get("callbackUrl");
 
     useEffect(() => {
@@ -61,32 +61,53 @@ export default function Login() {
 
     const handleSubmit = async (values: any) => {
         setLoading(true);
-        const responseNextAuth = await signIn("credentials", {
-            email: values.email,
-            password: values.password,
-            redirect: false,
-        });
-        setLoading(false);
+        try {
+            const responseNextAuth = await signIn("credentials", {
+                email: values.email,
+                password: values.password,
+                redirect: false,
+            });
 
-        if (responseNextAuth?.error) {
-            message.error(responseNextAuth.error);
-            return;
-        }
-
-        if (responseNextAuth?.ok) {
-            if (callbackUrl && !authRoutes.includes(new URL(callbackUrl, 'http://localhost').pathname)) {
-                router.push(callbackUrl);
+            if (responseNextAuth?.error) {
+                message.error(responseNextAuth.error);
                 return;
             }
-            const session = await getSession();
-            if (session?.user?.role === "ARENA") {
-                router.push("/dashboard");
+
+            if (responseNextAuth?.ok) {
+                const session = await getSession();
+
+                // 1. Define um destino padrão baseado no perfil do usuário
+                let destination = "/";
+                if (session?.user?.role === "ARENA") {
+                    destination = "/dashboard";
+                }
+
+                // 2. Verifica se existe um callbackUrl válido para sobrescrever o destino
+                if (callbackUrl) {
+                    try {
+                        // Usa a origem DINÂMICA do navegador como base
+                        const callbackPathname = new URL(callbackUrl, window.location.origin).pathname;
+
+                        // Só redireciona se não for uma rota de autenticação (evita loops)
+                        if (!authRoutes.includes(callbackPathname)) {
+                            destination = callbackUrl;
+                        }
+                    } catch (e) {
+                        console.error("URL de callback inválida, usando destino padrão.", e);
+                    }
+                }
+
+                // 3. Redireciona para o destino final
+                router.push(destination);
+
             } else {
-                router.push("/");
+                message.error("Ocorreu um erro inesperado. Por favor, tente novamente.");
             }
-        } else {
+        } catch (error) {
+            console.error("Falha no processo de login:", error);
+            message.error("Falha ao tentar fazer login. Verifique sua conexão.");
+        } finally {
             setLoading(false);
-            message.error("Ocorreu um erro inesperado. Por favor, tente novamente.");
         }
     };
 
@@ -98,8 +119,7 @@ export default function Login() {
         <Flex
             align="center"
             justify="center"
-            className="flex-1 sm:!px-10 lg:!px-40"
-            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+            className={`flex-1 sm:!px-10 lg:!px-40 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}
         >
             <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
                 <Image

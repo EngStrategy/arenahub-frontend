@@ -44,10 +44,10 @@ export function ButtonDelete(
         <Button
             type={type}
             htmlType={htmlType}
-            className={`!py-4 bg-red-800 ${!disabled ? "hover:!bg-red-500" : ""} !shadow-none ${className} `}
+            className={`bg-red-800 !shadow-none ${className} `}
             disabled={disabled}
             loading={loading}
-            danger={danger}
+            danger
             ghost={ghost}
             shape={shape === "default" ? undefined : shape}
             size={size}

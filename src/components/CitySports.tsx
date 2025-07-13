@@ -47,7 +47,7 @@ export default function CitySports({
             <div className="mb-6">
                 <Input
                     size="large"
-                    placeholder="Digite o nome da cidade para buscar"
+                    placeholder="Digite o nome da cidade"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onPressEnter={handleSearchCommit}
@@ -73,9 +73,11 @@ export default function CitySports({
                             }
                             setCurrentPage(1);
                         }}
-                        className={`!rounded-full !px-5 !py-2 !h-auto !text-sm flex items-center shadow-sm ${selectedSport === sport
-                            ? 'bg-green-primary text-white hover:!bg-green-500 border-green-primary hover:!border-green-500'
-                            : 'bg-white text-gray-700 border-gray-300 hover:text-green-primary hover:!border-green-primary'
+                        className={`!rounded-full !text-xs sm:!text-md !h-auto flex items-center gap-x-1 sm:gap-x-2 !px-3 sm:!px-4 
+                            !py-1 sm:!py-2 shadow-sm transition-all duration-200 
+                            ${selectedSport === sport
+                                ? 'bg-green-primary text-white hover:!bg-green-500 border-none'
+                                : 'bg-white text-gray-700 border-gray-300 hover:text-green-primary hover:!border-green-primary'
                             }`}
                     >
                         {sportIcons[sport]}

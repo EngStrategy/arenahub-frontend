@@ -18,7 +18,7 @@ export default function ErrorPage() {
   return (
     <main
       className="px-4 sm:px-10 lg:px-40 py-8 flex-1 flex flex-col items-center justify-center text-center"
-      style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+      style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
     >
       <div className='flex flex-col items-center justify-center gap-4'>
         <h1 className={`text-9xl ${minhaFonteCustomizada.className}`}>500</h1>

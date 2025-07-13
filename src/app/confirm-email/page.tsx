@@ -132,7 +132,7 @@ export default function ConfirmEmailPage() {
         align="center" 
         justify="center" 
         className="flex-1 sm:!px-10 lg:!px-40"
-        style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
                 <Image

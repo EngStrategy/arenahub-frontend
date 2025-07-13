@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Form, Button, Switch, Select, Radio, Typography, App } from 'antd';
+import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Tag } from 'antd';
 import { IoCloseOutline } from "react-icons/io5";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { format, addMonths, addDays, getDay, isBefore, parseISO } from 'date-fns';
@@ -17,9 +17,11 @@ import { createAgendamento, type AgendamentoCreate, type PeriodoAgendamentoFixo 
 import { ButtonPrimary } from '../Buttons/ButtonPrimary';
 import { Router } from 'next/router';
 import { useRouter } from 'next/navigation';
+import { useTheme } from '@/context/ThemeProvider';
+import { SyncOutlined } from '@ant-design/icons';
 
 
-const { Text } = Typography;
+const { Title, Text } = Typography;
 
 type Horario = HorariosDisponiveis;
 
@@ -71,6 +73,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     const [fixedDurationMonths, setFixedDurationMonths] = useState<number>(0);
     const [total, setTotal] = useState<number>(0);
     const [submitting, setSubmitting] = useState(false);
+    const { isDarkMode } = useTheme();
 
     const getOccurrences = (startDate: Date, months: number): { count: number, lastDate: Date } => {
         if (months === 0) return { count: 0, lastDate: startDate };
@@ -289,10 +292,10 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                     {/* O restante do JSX do formulário permanece o mesmo */}
                     <div className="flex flex-col">
                         <div className="flex flex-col mb-4">
-                            <h1 className="text-xl font-bold mb-1">{arena.nome}</h1>
-                            <h2 className='font-semibold'>{quadraSelecionada?.nomeQuadra}</h2>
+                            <Title level={4} className="mb-1">{arena.nome}</Title>
+                            <Text className='font-semibold'>{quadraSelecionada?.nomeQuadra}</Text>
                             {quadraSelecionada?.materiaisFornecidos && quadraSelecionada.materiaisFornecidos.length > 0 && (
-                                <p className="text-sm text-black mt-2">
+                                <Text className="mt-2">
                                     A Arena vai disponibilizar para você:{' '}
                                     <span className="text-green-600 font-semibold">
                                         {quadraSelecionada.materiaisFornecidos.length === 1
@@ -303,7 +306,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                                 return `${acc}, ${curr}`;
                                             }, '')}
                                     </span>
-                                </p>
+                                </Text>
                             )}
                         </div>
                         {selectedHorarios.length > 0 && (
@@ -321,9 +324,12 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     </Select>
                                 </Form.Item>
                             )}
-                            <div className="flex justify-between items-center bg-gray-100 p-2 rounded-md">
+                            <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
                                 <span>Quer reservar este horário como fixo?</span>
-                                <Switch disabled size="small" checked={isFixo} onChange={(c) => {
+                                <Tag icon={<SyncOutlined spin />} color="processing">
+                                    BETA
+                                </Tag>
+                                {/* <Switch disabled size="small" checked={isFixo} onChange={(c) => {
                                     setIsFixo(c);
                                     if (c) {
                                         setIsIncomplete(false);
@@ -331,7 +337,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     } else {
                                         setFixedDurationMonths(0);
                                     }
-                                }} />
+                                }} /> */}
                             </div>
                             {isFixo && (
                                 <Radio.Group value={fixedDurationMonths} onChange={(e) => setFixedDurationMonths(e.target.value)} className='!flex !justify-between'>
@@ -340,7 +346,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     <Radio value={6}>6 meses</Radio>
                                 </Radio.Group>
                             )}
-                            <div className="flex justify-between items-center bg-gray-100 p-2 mt-2 rounded-md">
+                            <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
                                 <span>Tá faltando gente?</span>
                                 <Switch size="small" checked={isIncomplete} onChange={(c) => {
                                     setIsIncomplete(c);
@@ -355,7 +361,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                             </div>
                             {isIncomplete && (
                                 <div className='flex justify-between items-center mt-2'>
-                                    <span className='text-sm text-gray-600'>Quantos jogadores você precisa?</span>
+                                    <span className='text-sm'>Quantos jogadores você precisa?</span>
                                     <div className="flex items-center rounded border border-gray-300">
                                         <Button
                                             type='text'

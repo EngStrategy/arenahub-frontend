@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Form, Input, App, Flex, Card, Typography, Row, Col, Space } from 'antd';
+import { Form, Input, App, Flex, Card, Typography, Row, Col, Space, Popover, Progress } from 'antd';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,50 @@ import { updatePassword } from '@/app/api/entities/atleta';
 import { useCapsLock } from '@/context/hooks/useCapsLook';
 import CapsLock from '@/components/Alerts/CapsLock';
 import { useTheme } from '@/context/ThemeProvider';
+
+const PasswordStrengthIndicator = ({ password = '' }: { password?: string }) => {
+    const evaluatePassword = () => {
+        let score = 0;
+        if (password.length >= 8) score += 25;
+        if (/\d/.test(password)) score += 25;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 25;
+        if (/[^A-Za-z0-9]/.test(password)) score += 25;
+        return score;
+    };
+
+    const score = evaluatePassword();
+    let color = 'red';
+    let text = 'Fraca';
+
+    if (score >= 75) {
+        color = 'green';
+        text = 'Forte';
+    } else if (score >= 50) {
+        color = 'orange';
+        text = 'Média';
+    }
+
+    return (
+        <div className="w-full">
+            <p className="mb-2 font-medium">Força da senha: {text}</p>
+            <Progress percent={score} showInfo={false} strokeColor={color} />
+            <ul className="text-xs text-gray-500 mt-2 list-disc list-inside">
+                <li className={password.length >= 8 ? 'text-green-600' : ''}>
+                    Pelo menos 8 caracteres
+                </li>
+                <li className={/\d/.test(password) ? 'text-green-600' : ''}>
+                    Pelo menos um número
+                </li>
+                <li className={/[a-z]/.test(password) && /[A-Z]/.test(password) ? 'text-green-600' : ''}>
+                    Letras maiúsculas e minúsculas
+                </li>
+                <li className={/[^A-Za-z0-9]/.test(password) ? 'text-green-600' : ''}>
+                    Pelo menos um caractere especial
+                </li>
+            </ul>
+        </div>
+    );
+};
 
 const AlterarSenhaSkeleton = () => (
     <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center mt-6">
@@ -54,6 +98,9 @@ export default function AlterarSenha() {
     const [isFormAltered, setIsFormAltered] = useState(false);
     const capsLockEstaAtivado = useCapsLock();
 
+    const [password, setPassword] = useState('');
+    const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+
     const onFinish = async (values: any) => {
         if (status !== 'authenticated' || !session?.user?.userId || !session?.user?.accessToken) {
             message.error('Você não está autenticado.');
@@ -62,13 +109,13 @@ export default function AlterarSenha() {
         }
         setIsSubmitting(true);
         try {
-            const { senhaAtual, novaSenha, confirmarSenha } = values;
-            if (novaSenha !== confirmarSenha) {
+            const { senhaAtual, confirmarSenha } = values;
+            if (password !== confirmarSenha) {
                 setIsSubmitting(false);
                 message.error('As novas senhas não coincidem.');
                 return;
             }
-            await updatePassword(senhaAtual, novaSenha, confirmarSenha);
+            await updatePassword(senhaAtual, password, confirmarSenha);
             message.success('Senha alterada com sucesso! Você será desconectado.');
             form.resetFields();
 
@@ -106,11 +153,11 @@ export default function AlterarSenha() {
     }
 
     return (
-        <Flex 
-        justify='center' 
-        align='start' 
-        className="sm:!px-10 lg:!px-40 !px-4 !py-6 !flex-1"
-        style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        <Flex
+            justify='center'
+            align='start'
+            className="sm:!px-10 lg:!px-40 !px-4 !py-6 !flex-1"
+            style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Card
                 title={
@@ -140,6 +187,7 @@ export default function AlterarSenha() {
                         label="Senha atual"
                         name="senhaAtual"
                         rules={[{ required: true, message: 'Por favor, insira sua senha atual!' }]}
+                        className='sem-asterisco'
                     >
                         <Input.Password placeholder="Digite sua senha atual" />
                     </Form.Item>
@@ -150,12 +198,28 @@ export default function AlterarSenha() {
                                 label="Nova senha"
                                 name="novaSenha"
                                 rules={[
-                                    { required: true, message: "Por favor, insira sua nova senha!" },
+                                    { required: password == '', message: "Por favor, insira sua nova senha!" },
                                     { min: 8, message: "A senha deve ter pelo menos 8 caracteres." },
                                 ]}
-                                hasFeedback
+                                className='sem-asterisco'
                             >
-                                <Input.Password placeholder="Digite a nova senha" />
+                                <Popover
+                                    content={<PasswordStrengthIndicator password={password} />}
+                                    placement="top"
+                                    open={isPasswordFocused}
+                                    getPopupContainer={triggerNode => triggerNode.parentNode as HTMLElement}
+                                >
+                                    <Input.Password
+                                        placeholder="Digite a nova senha"
+                                        onFocus={() => setIsPasswordFocused(true)}
+                                        onBlur={() => setIsPasswordFocused(false)}
+                                        onChange={(e) => {
+                                            const newPassword = e.target.value;
+                                            setPassword(newPassword);
+                                            form.setFieldsValue({ senha: newPassword });
+                                        }}
+                                    />
+                                </Popover>
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
@@ -167,13 +231,14 @@ export default function AlterarSenha() {
                                     { required: true, message: "Por favor, digite novamente sua senha!" },
                                     ({ getFieldValue }) => ({
                                         validator(_, value) {
-                                            if (!value || getFieldValue('novaSenha') === value) {
+                                            if (!value || password === value) {
                                                 return Promise.resolve();
                                             }
                                             return Promise.reject(new Error("As senhas não coincidem!"));
                                         }
                                     }),
                                 ]}
+                                className='sem-asterisco'
                                 hasFeedback
                             >
                                 <Input.Password placeholder="Confirme a nova senha" />

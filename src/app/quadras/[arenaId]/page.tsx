@@ -24,6 +24,7 @@ import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { useSession, signOut } from 'next-auth/react';
 import { getArenaById } from '@/app/api/entities/arena';
 import { ModalRedirecionamentoLogin } from '@/components/Modais/ModalRedirecionamentoLogin';
+import { useTheme } from '@/context/ThemeProvider';
 
 const ArenaCardSkeleton = () => (
     <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 w-full max-w-sm animate-pulse">
@@ -124,6 +125,7 @@ export default function QuadraPage() {
     const params = useParams();
     const arenaId = Number(params?.arenaId as string);
     const router = useRouter();
+    const { isDarkMode } = useTheme();
 
     const [arena, setArena] = useState<ArenaOficial | null>(null);
     const [quadras, setQuadras] = useState<QuadraOficial[]>([]);
@@ -280,14 +282,14 @@ export default function QuadraPage() {
 
     if (error) {
         return (
-            <div className="flex justify-center items-center h-screen">
+            <div className={`flex justify-center items-center h-screen ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
                 <Alert message="Erro" description={error} type="error" showIcon />
             </div>
         );
     }
 
     return (
-        <div className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
+        <div className={`px-4 sm:px-10 lg:px-40 py-8 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
             {arena && (
                 <div className='flex flex-row items-start justify-between mb-6'>
                     <ArenaCard arena={{
@@ -348,11 +350,21 @@ export default function QuadraPage() {
                             {visibleDates.map((day) => {
                                 const dateStr = format(day, 'yyyy-MM-dd');
                                 const isSelected = selectedDate === dateStr;
+                                let buttonClass = '';
+                                if (isSelected) {
+                                    buttonClass = '!bg-green-600 !text-white';
+                                } else if (isDarkMode) {
+                                    buttonClass = '!bg-[#232323] !text-white';
+                                } else {
+                                    buttonClass = '!bg-gray-200 !text-black';
+                                }
                                 return (
                                     <Button
                                         key={dateStr}
                                         type={isSelected ? 'primary' : 'default'}
-                                        className={`!flex !flex-col !h-auto !px-4 !gap-1 !py-2 !text-center !text-sm !font-semibold !rounded-md !border-0 hover:!bg-green-200 hover:!text-green-600 ${isSelected ? '!bg-green-600 !text-white' : '!bg-gray-200 !text-black'}`}
+                                        className={`!flex !flex-col !h-auto !px-4 !gap-1 !py-2 !text-center !text-sm 
+                                            !font-semibold !rounded-md !border-0 hover:!bg-green-200 hover:!text-green-600 
+                                            ${buttonClass}`}
                                         onClick={() => { setSelectedDate(dateStr); setSelectedHorarios([]) }}
                                     >
                                         <div className='leading-tight'>
@@ -410,11 +422,17 @@ export default function QuadraPage() {
 
                     const getHorarioButtonClass = (isDisabled: boolean, isSelected: boolean) => {
                         if (isDisabled) {
-                            return '!opacity-60 !bg-gray-100 !text-gray-400 !border-gray-200';
+                            return isDarkMode
+                                ? '!opacity-60 !bg-[#232323] !text-gray-500 !border-[#232323]'
+                                : '!opacity-60 !bg-gray-100 !text-gray-400 !border-gray-200';
                         } else if (isSelected) {
-                            return '!border-2 !border-green-600 !text-green-600 !font-bold !bg-white';
+                            return isDarkMode
+                                ? '!border-2 !border-green-400 !text-green-400 !font-bold !bg-[#181818]'
+                                : '!border-2 !border-green-600 !text-green-600 !font-bold !bg-white';
                         } else {
-                            return "!border-gray-300 !bg-white !text-gray-600 hover:!border-green-500 hover:!text-green-500";
+                            return isDarkMode
+                                ? '!border-[#232323] !bg-[#181818] !text-gray-200 hover:!border-green-400 hover:!text-green-400'
+                                : '!border-gray-300 !bg-white !text-gray-600 hover:!border-green-500 hover:!text-green-500';
                         }
                     };
 
@@ -428,7 +446,7 @@ export default function QuadraPage() {
                             <Button
                                 key={checkboxValue}
                                 disabled={isDisabled}
-                                className={`!flex !flex-col !items-center !justify-center !p-2 !transition-colors 
+                                className={`!flex !flex-col !items-center !justify-center !p-2
                                     !duration-150 !w-auto !h-auto !gap-1 !rounded-md ${horarioClass}`}
                                 onClick={() => {
                                     if (session?.user?.role !== 'ATLETA') {
@@ -453,12 +471,12 @@ export default function QuadraPage() {
                         <Card
                             key={quadra.id}
                             className="!border-0 !p-0 !shadow-none !border-b last:!border-b-0 !bg-transparent !border-gray-200"
-                            bodyStyle={{ padding: 0 }}
+                            styles={{ body: { padding: 0 } }}
                         >
                             <div className="flex flex-col lg:flex-row py-4">
                                 <div className="w-full lg:w-82 lg:flex-shrink-0 p-2 pr-4">
                                     <div className='flex flex-row items-start gap-4'>
-                                        <div className='relative h-24 min-w-[120px] w-30 overflow-hidden bg-gray-300 flex-shrink-0'>
+                                        <div className='relative h-24 min-w-[120px] w-30 overflow-hidden flex-shrink-0'>
                                             <Image
                                                 src={quadra.urlFotoQuadra || '/images/imagem-default.png'}
                                                 alt={`Imagem da ${quadra.nomeQuadra}`}
@@ -474,7 +492,7 @@ export default function QuadraPage() {
                                                 {quadra.tipoQuadra.map(formatarEsporte).join(', ')}
                                             </Typography.Text>
                                             {quadra.materiaisFornecidos && quadra.materiaisFornecidos.length > 0 && (
-                                                <Typography.Text className="!text-xs !text-gray-600 !mt-2 !block">
+                                                <Typography.Text type='secondary' className="!mt-2 !block !text-sm">
                                                     A Arena vai disponibilizar para você:{' '}
                                                     <span className="text-green-600 font-bold">
                                                         {quadra.materiaisFornecidos.map(formatarMaterial).join(', ')}
@@ -546,7 +564,7 @@ export default function QuadraPage() {
                 <DrawerConfirmacaoReserva
                     open={isDrawerVisible}
                     onClose={() => {
-                       setIsDrawerVisible(false);
+                        setIsDrawerVisible(false);
                     }}
                     arena={arena}
                     quadraSelecionada={quadraSelecionadaComHorarios}

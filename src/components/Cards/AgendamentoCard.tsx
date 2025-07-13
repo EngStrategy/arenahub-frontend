@@ -7,6 +7,8 @@ import ModalSolicitacoesEntrada from '../Modais/ModalSolicitacoesEntrada';
 import { type Solicitacao } from '@/app/api/entities/solicitacao';
 import { getSolicitacoesPorAgendamento, aceitarSolicitacao, recusarSolicitacao } from '@/app/api/entities/solicitacao';
 
+const { Text, Title, Paragraph } = Typography;
+
 const statusMap = {
     pendente: { text: 'Pendente', className: 'bg-sky-100 text-sky-500' },
     solicitado: { text: 'Solicitado', className: 'bg-gray-100 text-gray-500' },
@@ -178,25 +180,26 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
                     ) : (
                         <PictureOutlined className='text-6xl text-gray-300' />
                     )}
-                    <p className="mt-2 font-semibold text-gray-800 text-sm break-words">{agendamento.arenaName}</p>
+                    <Text className="!font-semibold !text-md mt-2">{agendamento.arenaName}</Text>
                 </Flex>
 
                 <div className="w-px self-stretch bg-gray-200" />
                 <div className="flex-grow space-y-1">
-                    <p className="text-sm font-semibold text-gray-900">{
-                        !['ausente', 'cancelado', 'pago'].includes(agendamento.status)
-                        && formatarDataAmigavel(agendamento.date)
-                    }</p>
-                    <p className="text-sm text-gray-600">
+                    {!['ausente', 'cancelado', 'pago'].includes(agendamento.status)
+                    && <><Text>{formatarDataAmigavel(agendamento.date)}</Text> <br /></>}
+                    <Text>
                         {agendamento.startTime} às {agendamento.endTime}
-                    </p>
-                    <p className="text-sm text-gray-600">{agendamento.quadraName}</p>
-                    <p className={`font-bold text-lg ${['ausente', 'cancelado'].includes(agendamento.status)
-                        ? 'text-gray-400 line-through'
+                    </Text>
+                    <br />
+                    <Text className=''>{agendamento.quadraName}</Text>
+                    <br />
+                    <Text type='secondary' className={`font-bold !text-lg ${['ausente', 'cancelado'].includes(agendamento.status)
+                        ? 'text-gray-400 !line-through'
                         : 'text-green-600'}`}>
                         {valorFormatado}
-                    </p>
-                    <div className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${statusInfo.className}`}>
+                    </Text>
+                    <br />
+                    <div className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-bold ${statusInfo.className}`}>
                         {statusInfo.text}
                     </div>
                 </div>

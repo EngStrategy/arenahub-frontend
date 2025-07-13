@@ -160,14 +160,14 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
           label="Senha"
           name="senha"
           rules={[
-            { required: true, message: "Insira sua senha!" },
+            { required: password == '', message: "Insira sua senha!" },
             { min: 8, message: "Pelo menos 8 caracteres!" },
           ]}
           className="sem-asterisco flex-1"
         >
           <Popover
             content={<PasswordStrengthIndicator password={password} />}
-            placement="right"
+            placement="top"
             open={isPasswordFocused}
             getPopupContainer={triggerNode => triggerNode.parentNode as HTMLElement}
           >

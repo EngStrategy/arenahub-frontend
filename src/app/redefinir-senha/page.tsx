@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect, useCallback } from "react";
-import { Form, Input, App, Grid, Flex, Typography } from "antd";
+import { Form, Input, App, Grid, Flex, Typography, Popover, Progress } from "antd";
 import { GrSecure } from "react-icons/gr";
 import { IoArrowBackOutline } from "react-icons/io5";
 import Link from "next/link";
@@ -15,6 +15,50 @@ import CapsLock from "@/components/Alerts/CapsLock";
 import { useTheme } from "@/context/ThemeProvider";
 
 const { useBreakpoint } = Grid;
+
+const PasswordStrengthIndicator = ({ password = '' }: { password?: string }) => {
+    const evaluatePassword = () => {
+        let score = 0;
+        if (password.length >= 8) score += 25;
+        if (/\d/.test(password)) score += 25;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 25;
+        if (/[^A-Za-z0-9]/.test(password)) score += 25;
+        return score;
+    };
+
+    const score = evaluatePassword();
+    let color = 'red';
+    let text = 'Fraca';
+
+    if (score >= 75) {
+        color = 'green';
+        text = 'Forte';
+    } else if (score >= 50) {
+        color = 'orange';
+        text = 'Média';
+    }
+
+    return (
+        <div className="w-full">
+            <p className="mb-2 font-medium">Força da senha: {text}</p>
+            <Progress percent={score} showInfo={false} strokeColor={color} />
+            <ul className="text-xs text-gray-500 mt-2 list-disc list-inside">
+                <li className={password.length >= 8 ? 'text-green-600' : ''}>
+                    Pelo menos 8 caracteres
+                </li>
+                <li className={/\d/.test(password) ? 'text-green-600' : ''}>
+                    Pelo menos um número
+                </li>
+                <li className={/[a-z]/.test(password) && /[A-Z]/.test(password) ? 'text-green-600' : ''}>
+                    Letras maiúsculas e minúsculas
+                </li>
+                <li className={/[^A-Za-z0-9]/.test(password) ? 'text-green-600' : ''}>
+                    Pelo menos um caractere especial
+                </li>
+            </ul>
+        </div>
+    );
+};
 
 const RedefinirSenhaSkeleton = () => (
     <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center justify-center animate-pulse">
@@ -53,8 +97,11 @@ export default function RedefinirSenha() {
     const [loading, setLoading] = useState(false);
     const [userEmail, setUserEmail] = useState("");
     const [isSuccess, setIsSuccess] = useState(false);
-    const [countdown, setCountdown] = useState(1000);
+    const [countdown, setCountdown] = useState(10);
     const capsLockEstaAtivado = useCapsLock();
+
+    const [password, setPassword] = useState('');
+    const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
     useEffect(() => {
         const emailFromQuery = searchParams.get("email");
@@ -84,7 +131,7 @@ export default function RedefinirSenha() {
         try {
             await resetPassword({
                 email: userEmail,
-                newPassword: values.password,
+                newPassword: password,
                 confirmation: values.confirmPassword,
                 passwordMatch: values.password === values.confirmPassword
             });
@@ -106,8 +153,7 @@ export default function RedefinirSenha() {
         <Flex
             align="center"
             justify="center"
-            className="sm:!px-10 lg:!px-40 flex-1"
-            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+            className={`sm:!px-10 lg:!px-40 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}
         >
             {
                 screens.md && (
@@ -159,12 +205,29 @@ export default function RedefinirSenha() {
                                     name="password"
                                     label="Nova Senha"
                                     rules={[
-                                        { required: true, message: "Por favor, insira sua nova senha!" },
+                                        { required: password == '', message: "Por favor, insira sua nova senha!" },
                                         { min: 8, message: "A senha deve ter no mínimo 8 caracteres." },
                                     ]}
                                     hasFeedback
+                                    className="sem-asterisco"
                                 >
-                                    <Input.Password placeholder="Digite a nova senha" />
+                                    <Popover
+                                        content={<PasswordStrengthIndicator password={password} />}
+                                        placement="top"
+                                        open={isPasswordFocused}
+                                        getPopupContainer={triggerNode => triggerNode.parentNode as HTMLElement}
+                                    >
+                                        <Input.Password
+                                            placeholder="Digite a nova senha"
+                                            onFocus={() => setIsPasswordFocused(true)}
+                                            onBlur={() => setIsPasswordFocused(false)}
+                                            onChange={(e) => {
+                                                const newPassword = e.target.value;
+                                                setPassword(newPassword);
+                                                form.setFieldsValue({ senha: newPassword });
+                                            }}
+                                        />
+                                    </Popover>
                                 </Form.Item>
 
                                 <Form.Item
@@ -176,13 +239,14 @@ export default function RedefinirSenha() {
                                         { required: true, message: "Confirme sua nova senha!" },
                                         ({ getFieldValue }) => ({
                                             validator(_, value) {
-                                                if (!value || getFieldValue("password") === value) {
+                                                if (!value || password === value) {
                                                     return Promise.resolve();
                                                 }
                                                 return Promise.reject(new Error("As senhas não coincidem!"));
                                             },
                                         }),
                                     ]}
+                                    className="sem-asterisco"
                                 >
                                     <Input.Password placeholder="Confirme a nova senha" />
                                 </Form.Item>

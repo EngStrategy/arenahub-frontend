@@ -15,6 +15,7 @@ import dayjs from 'dayjs';
 import { ButtonCancelar } from '../Buttons/ButtonCancelar';
 import { ButtonPrimary } from '../Buttons/ButtonPrimary';
 import { DiaDaSemana } from '@/app/api/entities/quadra';
+import ptBR from 'antd/es/date-picker/locale/pt_BR';
 
 const { Title } = Typography;
 
@@ -115,7 +116,7 @@ const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel,
                                             label="Início"
                                             rules={[{ required: true, message: 'Obrigatório!' }]}
                                         >
-                                            <TimePicker format="HH:mm" minuteStep={30} placeholder='08:00' style={{ width: '100%' }} />
+                                            <TimePicker needConfirm={false} format="HH:mm" minuteStep={30} placeholder='08:00' style={{ width: '100%' }} />
                                         </Form.Item>
 
                                         <Form.Item
@@ -145,11 +146,11 @@ const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel,
                                                 }),
                                             ]}
                                         >
-                                            <TimePicker format="HH:mm" minuteStep={30} placeholder='12:00' style={{ width: '100%' }} />
+                                            <TimePicker needConfirm={false} format="HH:mm" minuteStep={30} placeholder='12:00' style={{ width: '100%' }} />
                                         </Form.Item>
 
                                         <Form.Item {...restField} name={[name, 'valor']} label="Valor (R$)" rules={[{ required: true, message: 'Obrigatório!' }]}>
-                                            <InputNumber prefix="R$ " decimalSeparator="," precision={2} placeholder='100,00' style={{ width: '100%' }} />
+                                            <InputNumber min={0} prefix="R$ " decimalSeparator="," precision={2} placeholder='100,00' style={{ width: '100%' }} />
                                         </Form.Item>
                                         <Form.Item {...restField} name={[name, 'status']} label="Status" rules={[{ required: true, message: 'Obrigatório!' }]}>
                                             <Select placeholder="Selecione" style={{ width: '100%' }} options={[{ value: 'DISPONIVEL', label: 'Disponível' }, { value: 'INDISPONIVEL', label: 'Indisponível' }, { value: 'MANUTENCAO', label: 'Manutenção' }]} />

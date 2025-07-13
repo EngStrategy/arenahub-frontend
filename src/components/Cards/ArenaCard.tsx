@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Card, Flex, Typography } from 'antd'; // Componentes importados do Ant Design
-import { PictureOutlined, StarFilled } from '@ant-design/icons';
+import { Card, Flex, Typography } from 'antd';
+import { StarFilled } from '@ant-design/icons';
 import Image from 'next/image';
 import { Arena } from '@/app/api/entities/arena';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
+import { TipoQuadra } from '@/app/api/entities/quadra';
 
-const { Title, Text, Paragraph } = Typography; // Desestruturando os componentes de Typography
+const { Title, Text, Paragraph } = Typography;
 
 interface ArenaCardProps {
   arena: Arena;
@@ -21,40 +22,32 @@ export const ArenaCard = ({ arena, showDescription, showHover = true, showEsport
   const [imgSrc, setImgSrc] = useState(arena.urlFoto || fallbackSrc);
 
   const esportesFormatados = arena.esportes
-    ? (arena.esportes as any[]).map(esporte => formatarEsporte(esporte as any))
+    ? (arena.esportes as any[]).map(esporte => formatarEsporte(esporte as TipoQuadra))
     : [];
 
-  const listFormatter = new Intl.ListFormat('pt-BR', {
-    style: 'long',
-    type: 'conjunction'
-  });
+  const listFormatter = new Intl.ListFormat('pt-BR', { style: 'long', type: 'conjunction' });
 
   return (
     <Card
-      {...showHover ? { hoverable: true } : {}}
-      style={{ height: '100%', border: 'none' }}
-      styles={{ body: { padding: 6, height: '100%', display: 'flex', flexDirection: 'column' } }}
+      hoverable={showHover}
+      style={{ height: '100%', border: 'none', overflow: 'hidden' }}
+      styles={{ body: { padding: '0.75rem', height: '100%' } }}
     >
-      <Flex gap="large" align="start">
-        {/* Imagem da Arena */}
-        <div className="rounded-lg relative h-36 min-w-[144px] w-45 xs:w-20 sm:w-24 md:w-34 
-        lg:w-45 xl:w-45 overflow-hidden border border-gray-200 shadow-sm bg-white 
-        hover:shadow-md transition-shadow duration-200 ease-in-out cursor-pointer
-        overflow-hidden bg-gray-300 flex-shrink-0">
+      <Flex gap="middle" align="stretch">
+        <div className="relative w-1/3 max-w-[120px] flex-shrink-0 aspect-square rounded-md overflow-hidden">
           <Image
             src={imgSrc}
             alt={`Imagem da ${arena.nome}`}
             fill
+            sizes="(max-width: 768px) 33vw, 120px"
             className="object-cover"
             onError={() => setImgSrc(fallbackSrc)}
           />
         </div>
 
-        {/* Container de Informações */}
-        <Flex vertical justify="space-between" className="!flex-1 !h-36">
-          {/* Informações superiores */}
-          <Flex justify="space-between" vertical>
-            <Title level={5}>
+        <Flex vertical justify="space-between" className="flex-1 min-w-0">
+          <Flex vertical>
+            <Title level={5} ellipsis={{ tooltip: arena.nome }} style={{ marginBottom: '0.25rem' }}>
               {arena.nome}
             </Title>
             <Text type="secondary">
@@ -62,20 +55,18 @@ export const ArenaCard = ({ arena, showDescription, showHover = true, showEsport
               {arena.endereco.rua}, {arena.endereco.numero} - {arena.endereco.bairro} - CEP {arena.endereco.cep}
             </Text>
             {(esportesFormatados.length > 0 && showEsportes) && (
-              <Text strong className="!text-green-600 !mt-2">
+              <Text strong className="!text-green-600 !mt-1" style={{ fontSize: '0.8rem' }}>
                 {listFormatter.format(esportesFormatados)}
               </Text>
             )}
           </Flex>
 
-          {/* Descrição opcional */}
           {showDescription && arena.descricao &&
             <Paragraph ellipsis={{ rows: 2 }} type="secondary" className="!my-1">
               {arena.descricao}
             </Paragraph>
           }
 
-          {/* Parte inferior (Avaliações) */}
           <Flex align="center">
             <StarFilled className="!text-yellow-500 mr-1" />
             <Text strong>{arena.avaliacao?.toFixed(1)}</Text>

@@ -8,21 +8,18 @@ import {
     Tooltip,
 } from 'antd';
 import {
-    PictureOutlined,
-    UploadOutlined,
-    EditOutlined,
-    DeleteOutlined,
+    PictureOutlined, UploadOutlined, EditOutlined, DeleteOutlined,
 } from '@ant-design/icons';
+import ArenaCard from '@/components/Cards/ArenaCard';
+import { Arena, getArenaById } from '@/app/api/entities/arena';
 import { useSession } from "next-auth/react";
 import ImgCrop from 'antd-img-crop';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import ModalCriarHorarios from '@/components/Modais/ModalCriarHorarios';
-import {
-    updateQuadra, getQuadraById, QuadraCreate, DiaDaSemana,
-} from '@/app/api/entities/quadra';
+import { createQuadra, QuadraCreate, DiaDaSemana, StatusHorario } from '@/app/api/entities/quadra';
 import { formatarDiaSemanaCompleto } from '@/context/functions/mapeamentoDiaSemana';
 import { useTheme } from '@/context/ThemeProvider';
 
@@ -59,11 +56,21 @@ const horariosDaSemanaCompleta: Array<{ diaDaSemana: DiaDaSemana, intervalosDeHo
     },
 ];
 
-const EditarQuadraSkeleton = () => (
+
+const CadastrarQuadraSkeleton = () => (
     <main className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center my-6">
         <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl animate-pulse">
             <div className="h-8 bg-gray-300 rounded w-1/2 mb-3"></div>
             <div className="h-4 bg-gray-300 rounded w-5/6 mb-8"></div>
+            <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 w-full mb-4">
+                <div className="flex items-center space-x-4">
+                    <div className="h-16 w-16 bg-gray-300 rounded-lg flex-shrink-0"></div>
+                    <div className="flex-1 space-y-2">
+                        <div className="h-5 bg-gray-300 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-300 rounded w-full"></div>
+                    </div>
+                </div>
+            </div>
             <div className="space-y-6 mt-4">
                 <div className="flex items-center gap-4">
                     <div className="h-16 w-16 bg-gray-300 rounded-full"></div>
@@ -106,7 +113,8 @@ const EditarQuadraSkeleton = () => (
                     <div className="h-6 bg-gray-300 rounded w-1/3 mb-3"></div>
                     <div className="border border-gray-200 rounded-lg">
                         {Array.from({ length: 7 }).map((_, index) => (
-                            <div key={index} className="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0">
+                            <div key={index}
+                                className="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0">
                                 <div className="h-5 bg-gray-300 rounded w-1/4"></div>
                                 <div className="h-8 w-8 bg-gray-300 rounded-md"></div>
                             </div>
@@ -114,8 +122,7 @@ const EditarQuadraSkeleton = () => (
                     </div>
                 </div>
                 <div className="flex justify-end gap-4">
-                    <div className="h-10 w-28 bg-gray-300 rounded-lg">
-                    </div>
+                    <div className="h-10 w-28 bg-gray-300 rounded-lg"></div>
                     <div className="h-10 w-28 bg-gray-300 rounded-lg"></div>
                 </div>
             </div>
@@ -123,125 +130,47 @@ const EditarQuadraSkeleton = () => (
     </main>
 );
 
-export default function EditarQuadra() {
-    const params = useParams();
-    const quadraId = Number(params?.quadraId as string);
-    const { isDarkMode } = useTheme();
-
+export default function CadastrarQuadra() {
     const [form] = Form.useForm();
     const { message } = App.useApp();
     const { data: session, status } = useSession();
     const router = useRouter();
+    const [arena, setArena] = useState<Arena>();
+    const { isDarkMode } = useTheme();
 
     const [pageLoading, setPageLoading] = useState(true);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isFormAltered, setIsFormAltered] = useState(false);
-
+    const [loading, setLoading] = useState(false);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
+
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingDay, setEditingDay] = useState<any>(null);
     const [horarios, setHorarios] = useState(horariosDaSemanaCompleta);
 
+    const DEFAULT_AVATAR_URL = "https://i.imgur.com/p0hVrWq.png";
 
     useEffect(() => {
-        const fetchQuadraData = async () => {
+        const fetchArena = async () => {
             setPageLoading(true);
-            if (status === 'authenticated' && quadraId) {
-                try {
-                    const quadraData = await getQuadraById(quadraId);
-                    if (quadraData) {
-                        form.setFieldsValue({
-                            nomeQuadra: quadraData.nomeQuadra,
-                            tipoQuadra: quadraData.tipoQuadra,
-                            materiaisFornecidos: quadraData.materiaisFornecidos,
-                            duracaoReserva: quadraData.duracaoReserva,
-                            cobertura: quadraData.cobertura,
-                            iluminacaoNoturna: quadraData.iluminacaoNoturna,
-                            descricao: quadraData.descricao,
-                        });
-
-                        setImageUrl(quadraData.urlFotoQuadra || null);
-
-                        const horariosMap = new Map(
-                            quadraData.horariosFuncionamento.map(h => [h.diaDaSemana, h.intervalosDeHorario])
-                        );
-
-                        const horariosCompletos = horariosDaSemanaCompleta.map(dia => ({
-                            ...dia,
-                            intervalosDeHorario: horariosMap.get(dia.diaDaSemana) || [],
-                        }));
-
-                        setHorarios(horariosCompletos);
-                        setIsFormAltered(false);
-                    } else {
-                        message.error("Quadra não encontrada.");
-                        router.back();
+            try {
+                if (session?.user?.accessToken && session?.user?.userId) {
+                    const arenaData = await getArenaById(session.user.userId);
+                    if (arenaData) {
+                        setArena(arenaData);
                     }
-                } catch (error) {
-                    console.error("Erro ao buscar dados da quadra:", error);
-                    message.error("Não foi possível carregar os dados da quadra.");
-                } finally {
-                    setPageLoading(false);
                 }
-            } else if (status === 'unauthenticated') {
+            } catch (error) {
+                console.error("Erro ao buscar dados da arena:", error);
+                message.error("Não foi possível carregar os dados da arena.");
+            } finally {
                 setPageLoading(false);
             }
         };
 
         if (status !== 'loading') {
-            fetchQuadraData();
+            fetchArena();
         }
-    }, [status, quadraId, session, form, message, router]);
-
-
-    const handleSubmit = async (values: any) => {
-        if (!session) {
-            message.error("Sua sessão expirou. Por favor, faça login novamente.");
-            return;
-        }
-        setIsSubmitting(true);
-
-        try {
-            let urlParaSalvar = imageUrl;
-            if (selectedFile) {
-                const key = 'uploading-image';
-                message.loading({ content: 'Carregando...', key, duration: 0 });
-                urlParaSalvar = await uploadToImgur(selectedFile);
-                console.log("URL da imagem carregada:", urlParaSalvar);
-                message.destroy(key);
-            }
-
-            const horariosParaEnviar = horarios.map(h => {
-                const intervalosValidos = h.intervalosDeHorario.filter(i => i.inicio && i.fim);
-                return {
-                    diaDaSemana: h.diaDaSemana,
-                    intervalosDeHorario: intervalosValidos.map(({ id, ...resto }) => resto)
-                };
-            });
-
-            const updatePayload: Partial<QuadraCreate> = {
-                ...values,
-                urlFotoQuadra: urlParaSalvar,
-                horariosFuncionamento: horariosParaEnviar,
-            };
-
-            const updatedQuadra = await updateQuadra(quadraId, updatePayload);
-
-            if (updatedQuadra) {
-                message.success("Quadra atualizada com sucesso!");
-                setIsFormAltered(false);
-                router.push('/perfil/arena/minhas-quadras');
-            } else {
-                throw new Error("A atualização não retornou dados.");
-            }
-        } catch (error: any) {
-            console.error("Erro ao atualizar quadra:", error.message || error);
-            message.error(error.message ?? "Ocorreu um erro ao salvar as alterações.", 7);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+    }, [session, status]);
 
     const showModal = (day: any) => {
         setEditingDay(day);
@@ -257,7 +186,6 @@ export default function EditarQuadra() {
         });
         setHorarios(novosHorarios);
         setIsModalVisible(false);
-        setIsFormAltered(true);
     };
 
     const handleModalCancel = () => {
@@ -279,7 +207,6 @@ export default function EditarQuadra() {
     };
 
     const handleChange: UploadProps['onChange'] = (info) => {
-        setIsFormAltered(true);
         const file = info.file.originFileObj;
         if (file) {
             getBase64(file as FileType)
@@ -292,7 +219,7 @@ export default function EditarQuadra() {
     const uploadButton = (<Button > <UploadOutlined className="mr-2" /> Escolher foto </Button>);
 
     const handleRemoveImage = () => {
-        setImageUrl(null);
+        setImageUrl(DEFAULT_AVATAR_URL);
         setSelectedFile(null);
         message.info('Foto removida.');
     };
@@ -309,7 +236,7 @@ export default function EditarQuadra() {
                         maxCount={1}
                         multiple={false}
                         accept="image/jpeg,image/png"
-                        disabled={isSubmitting || status !== 'authenticated'}
+                        disabled={loading || status !== 'authenticated'}
                     >
                         <div className="flex items-center w-full">
                             <UploadOutlined className="mr-2" />
@@ -321,7 +248,7 @@ export default function EditarQuadra() {
         },
     ];
 
-    if (imageUrl && imageUrl !== null) {
+    if (imageUrl && imageUrl !== DEFAULT_AVATAR_URL) {
         menuItems.push({
             key: '2',
             label: 'Remover foto',
@@ -331,35 +258,94 @@ export default function EditarQuadra() {
         });
     }
 
+    const handleSubmit = async (values: any) => {
+        if (!session) {
+            message.error("Sua sessão expirou. Por favor, faça login novamente.");
+            return;
+        }
+        setLoading(true);
+
+        try {
+            let urlParaSalvar = imageUrl;
+            if (selectedFile) {
+                const key = 'uploading-image';
+                message.loading({ content: 'Carregando...', key, duration: 0 });
+                urlParaSalvar = await uploadToImgur(selectedFile);
+                message.destroy(key);
+            }
+
+            const quadra: QuadraCreate = {
+                ...values,
+                urlFotoQuadra: urlParaSalvar ?? '',
+                arenaId: arena?.id ?? 0,
+                horariosFuncionamento: horarios
+                    .map(item => ({
+                        diaDaSemana: item.diaDaSemana,
+                        intervalosDeHorario: item.intervalosDeHorario
+                            .filter(h => h.inicio && h.fim && h.valor && h.status)
+                            .map(h => ({
+                                inicio: (h.inicio ?? '') as string,
+                                fim: (h.fim ?? '') as string,
+                                valor: Number(h.valor),
+                                status: (h.status ?? '') as StatusHorario,
+                            })),
+                    }))
+                    .filter(dia => dia.intervalosDeHorario.length > 0),
+            };
+
+            console.log("Quadra a ser cadastrada:", quadra);
+
+
+            await createQuadra(quadra);
+
+            message.success("Quadra cadastrada com sucesso!");
+            setLoading(false);
+            router.push('/perfil/arena/quadras');
+        } catch (error) {
+            console.error("Erro no handleSubmit:", error);
+            message.error(error instanceof Error ? error.message : 'Erro ao cadastrar quadra.');
+            setLoading(false);
+        }
+    };
+
     if (pageLoading || status === 'loading') {
-        return <EditarQuadraSkeleton />;
+        return <CadastrarQuadraSkeleton />;
     }
 
     return (
         <Layout.Content
-            className="flex items-start justify-center px-4 sm:px-10 lg:px-40 py-6 flex-1"
-            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+            className="flex items-start justify-center px-4 sm:px-10 lg:px-40 py-6 !flex-1"
+            style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Card
                 title={
                     <>
-                        <Title level={3} className="!mb-2">Editar quadra</Title>
+                        <Title level={3} className="!mb-2">Cadastrar quadra</Title>
                         <Typography.Paragraph type="secondary" style={{ whiteSpace: 'normal' }}>
-                            Atualize os detalhes da sua quadra e seus horários de funcionamento.
+                            Detalhe sua quadra abaixo e prepare-se para receber novos agendamentos.
                         </Typography.Paragraph>
                     </>
                 }
-                className="w-full max-w-3xl mx-auto shadow-xl !pt-6 !mb-2"
+                className="w-full max-w-3xl mx-auto shadow-xl !pt-6"
                 styles={{ header: { borderBottom: 0 } }}
             >
+                {arena ? (
+                    <div className='mb-6'>
+                        <ArenaCard
+                            arena={{ ...arena, avaliacao: 1.0, numeroAvaliacoes: 10 }}
+                            showDescription={false}
+                            showHover={false}
+                        />
+                    </div>
+                ) : null}
+
                 <Form
                     form={form}
                     name='new_quadra_form'
                     layout="vertical"
                     onFinish={handleSubmit}
                     autoComplete='off'
-                    disabled={isSubmitting || status !== 'authenticated'}
-                    onValuesChange={() => setIsFormAltered(true)}
+                    disabled={loading || status !== 'authenticated'}
                 >
                     <Row gutter={[24, 16]}>
                         <Col span={24}>
@@ -391,7 +377,7 @@ export default function EditarQuadra() {
                                                 maxCount={1}
                                                 multiple={false}
                                                 accept="image/jpeg,image/png,image/jpg"
-                                                disabled={isSubmitting || status !== 'authenticated'}
+                                                disabled={loading || status !== 'authenticated'}
                                             >
                                                 {uploadButton}
                                             </Upload>
@@ -524,15 +510,13 @@ export default function EditarQuadra() {
                                             description={
                                                 isFechado ? <Tag color="error">Fechado</Tag> : (
                                                     <Flex wrap="wrap" gap={4}>
-                                                        {item.intervalosDeHorario.map((h) => {
+                                                        {item.intervalosDeHorario.map((h, i) => {
                                                             let color: "success" | "processing" | "error" = "success";
                                                             if (h.status === 'INDISPONIVEL') color = "error";
                                                             if (h.status === 'MANUTENCAO') color = "processing";
 
-                                                            const key = `${h.inicio ?? 'null'}-${h.fim ?? 'null'}-${h.valor ?? 'null'}-${h.status ?? 'null'}`;
-
                                                             return (
-                                                                <Tag key={key} color={color} style={{ textDecoration: h.status !== 'DISPONIVEL' ? 'line-through' : 'none' }}>
+                                                                <Tag key={i} color={color} style={{ textDecoration: h.status !== 'DISPONIVEL' ? 'line-through' : 'none' }}>
                                                                     {`${h.inicio} - ${h.fim} | R$ ${h.valor}`}
                                                                 </Tag>
                                                             );
@@ -550,12 +534,7 @@ export default function EditarQuadra() {
                     <Flex justify="end">
                         <Space size="middle">
                             <ButtonCancelar text='Voltar' onClick={() => router.back()} />
-                            <ButtonPrimary
-                                text='Salvar alterações'
-                                htmlType="submit"
-                                loading={isSubmitting}
-                                disabled={!isFormAltered || isSubmitting || status !== 'authenticated'}
-                            />
+                            <ButtonPrimary text='Salvar' htmlType="submit" loading={loading} />
                         </Space>
                     </Flex>
                 </Form>
@@ -569,3 +548,4 @@ export default function EditarQuadra() {
         </Layout.Content>
     );
 }
+

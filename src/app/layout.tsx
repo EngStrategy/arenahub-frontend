@@ -13,6 +13,10 @@ const inter = Inter({
 export const metadata: Metadata = {
     title: "Alugai",
     description: "",
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+        { media: '(prefers-color-scheme: dark)', color: '##2c2c2cff' },
+    ],
 };
 
 const ThemeScript = () => {

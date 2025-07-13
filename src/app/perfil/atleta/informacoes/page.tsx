@@ -253,7 +253,7 @@ export default function InformacoesPessoaisAtleta() {
             justify='center'
             align='start'
             className="sm:!px-10 lg:!px-40 !px-4 !py-6 !flex-1"
-            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+            style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Card
                 title={

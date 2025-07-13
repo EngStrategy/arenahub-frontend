@@ -53,6 +53,7 @@ const Navbar = () => {
     signOut({ callbackUrl: '/' });
     if (mobileMenuOpen) setMobileMenuOpen(false);
   };
+
   const navigateTo = (path: string) => {
     router.push(path);
     if (mobileMenuOpen) setMobileMenuOpen(false);
@@ -63,77 +64,91 @@ const Navbar = () => {
       key: "info",
       icon: <UserOutlined />,
       label: "Meus dados",
-      onClick: () => navigateTo("/perfil/atleta/informacoes")
+      onClick: () => navigateTo("/perfil/atleta/informacoes"),
+      className: "!my-1"
     },
     {
       key: "agendamentos",
       icon: <FaRegCalendarAlt />,
       label: "Agendamentos",
-      onClick: () => navigateTo("/perfil/atleta/agendamentos")
+      onClick: () => navigateTo("/perfil/atleta/agendamentos"),
+      className: "!my-1"
     },
     {
       key: "jogos-abertos",
       icon: <UnlockOutlined />,
       label: "Jogos abertos",
-      onClick: () => navigateTo("/jogos-abertos")
+      onClick: () => navigateTo("/jogos-abertos"),
+      className: "!my-1"
     },
     {
       key: "alterar-senha",
       icon: <TbLockPassword />,
       label: "Alterar senha",
-      onClick: () => navigateTo("/perfil/atleta/alterar-senha")
+      onClick: () => navigateTo("/perfil/atleta/alterar-senha"),
+      className: "!my-1"
     },
   ];
+
   const arenaMenuItems: AppMenuItem[] = [
     {
       key: "info-arena",
       icon: <UserOutlined />,
       label: "Meus dados",
-      onClick: () => navigateTo("/perfil/arena/informacoes")
+      onClick: () => navigateTo("/perfil/arena/informacoes"),
+      className: "!my-1"
     },
     {
       key: "agendamentos-arena",
       icon: <FaRegCalendarAlt />,
       label: "Agendamentos",
-      onClick: () => navigateTo("/perfil/arena/meus-agendamentos")
+      onClick: () => navigateTo("/perfil/arena/meus-agendamentos"),
+      className: "!my-1"
     },
     {
-      key: "minhas-quadras",
-      icon: <TbSoccerField  />,
+      key: "quadras-arena",
+      icon: <TbSoccerField />,
       label: "Quadras",
-      onClick: () => navigateTo("/perfil/arena/minhas-quadras")
+      onClick: () => navigateTo("/perfil/arena/quadras"),
+      className: "!my-1"
     },
     {
       key: "relatorio-arena",
       icon: <BarChartOutlined />,
       label: "Relatório",
-      onClick: () => navigateTo("/perfil/arena/relatorios")
+      onClick: () => navigateTo("/perfil/arena/relatorios"),
+      className: "!my-1"
     },
     {
       key: "alterar-senha-arena",
       icon: <TbLockPassword />,
       label: "Alterar senha",
-      onClick: () => navigateTo("/perfil/arena/alterar-senha")
+      onClick: () => navigateTo("/perfil/arena/alterar-senha"),
+      className: "!my-1"
     },
   ];
+
   const commonMenuItems: AppMenuItem[] = [
     {
       key: "/quem-somos",
       icon: <TeamOutlined />,
       label: "Quem somos",
-      onClick: () => navigateTo("/quem-somos")
+      onClick: () => navigateTo("/quem-somos"),
+      className: "!my-1"
     },
     {
       key: "/contato",
       icon: <PhoneOutlined />,
       label: "Contato",
-      onClick: () => navigateTo("/contato")
+      onClick: () => navigateTo("/contato"),
+      className: "!my-1"
     },
     {
       key: "/ajuda",
       icon: <QuestionCircleOutlined />,
       label: "Ajuda e suporte",
       onClick: () => navigateTo("/ajuda"),
+      className: "!my-1"
     },
   ];
 
@@ -150,6 +165,7 @@ const Navbar = () => {
       label: "Sair da conta",
       onClick: handleSignOut,
       danger: true,
+      className: "!my-1"
     },
   ];
 
@@ -167,8 +183,23 @@ const Navbar = () => {
             </Flex>
             <Menu
               mode="inline"
+              className="!bg-transparent"
               selectable={false}
-              items={[...userMenuItems, { type: 'divider' }, ...commonMenuItems, { type: 'divider' }, { key: "logout", icon: <LogoutOutlined />, label: "Sair da conta", onClick: handleSignOut, danger: true }]}
+              items={
+                [
+                  ...userMenuItems,
+                  { type: 'divider' },
+                  ...commonMenuItems,
+                  { type: 'divider' },
+                  {
+                    key: "logout",
+                    icon: <LogoutOutlined />,
+                    label: "Sair da conta",
+                    onClick: handleSignOut,
+                    danger: true
+                  }
+                ]
+              }
             />
           </>
         ) : (
@@ -177,7 +208,7 @@ const Navbar = () => {
               Entre para ter acesso a todos os recursos presentes na plataforma.
             </Text>
             <Button type="primary" size="large" block onClick={handleLogin}>Entrar</Button>
-            <Menu mode="inline" selectable={false} items={commonMenuItems} style={{ width: '100%', borderRight: 0 }} />
+            <Menu className="!bg-transparent" mode="inline" selectable={false} items={commonMenuItems} style={{ width: '100%', borderRight: 0 }} />
           </Flex>
         )}
       </Flex>
@@ -190,7 +221,7 @@ const Navbar = () => {
   // Skeleton de carregamento
   if (isLoadingSession) {
     return (
-      <Header style={{ paddingInline: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff' }}>
+      <div className="!p-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff' }}>
         <div className="h-8 w-24 bg-gray-200 rounded animate-pulse"></div>
         <div className="flex items-center space-x-4">
           <div className="hidden md:block h-5 w-20 bg-gray-200 rounded animate-pulse"></div>
@@ -198,11 +229,11 @@ const Navbar = () => {
           <div className="hidden md:block h-5 w-24 bg-gray-200 rounded animate-pulse"></div>
           <div className="h-9 w-20 bg-gray-200 rounded-lg animate-pulse"></div>
         </div>
-      </Header>
+      </div>
     );
   }
 
-  const homeHref = session?.user?.role === "ARENA" ? "/dashboard" : session?.user?.role ? "/" : "/";
+  const homeHref = session?.user?.role === "ARENA" ? "/dashboard" : "/";
 
   return (
     <Header
@@ -210,13 +241,12 @@ const Navbar = () => {
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        paddingInline: '0px',
-        backgroundColor: isDarkMode ? '#0a0a0aff' : '#ffffff',
+        backgroundColor: isDarkMode ? '#2c2c2c' : '#ffffff',
         backdropFilter: 'blur(10px)',
         lineHeight: 'inherit',
         height: '56px'
       }}
-      className="sm:!px-2 md:!px-6 lg:!px-8 xl:!px-10 2xl:!px-14"
+      className="!px-4 sm:!px-2 md:!px-6 lg:!px-8 xl:!px-10 2xl:!px-14"
     >
       <Flex justify="space-between" align="center" style={{ height: '100%' }} className="!w-full">
         {/* Logo */}
@@ -244,12 +274,12 @@ const Navbar = () => {
               menu={{ items: desktopUserDropdownItems }}
               trigger={["click"]}
               placement="bottomRight"
-              className="!border !border-gray-300 !rounded-lg !shadow-sm !px-2 !py-1"
-              overlayClassName="!mt-2 !w-50 !shadow-sm !rounded-md"
+              className="!border !border-gray-300 !rounded-lg !shadow-xs !px-2 !py-1"
+              overlayClassName="!mt-2 !w-50 !shadow-none !rounded-md"
             >
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar size={32} src={session.user.imageUrl} icon={<UserOutlined />} />
-                <Text>{session.user.name?.split(' ')[0]}</Text>
+                <Text>{session.user.name?.split(' ').slice(0, 2).join(' ')}</Text>
                 <FaAngleDown style={{ color: '#888' }} />
               </Space>
             </Dropdown>
@@ -259,7 +289,7 @@ const Navbar = () => {
         </Space>
 
         {/* Botão Hamburger - Mobile */}
-        <div className="md:hidden bg-red-300">
+        <div className="md:hidden">
           <Button type="text" icon={<MenuOutlined />} onClick={() => setMobileMenuOpen(true)} aria-label="Abrir menu" />
         </div>
       </Flex>

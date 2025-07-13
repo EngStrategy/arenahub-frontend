@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+:root {
+  --cor-fundo-light: #ffffff;
+  --cor-fundo-dark: #1A1A1A;
+}
+
+.bg-dark-mode {
+  background-color: var(--cor-fundo-dark);
+}
+
+.bg-light-mode {
+  background-color: var(--cor-fundo-light);
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
 }

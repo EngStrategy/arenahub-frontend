@@ -125,7 +125,7 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onDelete }) => {
                         </Popconfirm>
                     </Tooltip>
                     <Tooltip title="Editar">
-                        <Link href={`/perfil/arena/minhas-quadras/editar/${court.id}`}>
+                        <Link href={`/perfil/arena/quadras/editar/${court.id}`}>
                             <Button
                                 shape="circle"
                                 icon={<EditOutlined />}

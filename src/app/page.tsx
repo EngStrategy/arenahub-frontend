@@ -139,8 +139,7 @@ export default function HomePage() {
   return (
     <Flex
       vertical
-      className="!px-4 sm:!px-10 lg:!px-40 !py-8 flex-1"
-      style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+      className={`!px-4 sm:!px-10 lg:!px-40 !py-8 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}
     >
       <div className="w-full">
         <CitySports

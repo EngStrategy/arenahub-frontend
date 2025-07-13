@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useSession } from 'next-auth/react';
-import { Button, Avatar, Card, Col, Row, Flex, Typography, Space, Layout } from 'antd';
+import { Button, Avatar, Card, Col, Row, Flex, Typography, Layout } from 'antd';
 import {
   PlusOutlined,
   DollarCircleOutlined,
@@ -19,7 +19,6 @@ import { useTheme } from '@/context/ThemeProvider';
 
 const { Title, Text } = Typography;
 
-// -- Componente StatCard refatorado com Ant Design --
 interface StatCardProps {
   icon: React.ReactNode;
   title: string;
@@ -29,7 +28,6 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ icon, title, value, change, changeType }) => {
-  // A cor de fundo do Avatar pode ser personalizada no ThemeProvider se desejar
   let iconColor = '#f2e8ff';
   if (React.isValidElement(icon)) {
     const props = icon.props as { className?: string };
@@ -59,7 +57,6 @@ const StatCard: React.FC<StatCardProps> = ({ icon, title, value, change, changeT
 };
 
 
-// -- Skeletons permanecem os mesmos --
 const StatCardSkeleton = () => (
   <div className="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4 animate-pulse">
     <div className="h-12 w-12 bg-gray-300 rounded-full"></div>
@@ -72,7 +69,6 @@ const StatCardSkeleton = () => (
 
 const DashboardSkeleton = () => (
   <main className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
-    {/* Skeleton pode ser mantido ou refatorado com AntD Skeleton se preferir */}
     <div className="w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 animate-pulse">
         <div className="space-y-2">
@@ -95,7 +91,6 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const { isDarkMode } = useTheme();
 
-  // Os dados permanecem os mesmos
   const kpiData = [
     { icon: <DollarCircleOutlined className="!text-green-600 text-2xl" />, title: "Receita do Mês", value: "R$ 7.850,00", change: "+12% vs. mês passado", changeType: 'increase' as const },
     { icon: <ScheduleOutlined className="!text-blue-600 text-2xl" />, title: "Agendamentos Hoje", value: "12", change: "2 horários livres", changeType: 'decrease' as const },
@@ -106,7 +101,7 @@ export default function Dashboard() {
     { time: "21:00 - 22:00", court: "Quadra 2", client: "Cristiano Ronaldo", avatar: "https://api.dicebear.com/7.x/miniavs/svg?seed=3", phoneNumber: "89994706972" },
   ];
   const quickAccessLinks = [
-    { label: "Gerenciar Quadras", icon: <GiSoccerField />, path: "/perfil/arena/minhas-quadras" },
+    { label: "Gerenciar Quadras", icon: <GiSoccerField />, path: "/perfil/arena/quadras" },
     { label: "Agendamentos", icon: <ScheduleOutlined />, path: "/perfil/arena/agendamentos" },
     { label: "Relatórios Financeiros", icon: <BarChartOutlined />, path: "/perfil/arena/relatorios" },
     { label: "Gestão de Clientes", icon: <TeamOutlined />, path: "/perfil/arena/clientes" },
@@ -117,7 +112,7 @@ export default function Dashboard() {
   }
 
   return (
-    <Layout.Content style={{ padding: '2rem 8%',  backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }} >
+    <Layout.Content style={{ padding: '2rem 8%', backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)', }} >
       <Flex vertical gap="large">
         {/* Cabeçalho */}
         <Flex justify="space-between" align="center">
@@ -127,7 +122,7 @@ export default function Dashboard() {
             </Title>
             <Text type="secondary">Aqui está um resumo do seu dia.</Text>
           </Flex>
-          <Link href="/perfil/arena/minhas-quadras/nova">
+          <Link href="/perfil/arena/quadras/nova">
             <ButtonPrimary text="Nova Quadra" icon={<PlusOutlined />} size="large" />
           </Link>
         </Flex>
@@ -141,9 +136,7 @@ export default function Dashboard() {
           ))}
         </Row>
 
-        {/* Conteúdo Principal */}
         <Row gutter={[16, 16]}>
-          {/* Coluna de Agendamentos */}
           <Col xs={24} lg={16}>
             <Card title={<Title level={4}>Próximos Agendamentos</Title>}>
               <Flex vertical gap="middle">
@@ -175,7 +168,6 @@ export default function Dashboard() {
             </Card>
           </Col>
 
-          {/* Coluna de Acesso Rápido */}
           <Col xs={24} lg={8}>
             <Card title={<Title level={4}>Acesso Rápido</Title>}>
               <Flex vertical gap="small">
