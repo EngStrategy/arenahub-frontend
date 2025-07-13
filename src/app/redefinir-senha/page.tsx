@@ -53,7 +53,7 @@ export default function RedefinirSenha() {
     const [loading, setLoading] = useState(false);
     const [userEmail, setUserEmail] = useState("");
     const [isSuccess, setIsSuccess] = useState(false);
-    const [countdown, setCountdown] = useState(10);
+    const [countdown, setCountdown] = useState(1000);
     const capsLockEstaAtivado = useCapsLock();
 
     useEffect(() => {
