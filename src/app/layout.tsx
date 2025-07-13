@@ -1,61 +1,60 @@
-
 import "./styles/globals.css";
 import Navbar from "@/components/Navbar";
 import SessionAuthProvider from "@/context/SessionAuthProvider";
+import { ThemeProvider } from "@/context/ThemeProvider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { App, ConfigProvider, theme } from "antd";
-import '@ant-design/v5-patch-for-react-19';
 
 const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+    variable: "--font-inter",
+    subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Alugai",
-  description: "",
+    title: "Alugai",
+    description: "",
+};
+
+const ThemeScript = () => {
+  const script = `
+    (function() {
+      function getTheme() {
+        const theme = window.localStorage.getItem('theme');
+        if (theme) return theme;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      const theme = getTheme();
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  `;
+  return <script dangerouslySetInnerHTML={{ __html: script }} />;
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  const primary = "#15a01a";
-  return (
-    <html lang="en">
-      <body className={`${inter.variable} antialiased h-full`}>
-        <ConfigProvider
-          theme={{
-            token: {
-              colorPrimary: primary,
-              borderRadius: 5,
-              colorBgContainer: '#FFFFFF',
-            },
-            components: {
-              Button: {
-                colorPrimary: primary,
-                algorithm: true,
-              },
-              Input: {
-                colorPrimary: primary,
-                algorithm: true,
-              }
-            },
-            algorithm: theme.defaultAlgorithm,
-          }}
-        >
-          <App style={{ height: '100%' }}>
-            <SessionAuthProvider>
-              <main className="flex flex-col min-h-screen">
-                <Navbar />
-                {children}
-              </main>
-            </SessionAuthProvider>
-          </App>
-        </ConfigProvider>
-      </body>
-    </html>
-  );
+
+    return (
+        <html lang="en" suppressHydrationWarning>
+            <head>
+                <ThemeScript />
+            </head>
+            <body className={`${inter.variable} antialiased h-full`}>
+                <SessionAuthProvider>
+                    <ThemeProvider>
+                        <main className="flex flex-col min-h-screen">
+                            <Navbar />
+                            {children}
+                        </main>
+                    </ThemeProvider>
+                </SessionAuthProvider>
+            </body>
+        </html>
+    );
 }

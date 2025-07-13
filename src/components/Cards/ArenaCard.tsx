@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState } from 'react';
+import { Card, Flex, Typography } from 'antd'; // Componentes importados do Ant Design
 import { PictureOutlined, StarFilled } from '@ant-design/icons';
 import Image from 'next/image';
 import { Arena } from '@/app/api/entities/arena';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
+
+const { Title, Text, Paragraph } = Typography; // Desestruturando os componentes de Typography
 
 interface ArenaCardProps {
   arena: Arena;
@@ -27,47 +30,60 @@ export const ArenaCard = ({ arena, showDescription, showHover = true, showEsport
   });
 
   return (
-    <div
-      className={`
-        flex rounded-lg overflow-hidden gap-4
-        transition-all duration-200 ease-in-out
-        ${showHover ? 'hover:shadow-xl hover:scale-105 cursor-pointer' : ''}
-      `}
+    <Card
+      {...showHover ? { hoverable: true } : {}}
+      style={{ height: '100%', border: 'none' }}
+      styles={{ body: { padding: 6, height: '100%', display: 'flex', flexDirection: 'column' } }}
     >
-      <div className="rounded-lg relative h-36 min-w-[144px] w-45 overflow-hidden bg-gray-300 flex-shrink-0">
-        <Image
-          src={imgSrc}
-          alt={`Imagem da ${arena.nome}`}
-          fill
-          className="object-cover"
-          onError={() => setImgSrc(fallbackSrc)}
-        />
-      </div>
+      <Flex gap="large" align="start">
+        {/* Imagem da Arena */}
+        <div className="rounded-lg relative h-36 min-w-[144px] w-45 xs:w-20 sm:w-24 md:w-34 
+        lg:w-45 xl:w-45 overflow-hidden border border-gray-200 shadow-sm bg-white 
+        hover:shadow-md transition-shadow duration-200 ease-in-out cursor-pointer
+        overflow-hidden bg-gray-300 flex-shrink-0">
+          <Image
+            src={imgSrc}
+            alt={`Imagem da ${arena.nome}`}
+            fill
+            className="object-cover"
+            onError={() => setImgSrc(fallbackSrc)}
+          />
+        </div>
 
-      <div className="flex flex-col col-span-8 justify-between">
-        {/* Informações superiores */}
-        <h3 className="text-lg font-semibold text-gray-900">{arena.nome}</h3>
-        <div>
-          <p className="text-sm text-gray-600">{arena.endereco.cidade} - {arena.endereco.estado}</p>
-          <p className="text-sm text-gray-500">{arena.endereco.rua}, {arena.endereco.numero} - {arena.endereco.bairro} - CEP {arena.endereco.cep}</p>
-        </div>
-        {(esportesFormatados.length > 0 && showEsportes) && (
-          <p className="font-semibold text-green-600">
-            {listFormatter.format(esportesFormatados)}
-          </p>
-        )}
-        {/* Parte inferior */}
-        <div className="mb-2 flex items-center">
-          <StarFilled className="!text-yellow-500 mr-1" />
-          <span className="text-sm text-gray-800 font-medium">{arena.avaliacao?.toFixed(1)}</span>
-          <span className="text-sm text-gray-500 ml-1">({arena.numeroAvaliacoes} avaliações)</span>
-        </div>
-        {/* Descrição opcional */}
-        {showDescription && arena.descricao &&
-          <p className="text-sm text-gray-500 line-clamp-2">{arena.descricao}</p>
-        }
-      </div>
-    </div>
+        {/* Container de Informações */}
+        <Flex vertical justify="space-between" className="!flex-1 !h-36">
+          {/* Informações superiores */}
+          <Flex justify="space-between" vertical>
+            <Title level={5}>
+              {arena.nome}
+            </Title>
+            <Text type="secondary">
+              {arena.endereco.cidade} - {arena.endereco.estado} <br />
+              {arena.endereco.rua}, {arena.endereco.numero} - {arena.endereco.bairro} - CEP {arena.endereco.cep}
+            </Text>
+            {(esportesFormatados.length > 0 && showEsportes) && (
+              <Text strong className="!text-green-600 !mt-2">
+                {listFormatter.format(esportesFormatados)}
+              </Text>
+            )}
+          </Flex>
+
+          {/* Descrição opcional */}
+          {showDescription && arena.descricao &&
+            <Paragraph ellipsis={{ rows: 2 }} type="secondary" className="!my-1">
+              {arena.descricao}
+            </Paragraph>
+          }
+
+          {/* Parte inferior (Avaliações) */}
+          <Flex align="center">
+            <StarFilled className="!text-yellow-500 mr-1" />
+            <Text strong>{arena.avaliacao?.toFixed(1)}</Text>
+            <Text type="secondary" className="ml-1">({arena.numeroAvaliacoes} avaliações)</Text>
+          </Flex>
+        </Flex>
+      </Flex>
+    </Card>
   );
 };
 

@@ -11,7 +11,7 @@ export const formatarDiaSemanaCompleto = (dia: DiaDaSemana) => {
 export const formatarDiaSemanaAbreviado = (dia: DiaDaSemana) => {
     const mapa = {
         DOMINGO: "Dom", SEGUNDA: "Seg", TERCA: "Ter",
-        QUARTA: "Qua", QUINTA: "Qui", SEXTA: "Sext", SABADO: "Sáb"
+        QUARTA: "Qua", QUINTA: "Qui", SEXTA: "Sex", SABADO: "Sáb"
     };
     return mapa[dia];
 };

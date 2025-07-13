@@ -17,6 +17,7 @@ import { Quadra, TipoQuadra } from '@/app/api/entities/quadra';
 import Image from 'next/image';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { formatarDiaSemanaAbreviado } from '@/context/functions/mapeamentoDiaSemana';
+import { MdOutlineSports } from "react-icons/md";
 
 interface CourtCardProps {
     court: Quadra;
@@ -68,7 +69,7 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onDelete }) => {
                         </Typography.Title>
 
                         {diasFuncionamento && (
-                            <Typography.Text type="secondary" style={{ fontSize: 12, display: 'flex', alignItems: 'center' }}>
+                            <Typography.Text type="secondary" style={{ fontSize: 12, display: 'flex', alignItems: 'center', marginTop: 4 }}>
                                 <CalendarOutlined style={{ marginRight: 6 }} />
                                 {diasFuncionamento}
                             </Typography.Text>
@@ -81,7 +82,7 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onDelete }) => {
                 <Flex vertical gap="middle">
                     <TagSection
                         title="Esportes"
-                        icon={<Image src="/icons/corrida.svg" alt="Ícone de esportes" width={16} height={16} />}
+                        icon={<MdOutlineSports />}
                         tags={court.tipoQuadra}
                         color="green"
                         formatter={(sport) => formatarEsporte(sport as TipoQuadra)}

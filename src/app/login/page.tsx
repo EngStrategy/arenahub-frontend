@@ -3,13 +3,14 @@
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import { Checkbox, Form, Input, App, Flex } from 'antd';
+import { Checkbox, Form, Input, App, Flex, Typography } from 'antd';
 import Link from "next/link"
 import Image from "next/image";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { useCapsLock } from "@/context/hooks/useCapsLook";
 import { ExclamationCircleFilled } from "@ant-design/icons";
 import CapsLock from "@/components/Alerts/CapsLock";
+import { useTheme } from "@/context/ThemeProvider";
 
 const LoginSkeleton = () => (
     <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center justify-center animate-pulse">
@@ -44,6 +45,7 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { isDarkMode } = useTheme();
 
     const capsLockEstaAtivado = useCapsLock();
     const authRoutes = ["/login", "/register", "/forgot-password"];
@@ -93,7 +95,12 @@ export default function Login() {
     }
 
     return (
-        <Flex align="center" justify="center" className="flex-1 sm:!px-10 lg:!px-40">
+        <Flex
+            align="center"
+            justify="center"
+            className="flex-1 sm:!px-10 lg:!px-40"
+            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        >
             <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
                 <Image
                     src="/icons/beachtenis.svg"
@@ -107,7 +114,9 @@ export default function Login() {
             <Flex align="center" justify="center" className="!w-full md:!w-1/3">
                 <div className="p-6 sm:p-8 w-full">
                     <Flex justify="center" vertical>
-                        <p className="text-center text-gray-600 font-medium text-lg mb-4">Faça login para continuar acessando</p>
+                        <Typography.Title level={4} className="text-center !mb-4">
+                            Faça login para continuar acessando
+                        </Typography.Title>
                         <Form
                             layout="vertical"
                             name="login"
@@ -164,11 +173,16 @@ export default function Login() {
                                 htmlType="submit"
                                 loading={loading}
                                 disabled={loading}
-                                className="w-full"
+                                className="w-full mb-4"
                             />
-                            <p className="text-gray-800 text-sm mt-4">
-                                Não tem uma conta? <Link href="/register" className="!underline underline-offset-4 text-green-primary hover:!text-green-500 ">Cadastre-se</Link>
-                            </p>
+                            <Typography.Text>
+                                Não tem uma conta?{" "}
+                                <Link
+                                    href="/register"
+                                    className="!underline !underline-offset-4 !text-green-500 hover:!text-green-500 ">
+                                    Cadastre-se
+                                </Link>
+                            </Typography.Text>
                         </Form>
                     </Flex>
                 </div>

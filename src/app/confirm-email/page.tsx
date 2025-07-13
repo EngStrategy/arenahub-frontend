@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect, useCallback } from "react";
-import { Button, Input, App, Flex } from "antd";
+import { Button, Input, App, Flex, Typography } from "antd";
 import Image from "next/image";
 import {
     verifyEmail,
@@ -10,6 +10,7 @@ import {
     VerifyEmailPayload
 } from "@/app/api/entities/verifyEmail";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
+import { useTheme } from "@/context/ThemeProvider";
 
 const ConfirmEmailSkeleton = () => (
     <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center justify-center animate-pulse">
@@ -39,6 +40,7 @@ export default function ConfirmEmailPage() {
     const { message } = App.useApp();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { isDarkMode } = useTheme();
 
     const [pageLoading, setPageLoading] = useState(true);
     const [loading, setLoading] = useState(false);
@@ -126,7 +128,12 @@ export default function ConfirmEmailPage() {
     }
 
     return (
-        <Flex align="center" justify="center" className="flex-1 sm:!px-10 lg:!px-40">
+        <Flex 
+        align="center" 
+        justify="center" 
+        className="flex-1 sm:!px-10 lg:!px-40"
+        style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        >
             <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
                 <Image
                     src="/icons/beachtenis.svg"
@@ -148,14 +155,14 @@ export default function ConfirmEmailPage() {
                         />
                     </Flex>
                 </Flex>
-                <p className="text-center text-gray-800 font-semibold text-2xl mb-2">
+                <Typography.Title level={4} className="text-center mb-2">
                     Confirme seu e-mail
-                </p>
-                <p className="mb-4 text-center text-gray-600">
-                    Um código foi enviado para <b>{email}</b>.
+                </Typography.Title>
+                <Typography.Text type="secondary" className="mb-4 text-center">
+                    Um código foi enviado para <Typography.Text strong italic>{email}</Typography.Text>.
                     <br />
                     Insira-o abaixo:
-                </p>
+                </Typography.Text>
 
                 <Flex justify="center" className="!mb-4">
                     <Input.OTP
@@ -165,14 +172,14 @@ export default function ConfirmEmailPage() {
                         disabled={loading}
                     />
                 </Flex>
-                <p className="mb-4 text-center text-sm text-gray-500">
+                <Typography.Text type="secondary" className="mb-4 text-center">
                     Não recebeu o código? Verifique sua caixa de lixo eletrônico (SPAM)
                     ou aguarde para reenviar.
-                </p>
+                </Typography.Text>
 
                 <div className="text-center text-gray-500 mb-4">
                     {timer > 0 ? (
-                        <span>{`Aguarde ${String(Math.floor(timer / 60)).padStart(2, '0')}:${String(timer % 60).padStart(2, '0')} para reenviar`}</span>
+                        <Typography.Text >{`Aguarde ${String(Math.floor(timer / 60)).padStart(2, '0')}:${String(timer % 60).padStart(2, '0')} para reenviar`}</Typography.Text>
                     ) : (
                         <Button
                             type="link"

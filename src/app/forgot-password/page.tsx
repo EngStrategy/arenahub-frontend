@@ -2,17 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useCallback } from "react";
-import { Button, Form, Input, App, Flex } from "antd";
+import { Button, Form, Input, App, Flex, Typography } from "antd";
 import { GrSecure } from "react-icons/gr";
 import { IoArrowBackOutline } from "react-icons/io5";
 import Link from "next/link";
 import Image from "next/image";
 import { forgotPassword, verifyResetCode } from "@/app/api/entities/verifyEmail";
+import { useTheme } from "@/context/ThemeProvider";
 
 export default function ForgotPassword() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const router = useRouter();
+  const { isDarkMode } = useTheme();
 
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -94,7 +96,12 @@ export default function ForgotPassword() {
   }, [message]);
 
   return (
-    <Flex align="center" justify="center" className="flex-1 sm:!px-10 lg:!px-40">
+    <Flex
+      align="center"
+      justify="center"
+      className="flex-1 sm:!px-10 lg:!px-40"
+      style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+    >
       <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
         <Image
           src="/icons/beachtenis.svg"
@@ -111,15 +118,15 @@ export default function ForgotPassword() {
             <GrSecure className="text-xl text-white" />
           </Flex>
         </Flex>
-        <p className="text-center text-gray-600 font-medium text-lg mb-4">
+        <Typography.Title level={4} className="text-center mb-4">
           Esqueceu sua senha?
-        </p>
+        </Typography.Title>
 
         {!emailSent ? (
           <>
-            <p className="text-center text-gray-500 mb-4 text-md">
+            <Typography.Text className="text-center mb-4">
               Insira seu email abaixo para receber um código de verificação!
-            </p>
+            </Typography.Text>
             <Form
               form={form}
               layout="vertical"
@@ -159,9 +166,9 @@ export default function ForgotPassword() {
           </>
         ) : (
           <>
-            <p className="mb-4 text-center text-gray-600">
-              Um código foi enviado para <b>{userEmail}</b>. Insira-o abaixo:
-            </p>
+            <Typography.Text type="secondary" className="mb-4 text-center">
+              Um código foi enviado para <Typography.Text strong italic>{userEmail}</Typography.Text>. Insira-o abaixo:
+            </Typography.Text>
             <Form onFinish={({ code }) => handleVerifyCode(code)}>
               <Form.Item
                 name="code"
@@ -179,11 +186,11 @@ export default function ForgotPassword() {
               </Form.Item>
 
               <Flex justify="space-between" align="center" className="!mb-4">
-                <span className="text-gray-500">
+                <Typography.Text type="secondary">
                   {timer > 0
                     ? `Reenviar código em ${String(timer).padStart(2, "0")}s`
                     : "Não recebeu o código?"}
-                </span>
+                </Typography.Text>
                 <Button
                   type="link"
                   disabled={timer > 0 || loading}

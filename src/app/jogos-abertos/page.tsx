@@ -6,6 +6,7 @@ import { JogoAbertoCard } from '@/components/Cards/JogoAbertoCard';
 import CitySports from '@/components/CitySports';
 import { useSession } from 'next-auth/react';
 import { sportIcons } from '@/data/sportIcons';
+import { useTheme } from '@/context/ThemeProvider';
 
 const { Title } = Typography;
 const { Content } = Layout;
@@ -70,6 +71,7 @@ const JogoAbertoSkeleton = () => (
 export default function JogosAbertos() {
     const { status } = useSession();
     const [selectedSport, setSelectedSport] = useState('Todos');
+    const { isDarkMode } = useTheme();
 
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 6;
@@ -97,14 +99,17 @@ export default function JogosAbertos() {
     }
 
     return (
-        <Content className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
+        <Content
+            className="px-4 sm:px-10 lg:px-40 py-8 flex-1"
+            style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        >
             <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>Jogos abertos</Title>
 
             <CitySports
                 selectedSport={selectedSport}
                 setSelectedSport={handleSportChange}
-                searchTerm=""
-                setSearchTerm={() => { }}
+                inputValue=""
+                setInputValue={() => { }}
                 setCurrentPage={() => { }}
                 allSports={allSports}
                 sportIcons={sportIcons}

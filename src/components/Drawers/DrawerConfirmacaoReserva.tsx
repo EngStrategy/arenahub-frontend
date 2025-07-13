@@ -1,18 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Form, Button, Switch, Select, Radio, Typography } from 'antd';
+import { Drawer, Form, Button, Switch, Select, Radio, Typography, App } from 'antd';
 import { IoCloseOutline } from "react-icons/io5";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { format, addMonths, addDays, getDay, isBefore, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import type {
     MaterialFornecido,
-    DuracaoReserva
+    DuracaoReserva,
+    Quadra,
+    HorariosDisponiveis,
+    TipoQuadra
 } from '@/app/api/entities/quadra';
 import type { Arena as ArenaOficial } from '@/app/api/entities/arena';
-import type { QuadraComHorarios, Horario } from '@/app/(atleta)/quadras-page/[arenaId]/page';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
+import { createAgendamento, type AgendamentoCreate, type PeriodoAgendamentoFixo } from '@/app/api/entities/agendamento';
+import { ButtonPrimary } from '../Buttons/ButtonPrimary';
+import { Router } from 'next/router';
+import { useRouter } from 'next/navigation';
+
 
 const { Text } = Typography;
+
+type Horario = HorariosDisponiveis;
+
+export interface QuadraComHorarios extends Quadra {
+    horariosDisponiveis: Horario[];
+}
 
 const formatarMaterial = (material: MaterialFornecido): string => {
     return material.charAt(0).toUpperCase() + material.slice(1).toLowerCase();
@@ -50,45 +63,14 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     quadras
 }) => {
     const [form] = Form.useForm();
-    const [isFix, setIsFix] = useState(false);
+    const router = useRouter();
+    const { message } = App.useApp();
+    const [isFixo, setIsFixo] = useState(false);
     const [isIncomplete, setIsIncomplete] = useState(false);
     const [numeroJogadoresFaltando, setNumeroJogadoresFaltando] = useState(0);
     const [fixedDurationMonths, setFixedDurationMonths] = useState<number>(0);
-
-    useEffect(() => {
-        if (quadraSelecionada) {
-            if (quadraSelecionada.tipoQuadra.length === 1) {
-                form.setFieldValue('esporteSelecionado', quadraSelecionada.tipoQuadra[0]);
-            } else {
-                form.resetFields(['esporteSelecionado']);
-            }
-        }
-        // Reset states on drawer close/open
-        if (!open) {
-            setIsFix(false);
-            setIsIncomplete(false);
-            setNumeroJogadoresFaltando(0);
-            setFixedDurationMonths(0);
-        }
-    }, [quadraSelecionada, open, form]);
-
-    const handleFormSubmit = (values: any) => {
-        const finalBookingDetails = {
-            ...values,
-            isFix,
-            fixedDurationMonths: isFix ? fixedDurationMonths : 0,
-            isIncomplete,
-            numeroJogadoresFaltando: isIncomplete ? numeroJogadoresFaltando : 0,
-            horarios: selectedHorarios,
-            data: selectedDate,
-            quadraId: quadraSelecionada?.id,
-            arenaId: arena.id,
-            total: calcularTotal(),
-        };
-        console.log("DADOS FINAIS DA RESERVA:", finalBookingDetails);
-        alert('Reserva confirmada! Verifique o console para ver os dados.');
-        onClose();
-    };
+    const [total, setTotal] = useState<number>(0);
+    const [submitting, setSubmitting] = useState(false);
 
     const getOccurrences = (startDate: Date, months: number): { count: number, lastDate: Date } => {
         if (months === 0) return { count: 0, lastDate: startDate };
@@ -109,27 +91,109 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
         return { count, lastDate };
     };
 
-    const calcularTotal = (): number => {
-        if (!selectedHorarios || !quadras || selectedHorarios.length === 0) return 0;
+    useEffect(() => {
+        if (!selectedHorarios || !quadras || selectedHorarios.length === 0) {
+            setTotal(0);
+            return;
+        }
 
         const basePrice = selectedHorarios
             .map((val) => {
                 const [quadraId, hora] = val.split('|');
                 const quadra = quadras.find(q => q.id === Number(quadraId));
-                const horario: Horario | undefined = quadra?.horarios?.find((h: Horario) => h.hora === hora && h.data === selectedDate);
-                return horario?.preco ?? 0;
+                const horario: Horario | undefined = quadra?.horariosDisponiveis?.find(h => h.horarioInicio === hora);
+                return horario?.valor ?? 0;
             })
             .reduce((acc, preco) => acc + preco, 0);
 
-        if (isFix && fixedDurationMonths > 0 && selectedDate) {
+        if (isFixo && fixedDurationMonths > 0 && selectedDate) {
             const startDate = parseISO(selectedDate + 'T00:00:00');
             const { count } = getOccurrences(startDate, fixedDurationMonths);
-            return basePrice * count;
+            setTotal(basePrice * count);
+        } else {
+            setTotal(basePrice);
+        }
+    }, [selectedHorarios, quadras, selectedDate, isFixo, fixedDurationMonths]);
+
+
+    useEffect(() => {
+        if (quadraSelecionada) {
+            if (quadraSelecionada.tipoQuadra.length === 1) {
+                form.setFieldValue('esporte', quadraSelecionada.tipoQuadra[0]);
+            } else {
+                form.resetFields(['esporte']);
+            }
+        }
+        if (!open) {
+            setIsFixo(false);
+            setIsIncomplete(false);
+            setNumeroJogadoresFaltando(0);
+            setFixedDurationMonths(0);
+            form.resetFields();
+        }
+    }, [quadraSelecionada, open, form]);
+
+    const handleFormSubmit = async (values: any) => {
+        if (!quadraSelecionada) {
+            message.error("Nenhuma quadra selecionada.");
+            return;
         }
 
-        return basePrice;
-    };
+        setSubmitting(true);
 
+        let periodoFixoValue: PeriodoAgendamentoFixo | undefined = undefined;
+        if (isFixo) {
+            if (fixedDurationMonths === 1) periodoFixoValue = 'UM_MES';
+            else if (fixedDurationMonths === 3) periodoFixoValue = 'TRES_MESES';
+            else if (fixedDurationMonths === 6) periodoFixoValue = 'SEIS_MESES';
+        }
+
+        const slotHorarioIds = selectedHorarios.map(h => {
+            const [quadraIdStr, horarioInicio] = h.split('|');
+            const quadraId = Number(quadraIdStr);
+            const quadra = quadras.find(q => q.id === quadraId);
+            const horario = quadra?.horariosDisponiveis.find(slot => slot.horarioInicio === horarioInicio);
+            return horario?.id;
+        }).filter((id): id is number => id !== undefined);
+
+        if (slotHorarioIds.length !== selectedHorarios.length) {
+            message.error("Erro ao processar os horários selecionados. Tente novamente.");
+            setSubmitting(false);
+            return;
+        }
+
+        const esporteSelecionado: TipoQuadra = values.esporte || (quadraSelecionada.tipoQuadra.length === 1 ? quadraSelecionada.tipoQuadra[0] : null);
+
+        if (!esporteSelecionado) {
+            message.error("Por favor, selecione um esporte.");
+            setSubmitting(false);
+            return;
+        }
+
+        const payload: AgendamentoCreate = {
+            quadraId: quadraSelecionada.id,
+            dataAgendamento: selectedDate,
+            slotHorarioIds: slotHorarioIds,
+            esporte: esporteSelecionado,
+            periodoFixo: periodoFixoValue,
+            numeroJogadoresNecessarios: isIncomplete ? numeroJogadoresFaltando : 0,
+            isFixo: isFixo,
+            isPublico: isIncomplete,
+        };
+
+        try {
+            console.log("Enviando para a API:", payload);
+            await createAgendamento(payload);
+            message.success('Agendamento criado com sucesso!');
+            onClose();
+            router.push('/perfil/atleta/agendamentos');
+        } catch (error) {
+            console.error("Falha ao criar agendamento:", error);
+            message.error('Não foi possível realizar o agendamento. Tente novamente.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
     const renderResumoHorario = () => {
         if (!selectedHorarios || selectedHorarios.length === 0 || !quadraSelecionada) return null;
 
@@ -138,8 +202,8 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
             .map(h => h.split('|')[1])
             .sort((a, b) => a.localeCompare(b));
         const horaInicioStr = horariosOrdenados[0];
-        const ultimoHorarioStr = horariosOrdenados[horariosOrdenados.length - 1];
 
+        const ultimoHorarioStr = horariosOrdenados[horariosOrdenados.length - 1];
         const [h, m] = ultimoHorarioStr.split(':').map(Number);
         const fimMinutosTotal = (h * 60) + m + duracaoMinutosPorSlot;
         const horaFimStr = `${String(Math.floor(fimMinutosTotal / 60) % 24).padStart(2, '0')}:${String(fimMinutosTotal % 60).padStart(2, '0')}`;
@@ -153,7 +217,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
         if (totalMinutos > 0) partesDuracao.push(`${totalMinutos}min`);
         const duracaoFormatada = partesDuracao.join(' ');
 
-        if (isFix && fixedDurationMonths > 0 && selectedDate) {
+        if (isFixo && fixedDurationMonths > 0 && selectedDate) {
             const startDate = parseISO(selectedDate + 'T00:00:00');
             const { count, lastDate } = getOccurrences(startDate, fixedDurationMonths);
             const diaDaSemana = format(startDate, 'EEEE', { locale: ptBR });
@@ -170,7 +234,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                         <span className="font-semibold text-sm">{textoResumo}</span>
                         <span className="text-sm text-gray-600">{`${horaInicioStr} às ${horaFimStr} (${duracaoFormatada})`}</span>
                         <span className="text-green-600 font-bold text-lg mt-1">
-                            {calcularTotal().toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ({count} dias)
+                            {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ({count} dias)
                         </span>
                     </div>
                     <div className="flex flex-col items-center justify-center min-w-[48px] gap-1 p-2 rounded-md">
@@ -190,7 +254,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                 <div className="flex flex-col flex-1">
                     <span className="font-semibold text-base">{`${horaInicioStr} às ${horaFimStr} (${duracaoFormatada})`}</span>
                     <span className="text-green-600 font-bold text-lg mt-1">
-                        {calcularTotal().toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </span>
                 </div>
                 <div className="flex flex-col items-center justify-center min-w-[48px] gap- p-2 rounded-md">
@@ -222,6 +286,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                     onFinish={handleFormSubmit}
                     className="flex flex-col justify-between px-6 pb-6 w-full h-full"
                 >
+                    {/* O restante do JSX do formulário permanece o mesmo */}
                     <div className="flex flex-col">
                         <div className="flex flex-col mb-4">
                             <h1 className="text-xl font-bold mb-1">{arena.nome}</h1>
@@ -248,7 +313,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                         )}
                         <div className="flex flex-col gap-2 mb-4">
                             {quadraSelecionada && quadraSelecionada.tipoQuadra.length > 1 && (
-                                <Form.Item name="esporteSelecionado" label={<Text className='font-semibold text-lg'>Selecione um esporte</Text>} rules={[{ required: true, message: 'Por favor, selecione um esporte!' }]}>
+                                <Form.Item name="esporte" label={<Text className='font-semibold text-lg'>Selecione um esporte</Text>} rules={[{ required: true, message: 'Por favor, selecione um esporte!' }]}>
                                     <Select placeholder="Selecione um esporte" className="w-full">
                                         {quadraSelecionada.tipoQuadra.map((esporte) => (
                                             <Select.Option key={esporte} value={esporte}>{formatarEsporte(esporte)}</Select.Option>
@@ -258,8 +323,8 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                             )}
                             <div className="flex justify-between items-center bg-gray-100 p-2 rounded-md">
                                 <span>Quer reservar este horário como fixo?</span>
-                                <Switch size="small" checked={isFix} onChange={(c) => {
-                                    setIsFix(c);
+                                <Switch disabled size="small" checked={isFixo} onChange={(c) => {
+                                    setIsFixo(c);
                                     if (c) {
                                         setIsIncomplete(false);
                                         if (fixedDurationMonths === 0) setFixedDurationMonths(1);
@@ -268,7 +333,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     }
                                 }} />
                             </div>
-                            {isFix && (
+                            {isFixo && (
                                 <Radio.Group value={fixedDurationMonths} onChange={(e) => setFixedDurationMonths(e.target.value)} className='!flex !justify-between'>
                                     <Radio value={1}>1 mês</Radio>
                                     <Radio value={3}>3 meses</Radio>
@@ -280,7 +345,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                 <Switch size="small" checked={isIncomplete} onChange={(c) => {
                                     setIsIncomplete(c);
                                     if (c) {
-                                        setIsFix(false);
+                                        setIsFixo(false);
                                         setFixedDurationMonths(0);
                                         if (numeroJogadoresFaltando === 0) setNumeroJogadoresFaltando(1);
                                     } else {
@@ -312,11 +377,15 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                     <div className="flex flex-col flex-1 justify-end">
                         <div className='flex justify-between items-center mb-4'>
                             <span className='text-lg'>Total</span>
-                            <span className='font-bold text-lg text-green-600'>{calcularTotal().toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                            <span className='font-bold text-lg text-green-600'>{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                         </div>
-                        <Button type="primary" htmlType="submit" className="w-full bg-green-primary !font-semibold hover:bg-green-500 text-white !py-5 !rounded-md">
-                            Confirmar agendamento
-                        </Button>
+                        <ButtonPrimary
+                            text={submitting ? 'Agendando...' : 'Confirmar agendamento'}
+                            htmlType="submit"
+                            className="w-full"
+                            loading={submitting}
+                            size='large'
+                        />
                     </div>
                 </Form>
             </div>

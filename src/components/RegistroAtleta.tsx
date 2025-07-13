@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Form, Input, App, Progress, Popover, Flex } from "antd";
+import { Form, Input, App, Progress, Popover, Flex, Typography } from "antd";
 import Link from "next/link";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { createAtleta } from '@/app/api/entities/atleta';
@@ -10,6 +10,7 @@ import { formatarTelefone } from "@/context/functions/formatarTelefone";
 import { ExclamationCircleFilled } from "@ant-design/icons";
 import { useCapsLock } from "@/context/hooks/useCapsLook";
 import CapsLock from "./Alerts/CapsLock";
+import { ButtonCancelar } from "./Buttons/ButtonCancelar";
 
 const PasswordStrengthIndicator = ({ password = '' }: { password?: string }) => {
   const evaluatePassword = () => {
@@ -209,24 +210,31 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
         <CapsLock />
       )}
 
-      <ButtonPrimary
-        text="Criar conta"
-        type="primary"
-        htmlType="submit"
-        className="w-full"
-        loading={loading}
-        disabled={loading}
-      />
+      <Flex className="gap-2 !mb-4">
+        <ButtonCancelar
+          text="Cancelar"
+          type="primary"
+          onClick={router.back}
+          className="w-100"
+        />
+        <ButtonPrimary
+          text="Criar conta"
+          type="primary"
+          htmlType="submit"
+          className="w-100"
+          loading={loading}
+          disabled={loading}
+        />
+      </Flex>
 
-      <p className="text-gray-800 text-sm mt-4">
+      <Typography.Text>
         Já possui uma conta?{" "}
         <Link
           href="/login"
-          className="!underline underline-offset-4 text-green-primary hover:!text-green-500"
-        >
+          className="!underline !underline-offset-4 !text-green-500 hover:!text-green-500 ">
           Entrar
         </Link>
-      </p>
+      </Typography.Text>
     </Form>
   );
 };

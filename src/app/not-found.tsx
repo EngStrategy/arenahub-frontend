@@ -4,21 +4,32 @@ import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary'
 import React from 'react'
 import localFont from 'next/font/local'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { useTheme } from '@/context/ThemeProvider'
 
 const minhaFonteCustomizada = localFont({
   src: '../../public/fonts/jsMath-cmr10.ttf',
 })
 
 export default function NotFound() {
+  const { data: session } = useSession()
+  const { isDarkMode } = useTheme();
 
   return (
-    <main className="px-4 sm:px-10 lg:px-40 py-8 flex-1 flex flex-col items-center justify-center text-center">
+    <main
+      className="px-4 sm:px-10 lg:px-40 py-8 flex-1 flex flex-col items-center justify-center text-center"
+      style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+    >
       <div className='flex flex-col items-center justify-center gap-4'>
         <h1 className={` text-9xl ${minhaFonteCustomizada.className}`}>404</h1>
         <p className='text-gray-500'>Desculpe, a página que você está procurando não existe.</p>
 
         <div>
-         <Link href="/login" className='text-blue-500 hover:underline'>
+          <Link
+            href={
+              session?.user?.role === 'ARENA' ? '/dashboard' : '/'
+            }
+            className='text-blue-500 hover:underline'>
             <ButtonPrimary
               text="Voltar para a Página Inicial"
               className='!px-6'

@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { getQuadraByIdArena, Quadra, TipoQuadra, deleteQuadra } from '@/app/api/entities/quadra';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
+import { useTheme } from '@/context/ThemeProvider';
 
 const { Title } = Typography;
 const { confirm } = Modal;
@@ -51,6 +52,7 @@ const MinhasQuadrasPageSkeleton = () => (
 
 const MinhasQuadrasPage: React.FC = () => {
   const { data: session, status } = useSession();
+  const { isDarkMode } = useTheme();
 
   const [courts, setCourts] = useState<Quadra[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +110,10 @@ const MinhasQuadrasPage: React.FC = () => {
   }
 
   return (
-    <Content className="px-4 sm:px-10 lg:px-40 py-8">
+    <Content
+      className="!px-4 sm:!px-10 lg:!px-40 !py-8 !flex-1"
+      style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+    >
       <Title level={3}>Minhas quadras</Title>
 
       <Flex justify="space-between" align="center" gap="middle" wrap="wrap" className="!mb-6">

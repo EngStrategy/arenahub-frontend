@@ -9,6 +9,7 @@ import { useSession, signOut } from "next-auth/react";
 import { updatePassword } from '@/app/api/entities/atleta';
 import { useCapsLock } from '@/context/hooks/useCapsLook';
 import CapsLock from '@/components/Alerts/CapsLock';
+import { useTheme } from '@/context/ThemeProvider';
 
 const AlterarSenhaSkeleton = () => (
     <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center mt-6">
@@ -47,6 +48,7 @@ export default function AlterarSenha() {
     const { message } = App.useApp();
     const [form] = Form.useForm();
     const router = useRouter();
+    const { isDarkMode } = useTheme();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isFormAltered, setIsFormAltered] = useState(false);
@@ -104,7 +106,12 @@ export default function AlterarSenha() {
     }
 
     return (
-        <Flex justify='center' align='start' className="sm:!px-10 lg:!px-40 !px-4 !my-6">
+        <Flex 
+        justify='center' 
+        align='start' 
+        className="sm:!px-10 lg:!px-40 !px-4 !py-6 !flex-1"
+        style={{ backgroundColor: isDarkMode ? '#0c0c0fff' : 'white', }}
+        >
             <Card
                 title={
                     <>
