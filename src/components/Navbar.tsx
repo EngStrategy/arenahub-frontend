@@ -102,7 +102,7 @@ const Navbar = () => {
       key: "agendamentos-arena",
       icon: <FaRegCalendarAlt />,
       label: "Agendamentos",
-      onClick: () => navigateTo("/perfil/arena/meus-agendamentos"),
+      onClick: () => navigateTo("/perfil/arena/agendamentos"),
       className: "!my-1"
     },
     {
@@ -218,7 +218,6 @@ const Navbar = () => {
     </Flex>
   );
 
-  // Skeleton de carregamento
   if (isLoadingSession) {
     return (
       <div className="!p-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff' }}>
@@ -242,6 +241,7 @@ const Navbar = () => {
         top: 0,
         zIndex: 50,
         backgroundColor: isDarkMode ? '#2c2c2c' : '#ffffff',
+        boxShadow: isDarkMode ? '0 1px 4px rgba(0, 0, 0, 0.5)' : '0 2px 10px rgba(0, 0, 0, 0.1)',
         backdropFilter: 'blur(10px)',
         lineHeight: 'inherit',
         height: '56px'
@@ -259,7 +259,16 @@ const Navbar = () => {
           <div className="hidden md:block">
             <Menu
               mode="horizontal"
-              items={commonMenuItems}
+              items={[
+                {
+                  key: "jogos-abertos",
+                  icon: <UnlockOutlined />,
+                  label: "Jogos abertos",
+                  onClick: () => navigateTo("/jogos-abertos"),
+                  className: "!my-1"
+                },
+                ...commonMenuItems,
+              ]}
               selectable={false}
               style={{ backgroundColor: 'transparent', borderBottom: 'none' }}
             />

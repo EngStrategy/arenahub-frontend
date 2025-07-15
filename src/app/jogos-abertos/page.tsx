@@ -1,39 +1,18 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { Pagination, Layout, Typography, Row, Col, Flex, Empty } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Pagination, Layout, Typography, Row, Col, Flex, Empty, App } from 'antd';
 import { JogoAbertoCard } from '@/components/Cards/JogoAbertoCard';
 import CitySports from '@/components/CitySports';
 import { useSession } from 'next-auth/react';
 import { sportIcons } from '@/data/sportIcons';
 import { useTheme } from '@/context/ThemeProvider';
+import { getAllJogosAbertos, JogosAbertosQueryParams, type JogosAbertos as JogoAbertoAPI } from '@/app/api/entities/jogosAbertos';
+import { mapeamentoEsportes } from '@/context/functions/mapeamentoEsportes';
+import { TipoQuadra } from '../api/entities/quadra';
 
 const { Title } = Typography;
 const { Content } = Layout;
-
-type JogoAberto = {
-    id: string;
-    arenaName: string;
-    quadraName: string;
-    localImageUrl?: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    durationHours: number;
-    sport: string;
-    vagasDisponiveis: number;
-};
-
-const jogosAbertos: JogoAberto[] = [
-    { id: '1', arenaName: 'Resenha', quadraName: 'Campo Leste 2', localImageUrl: '/images/arena1.png', date: '2023-10-01', startTime: '10:00', endTime: '11:00', durationHours: 1, sport: 'Futebol society', vagasDisponiveis: 5 },
-    { id: '2', arenaName: 'Arena João Garcia', quadraName: 'Quadra Sul 1', localImageUrl: '/images/arenaGarcia.png', date: '2023-02-02', startTime: '14:00', endTime: '15:00', durationHours: 1, sport: 'Basquete', vagasDisponiveis: 3 },
-    { id: '3', arenaName: 'MR Sports', quadraName: 'Campo Principal', localImageUrl: '/images/arenaTennis.png', date: '2023-09-03', startTime: '16:00', endTime: '17:00', durationHours: 1, sport: 'Vôlei', vagasDisponiveis: 2 },
-    { id: '4', arenaName: 'Arena Wilson', quadraName: 'Quadra Norte 4', localImageUrl: '/images/arenaWilson.png', date: '2023-08-04', startTime: '18:00', endTime: '19:00', durationHours: 1, sport: 'Handebol', vagasDisponiveis: 4 },
-    { id: '5', arenaName: 'Arena Júnior Bocão', quadraName: 'Campo Oeste 5', localImageUrl: '/images/arena1.png', date: '2023-01-05', startTime: '20:00', endTime: '21:00', durationHours: 1, sport: 'Futsal', vagasDisponiveis: 6 },
-    { id: '6', arenaName: 'Arena do Esporte', quadraName: 'Quadra Central 3', localImageUrl: '/images/arenaFaustinoGreen.png', date: '2023-07-06', startTime: '12:00', endTime: '13:00', durationHours: 1, sport: 'Futebol 11', vagasDisponiveis: 8 },
-    { id: '7', arenaName: 'Arena Beach Sports', quadraName: 'Quadra Praia 1', localImageUrl: '/images/arenaesportes.png', date: '2023-06-07', startTime: '15:00', endTime: '16:00', durationHours: 1, sport: 'Futebol de areia', vagasDisponiveis: 10 },
-    { id: '8', arenaName: 'Arena do Vôlei', quadraName: 'Quadra Sul 2', localImageUrl: '/images/arenaFaustinoBlack.png', date: '2023-05-08', startTime: '17:00', endTime: '18:00', durationHours: 1, sport: 'Beach Tennis', vagasDisponiveis: 7 },
-];
 
 const JogoAbertoCardSkeleton = () => (
     <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 animate-pulse">
@@ -46,18 +25,15 @@ const JogoAbertoCardSkeleton = () => (
         <div className="h-10 bg-gray-300 rounded-lg mt-4"></div>
     </div>
 );
-
 const JogoAbertoSkeleton = () => (
     <div className="px-4 sm:px-10 lg:px-40 py-8 flex-1">
         <div className="h-7 bg-gray-300 rounded-md w-48 mx-auto mb-8 animate-pulse"></div>
-
         <div className="w-full">
             <div className="mb-8 flex overflow-x-auto whitespace-nowrap space-x-3 pb-3">
                 {Array.from({ length: 10 }).map((_, index) => (
                     <div key={index} className="bg-gray-300 h-10 w-28 rounded-full animate-pulse"></div>
                 ))}
             </div>
-
             <div className="w-full mb-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, index) => (
                     <JogoAbertoCardSkeleton key={index} />
@@ -65,37 +41,126 @@ const JogoAbertoSkeleton = () => (
             </div>
         </div>
     </div>
-)
+);
 
+const friendlyNameToBackendEnum = Object.entries(mapeamentoEsportes).reduce((acc, [key, value]) => {
+    acc[value] = key as TipoQuadra;
+    return acc;
+}, {} as Record<string, TipoQuadra>);
 
 export default function JogosAbertos() {
-    const { status } = useSession();
-    const [selectedSport, setSelectedSport] = useState('Todos');
+    const { status: sessionStatus } = useSession();
     const { isDarkMode } = useTheme();
+    const { message } = App.useApp();
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 6;
+    const [jogos, setJogos] = useState<JogoAbertoAPI[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedSport, setSelectedSport] = useState('Todos');
+    const [committedSearchTerm, setCommittedSearchTerm] = useState('');
+    const [inputValue, setInputValue] = useState('');
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        pageSize: 16,
+        totalElements: 0,
+    });
 
-    const filteredJogos = useMemo(() => {
-        return jogosAbertos.filter(jogo =>
-            selectedSport === 'Todos' || jogo.sport === selectedSport
-        );
-    }, [selectedSport]);
+    const fetchJogosAbertos = useCallback(async (page: number, sport: string, cidade: string) => {
+        setLoading(true);
+        try {
+            const backendSport = sport === 'Todos' ? undefined : friendlyNameToBackendEnum[sport];
 
-    const paginatedJogos = filteredJogos.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
-    );
+            const params = {
+                page: page - 1,
+                size: pagination.pageSize,
+                sort: 'dataAgendamento',
+                direction: 'asc',
+                cidade: cidade === '' ? undefined : cidade,
+                esporte: backendSport,
+            };
+            const response = await getAllJogosAbertos(params as JogosAbertosQueryParams);
+
+            setJogos(response?.content ?? []);
+            setPagination(prev => ({
+                ...prev,
+                currentPage: (response?.number ?? 0) + 1,
+                totalElements: response?.totalElements ?? 0,
+            }));
+        } catch (error) {
+            console.error(
+                "Erro ao buscar jogos abertos:",
+                error instanceof Error ? error : new Error(String(error))
+            );
+            message.error(
+                error instanceof Error
+                    ? error.message
+                    : "Não foi possível carregar os jogos abertos."
+            );
+            setJogos([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [pagination.pageSize, message]);
+
+    useEffect(() => {
+        fetchJogosAbertos(pagination.currentPage, selectedSport, committedSearchTerm);
+    }, [pagination.currentPage, selectedSport, committedSearchTerm, fetchJogosAbertos]);
 
     const handleSportChange = (sport: string) => {
         setSelectedSport(sport);
-        setCurrentPage(1);
+        setPagination(prev => ({ ...prev, currentPage: 1 }));
     };
 
-    const allSports = ['Todos', ...Object.keys(sportIcons)];
+    const handleSearchCommit = () => {
+        setCommittedSearchTerm(inputValue);
+        setPagination(prev => ({ ...prev, currentPage: 1 }));
+    };
 
-    if (status === 'loading') {
+    const handlePageChange = (page: number) => {
+        setPagination(prev => ({ ...prev, currentPage: page }));
+    };
+
+    const allSports = ['Todos', ...Object.values(mapeamentoEsportes)];
+
+    if (sessionStatus === 'loading') {
         return <JogoAbertoSkeleton />;
+    }
+
+    let contentToRender;
+    if (loading) {
+        contentToRender = (
+            <div className="w-full mb-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, index) => (
+                    <JogoAbertoCardSkeleton key={index} />
+                ))}
+            </div>
+        );
+    } else if (jogos.length > 0) {
+        contentToRender = (
+            <>
+                <Row gutter={[24, 24]} className="mb-10">
+                    {jogos.map((jogo) => (
+                        <Col key={jogo.agendamentoId} xs={24} sm={12} lg={8}>
+                            <JogoAbertoCard jogoAberto={jogo} />
+                        </Col>
+                    ))}
+                </Row>
+                {jogos.length > pagination.pageSize && (
+                    <Flex justify='center'>
+                        <Pagination
+                            current={pagination.currentPage}
+                            total={pagination.totalElements}
+                            pageSize={pagination.pageSize}
+                            onChange={handlePageChange}
+                            showSizeChanger={false}
+                        />
+                    </Flex>
+                )}
+            </>
+        );
+    } else {
+        contentToRender = (
+            <Empty description="Nenhum jogo aberto encontrado para o esporte selecionado." className="mt-10" />
+        );
     }
 
     return (
@@ -106,37 +171,17 @@ export default function JogosAbertos() {
             <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>Jogos abertos</Title>
 
             <CitySports
+                loading={loading}
                 selectedSport={selectedSport}
                 setSelectedSport={handleSportChange}
-                inputValue=""
-                setInputValue={() => { }}
-                setCurrentPage={() => { }}
+                inputValue={inputValue}
+                setInputValue={setInputValue}
+                handleSearchCommit={handleSearchCommit}
+                setCurrentPage={(page) => setPagination(prev => ({ ...prev, currentPage: page }))}
                 allSports={allSports}
                 sportIcons={sportIcons}
             />
-
-            {paginatedJogos.length > 0 ? (
-                <>
-                    <Row gutter={[24, 24]} className="mb-10">
-                        {paginatedJogos.map((jogo) => (
-                            <Col key={jogo.id} xs={24} sm={12} md={8} lg={6}>
-                                <JogoAbertoCard jogoAberto={jogo} />
-                            </Col>
-                        ))}
-                    </Row>
-                    <Flex justify='center'>
-                        <Pagination
-                            current={currentPage}
-                            total={filteredJogos.length}
-                            pageSize={pageSize}
-                            onChange={(page) => setCurrentPage(page)}
-                            showSizeChanger={false}
-                        />
-                    </Flex>
-                </>
-            ) : (
-                <Empty description="Nenhum jogo aberto encontrado para o esporte selecionado." className="mt-10" />
-            )}
+            {contentToRender}
         </Content>
     );
 }

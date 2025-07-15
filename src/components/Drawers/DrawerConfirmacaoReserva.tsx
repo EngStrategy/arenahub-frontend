@@ -192,7 +192,11 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
             router.push('/perfil/atleta/agendamentos');
         } catch (error) {
             console.error("Falha ao criar agendamento:", error);
-            message.error('Não foi possível realizar o agendamento. Tente novamente.');
+            message.error(
+                (error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string')
+                    ? (error as any).message
+                    : 'Não foi possível realizar o agendamento. Tente novamente.'
+            );
         } finally {
             setSubmitting(false);
         }

@@ -34,7 +34,7 @@ export const ArenaCard = ({ arena, showDescription, showHover = true, showEsport
       styles={{ body: { padding: '0.75rem', height: '100%' } }}
     >
       <Flex gap="middle" align="stretch">
-        <div className="relative w-1/3 max-w-[120px] flex-shrink-0 aspect-square rounded-md overflow-hidden">
+        <div className="relative w-full max-w-[120px] flex-shrink-0 aspect-square rounded-md overflow-hidden">
           <Image
             src={imgSrc}
             alt={`Imagem da ${arena.nome}`}

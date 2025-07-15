@@ -117,15 +117,17 @@ export default function HomePage() {
             </Col>
           ))}
         </Row>
-        <Flex justify='center'>
-          <Pagination
-            current={currentPage}
-            total={totalArenas}
-            pageSize={pageSize}
-            onChange={(page) => setCurrentPage(page)}
-            showSizeChanger={false}
-          />
-        </Flex>
+        {arenas.length > pageSize && (
+          <Flex justify='center'>
+            <Pagination
+              current={currentPage}
+              total={totalArenas}
+              pageSize={pageSize}
+              onChange={(page) => setCurrentPage(page)}
+              showSizeChanger={false}
+            />
+          </Flex>
+        )}
       </>
     );
   } else {

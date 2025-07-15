@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Modal, List, Button, Avatar, Typography, Empty, Skeleton } from 'antd';
-import { UserOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import { type Solicitacao } from '@/app/api/entities/solicitacao';
+import { Modal, List, Button, Avatar, Typography, Empty, Tag } from 'antd';
+import { UserOutlined, CheckOutlined, CloseOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { type SolicitacaoJogoAberto } from '@/app/api/entities/jogosAbertos';
 
 const { Title, Text } = Typography;
 
@@ -9,7 +9,7 @@ type ModalSolicitacoesProps = {
     open: boolean;
     loading: boolean;
     vagasDisponiveis: number;
-    solicitacoes: Solicitacao[];
+    solicitacoes: SolicitacaoJogoAberto[];
     onClose: () => void;
     onAccept: (solicitacaoId: number) => Promise<void>;
     onDecline: (solicitacaoId: number) => Promise<void>;
@@ -21,6 +21,14 @@ const SolicitacaoItemSkeleton = () => (
         <div className="h-5 w-2/5 rounded-md bg-gray-200 animate-pulse"></div>
     </div>
 );
+
+const StatusTag = ({ status }: { status: 'ACEITO' | 'RECUSADO' }) => {
+    const statusInfo = status === 'ACEITO'
+        ? { color: 'success', icon: <CheckOutlined />, text: 'Aceito' }
+        : { color: 'error', icon: <CloseOutlined />, text: 'Recusado' };
+
+    return <Tag icon={statusInfo.icon} color={statusInfo.color}>{statusInfo.text}</Tag>;
+};
 
 export default function ModalSolicitacoesEntrada({
     open,
@@ -67,7 +75,7 @@ export default function ModalSolicitacoesEntrada({
             return (
                 <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="Nenhuma solicitação pendente."
+                    description="Nenhuma solicitação ainda."
                     className="py-8"
                 />
             );
@@ -78,9 +86,9 @@ export default function ModalSolicitacoesEntrada({
                 className="pr-2"
                 itemLayout="horizontal"
                 dataSource={solicitacoes}
-                renderItem={(solicitacao) => (
-                    <List.Item
-                        actions={[
+                renderItem={(solicitacao) => {
+                    const actions = solicitacao.status === 'PENDENTE'
+                        ? [
                             <Button
                                 key="decline"
                                 type="text"
@@ -97,16 +105,21 @@ export default function ModalSolicitacoesEntrada({
                                 icon={<CheckOutlined />}
                                 loading={loadingActionId === solicitacao.id}
                                 onClick={() => handleAccept(solicitacao.id)}
-                                disabled={vagasDisponiveis <= 0}
+                                disabled={vagasDisponiveis <= 0 && loadingActionId !== solicitacao.id}
                             />,
-                        ]}
-                    >
-                        <List.Item.Meta
-                            avatar={<Avatar size="large" src={solicitacao.atleta.urlFotoPerfil} icon={<UserOutlined />} />}
-                            title={<Typography.Text className="font-semibold">{solicitacao.atleta.nome}</Typography.Text>}
-                        />
-                    </List.Item>
-                )}
+                        ]
+                        : [<StatusTag key="status" status={solicitacao.status} />];
+
+                    return (
+                        <List.Item actions={actions}>
+                            <List.Item.Meta
+                                avatar={<Avatar size="large" src={solicitacao.fotoSolicitante} icon={<UserOutlined />} />}
+                                title={<Typography.Text className="font-semibold">{solicitacao.nomeSolicitante}</Typography.Text>}
+                                description={<Typography.Text type="secondary">{solicitacao.telefoneSolicitante}</Typography.Text>}
+                            />
+                        </List.Item>
+                    );
+                }}
             />
         );
     };

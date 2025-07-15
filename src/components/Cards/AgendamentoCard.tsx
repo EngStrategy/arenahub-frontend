@@ -1,36 +1,29 @@
 "use client";
 
 import React, { useState } from 'react';
-import { PictureOutlined, UserAddOutlined, DeleteOutlined } from '@ant-design/icons';
-import { App, Avatar, Flex, Popconfirm, Tooltip, Typography } from 'antd';
+import { PictureOutlined, UserAddOutlined, DeleteOutlined, CalendarOutlined, ClockCircleOutlined, InfoCircleOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { App, Avatar, Button, Card, Divider, Flex, Popconfirm, Tag, Tooltip, Typography } from 'antd';
 import ModalSolicitacoesEntrada from '../Modais/ModalSolicitacoesEntrada';
-import { type Solicitacao } from '@/app/api/entities/solicitacao';
-import { getSolicitacoesPorAgendamento, aceitarSolicitacao, recusarSolicitacao } from '@/app/api/entities/solicitacao';
+import { type SolicitacaoJogoAberto, listarSolicitacoesJogoAbertoMe, aceitarOuRecusarEntrada } from '@/app/api/entities/jogosAbertos';
+import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
+import { TipoQuadra } from '@/app/api/entities/quadra';
 
-const { Text, Title, Paragraph } = Typography;
-
-const statusMap = {
-    pendente: { text: 'Pendente', className: 'bg-sky-100 text-sky-500' },
-    solicitado: { text: 'Solicitado', className: 'bg-gray-100 text-gray-500' },
-    aceito: { text: 'Aceito', className: 'bg-green-100 text-green-500' },
-    ausente: { text: 'Ausente', className: 'bg-red-100 text-red-500' },
-    cancelado: { text: 'Cancelado', className: 'bg-red-100 text-red-500' },
-    pago: { text: 'Pago', className: 'bg-green-100 text-green-500' },
-};
+const { Text, Title } = Typography;
 
 export type AgendamentoCardData = {
     id: number;
-    arenaName: string;
-    quadraName: string;
-    localImageUrl?: string;
     date: string;
     startTime: string;
     endTime: string;
     valor: number;
-    status: keyof typeof statusMap;
+    esporte: TipoQuadra;
+    status: "pendente" | "aceito" | "pago" | "cancelado" | "ausente" | "solicitado";
     numeroJogadoresNecessarios?: number;
-    publico: boolean;
+    quadraName: string;
+    arenaName: string;
+    urlFotoArena?: string;
     fixo: boolean;
+    publico: boolean;
 };
 
 type CardProps = {
@@ -38,177 +31,154 @@ type CardProps = {
     readonly onCancel: (id: number) => Promise<void>;
 };
 
-const formatarDataAmigavel = (dateString: string) => {
-    const data = new Date(dateString + 'T00:00:00');
-    return data.toLocaleDateString('pt-BR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
+const StatusTag = ({ status }: { status: AgendamentoCardData['status'] }) => {
+    const statusMap = {
+        pendente: { color: 'processing', icon: <ClockCircleOutlined />, text: 'Pendente' },
+        aceito: { color: 'success', icon: <CheckCircleOutlined />, text: 'Confirmado' },
+        pago: { color: 'success', icon: <CheckCircleOutlined />, text: 'Pago' },
+        cancelado: { color: 'error', icon: <CloseCircleOutlined />, text: 'Cancelado' },
+        ausente: { color: 'error', icon: <CloseCircleOutlined />, text: 'Ausente' },
+        solicitado: { color: 'default', icon: <InfoCircleOutlined />, text: 'Solicitado' },
+    };
+    const currentStatus = statusMap[status] || statusMap.pendente;
+    return <Tag icon={currentStatus.icon} color={currentStatus.color}>{currentStatus.text}</Tag>;
 };
+
+const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number => {
+    try {
+        const [horaInicio, minutoInicio] = horarioInicio.split(':').map(Number);
+        const [horaFim, minutoFim] = horarioFim.split(':').map(Number);
+
+        const totalMinutosInicio = horaInicio * 60 + minutoInicio;
+        const totalMinutosFim = horaFim * 60 + minutoFim;
+
+        const diferencaEmMinutos = totalMinutosFim - totalMinutosInicio;
+
+        // Retorna a diferença em horas. Ex: 90 min = 1.5h
+        return parseFloat((diferencaEmMinutos / 60).toFixed(2));
+    } catch (error) {
+        console.error("Erro ao calcular duração:", error);
+        return 0; // Retorna 0 em caso de erro no formato da hora
+    }
+};
+
 
 export function CardAgendamento({ agendamento, onCancel }: CardProps) {
     const { message } = App.useApp();
-    const statusInfo = statusMap[agendamento.status] || statusMap.pendente;
-
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
+    const [solicitacoes, setSolicitacoes] = useState<SolicitacaoJogoAberto[]>([]);
     const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(false);
 
-    const valorFormatado = agendamento.valor.toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-    });
+    const valorFormatado = agendamento.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    const handleConfirmCancel = async () => {
-        await onCancel(agendamento.id);
-    };
+    const duracaoHoras = calcularDuracaoHoras(agendamento.startTime, agendamento.endTime);
+
+    const handleConfirmCancel = () => onCancel(agendamento.id);
 
     const handleOpenModal = async () => {
         setIsModalOpen(true);
         setLoadingSolicitacoes(true);
         try {
-            const data = await getSolicitacoesPorAgendamento(agendamento.id);
-            setSolicitacoes(data);
+            const data = await listarSolicitacoesJogoAbertoMe(agendamento.id);
+            setSolicitacoes(data || []);
         } catch (error) {
-            message.error("Erro ao buscar solicitações.");
             console.error("Erro ao buscar solicitações:", error);
+            message.error(
+                (error && typeof error === 'object' && 'message' in error && typeof (error as Error).message === 'string')
+                    ? (error as Error).message
+                    : "Erro ao buscar solicitações."
+            );
         } finally {
             setLoadingSolicitacoes(false);
         }
     };
-
+    
     const handleAcceptRequest = async (solicitacaoId: number) => {
-        try {
-            await aceitarSolicitacao(solicitacaoId);
-            message.success("Solicitação aceita!");
-
-            setSolicitacoes(prev => prev.filter(s => s.id !== solicitacaoId));
-        } catch (error) {
-            message.error("Falha ao aceitar solicitação.");
-            console.error("Erro ao aceitar solicitação:", error);
-            return;
-        }
+        await aceitarOuRecusarEntrada(solicitacaoId, true);
+        message.success("Solicitação aceita!");
+        setSolicitacoes(prev => prev.filter(s => s.id !== solicitacaoId));
     };
 
     const handleDeclineRequest = async (solicitacaoId: number) => {
-        try {
-            await recusarSolicitacao(solicitacaoId);
-            message.info("Solicitação recusada.");
-
-            setSolicitacoes(prev => prev.filter(s => s.id !== solicitacaoId));
-        } catch (error) {
-            message.error("Falha ao recusar solicitação.");
-            console.error("Erro ao recusar solicitação:", error);
-            return;
-        }
-    };
-
-    const DataNaAcao = () => {
-        const data = new Date(agendamento.date + 'T00:00:00');
-        const dia = String(data.getDate()).padStart(2, '0');
-        const mes = data.toLocaleString('pt-BR', { month: 'short' }).toUpperCase().replace('.', '');
-        const ano = data.getFullYear();
-
-        return (
-            <div className="w-16 text-center">
-                <p className="text-lg font-bold">{dia}</p>
-                <p className="text-sm uppercase text-gray-500 font-semibold">{mes}</p>
-                <p className="text-sm text-gray-500 font-semibold">{ano}</p>
-            </div>
-        );
-    };
-
-    const AcoesDoCard = () => {
-        // Ação de cancelar é possível para status 'PENDENTE'
-        if (agendamento.status === 'pendente') {
-            return (
-                <>
-                    <Tooltip title="Cancelar agendamento" placement="top">
-                        <Popconfirm
-                            title="Cancelar Agendamento"
-                            description="Você tem certeza que quer cancelar?"
-                            icon={null}
-                            okText="Sim"
-                            cancelText="Não"
-                            okButtonProps={{ type: 'text', className: '!bg-red-500 !text-white' }}
-                            cancelButtonProps={{ type: 'text', className: '!text-gray-600' }}
-                            onConfirm={handleConfirmCancel}
-                        >
-                            <button
-                                className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 
-                                text-red-500 hover:bg-red-200 transition-colors cursor-pointer"
-                                aria-label="Cancelar agendamento"
-                            >
-                                <DeleteOutlined style={{ fontSize: '20px' }} />
-                            </button>
-                        </Popconfirm>
-                    </Tooltip>
-
-                    {agendamento.publico && (
-                        <Tooltip title="Solicitações" placement="bottom">
-                            <button
-                                className="relative flex h-10 w-10 items-center justify-center rounded-lg 
-                                bg-green-100 text-green-500 hover:bg-green-200 transition-colors cursor-pointer"
-                                aria-label="Ver solicitações"
-                                onClick={handleOpenModal}
-                            >
-                                <UserAddOutlined style={{ fontSize: '20px' }} />
-                            </button>
-                        </Tooltip>
-                    )}
-                </>
-            );
-        }
-
-        // Para outros status, mostra a data
-        if (['ausente', 'cancelado', 'pago'].includes(agendamento.status)) {
-            return <DataNaAcao />;
-        }
-
-        // Para status sem ação como 'aceito', 'solicitado', etc.
-        return <div className="w-16" />;
+        await aceitarOuRecusarEntrada(solicitacaoId, false);
+        message.info("Solicitação recusada.");
+        setSolicitacoes(prev => prev.filter(s => s.id !== solicitacaoId));
     };
 
     return (
         <>
-            <Flex align='center' className="h-full gap-4 rounded-lg border border-gray-200 !p-3 shadow-sm">
-                <Flex vertical align='center' justify='start' className="text-center w-24">
-                    {agendamento.localImageUrl ? (
-                        <Avatar shape="circle" size={80} src={agendamento.localImageUrl || undefined}
-                            icon={<PictureOutlined />} />
-                    ) : (
-                        <PictureOutlined className='text-6xl text-gray-300' />
-                    )}
-                    <Text className="!font-semibold !text-md mt-2">{agendamento.arenaName}</Text>
-                </Flex>
+            <Card hoverable style={{ height: '100%' }} styles={{ body: { padding: 0, height: '100%' } }}>
+                <Flex vertical justify="space-between" style={{ height: '100%' }}>
+                    <div style={{ padding: '16px' }}>
+                        <Flex justify="space-between" align="start" gap="middle">
+                            <Flex gap="middle">
+                                <Avatar shape="square" size={48} src={agendamento.urlFotoArena} icon={<PictureOutlined />} />
+                                <Flex vertical>
+                                    <Title level={5} style={{ margin: 0 }} ellipsis={{ tooltip: agendamento.arenaName }}>
+                                        {agendamento.arenaName}
+                                    </Title>
+                                    <Text type="secondary">{agendamento.quadraName}</Text>
+                                </Flex>
+                            </Flex>
+                            <StatusTag status={agendamento.status} />
+                        </Flex>
+                        
+                        <Divider style={{ marginTop: 12, marginBottom: 12 }} />
 
-                <div className="w-px self-stretch bg-gray-200" />
-                <div className="flex-grow space-y-1">
-                    {!['ausente', 'cancelado', 'pago'].includes(agendamento.status)
-                    && <><Text>{formatarDataAmigavel(agendamento.date)}</Text> <br /></>}
-                    <Text>
-                        {agendamento.startTime} às {agendamento.endTime}
-                    </Text>
-                    <br />
-                    <Text className=''>{agendamento.quadraName}</Text>
-                    <br />
-                    <Text type='secondary' className={`font-bold !text-lg ${['ausente', 'cancelado'].includes(agendamento.status)
-                        ? 'text-gray-400 !line-through'
-                        : 'text-green-600'}`}>
-                        {valorFormatado}
-                    </Text>
-                    <br />
-                    <div className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-bold ${statusInfo.className}`}>
-                        {statusInfo.text}
+                        <Flex vertical gap={8}>
+                            <Flex align="center" gap="small">
+                                <CalendarOutlined />
+                                <Text strong>
+                                    {(() => {
+                                        const dateStr = new Date(agendamento.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+                                        return dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+                                    })()}
+                                </Text>
+                            </Flex>
+                            <Flex align="center" gap="small">
+                                <ClockCircleOutlined />
+                                <Text>{`${agendamento.startTime} às ${agendamento.endTime} (${duracaoHoras}h)`}</Text>
+                            </Flex>
+                            <Flex justify="space-between" align="center">
+                                <Text strong className="!text-green-600 text-base">{formatarEsporte(agendamento.esporte)}</Text>
+                                <Title
+                                    level={4}
+                                    style={{ margin: 0 }}
+                                    className={`${agendamento.status === "cancelado" ? "line-through" : ""} !text-green-600`}
+                                >
+                                    {valorFormatado}
+                                </Title>
+                            </Flex>
+                        </Flex>
                     </div>
-                </div>
 
-                <div className="ml-auto flex flex-col items-center justify-center gap-2">
-                    <AcoesDoCard />
-                </div>
-            </Flex>
-            
+                    {agendamento.status === 'pendente' && (
+                        <Flex
+                            justify={agendamento.publico ? "space-between" : "flex-end"}
+                            align="center"
+                            style={{ padding: '12px 16px'}}
+                        >
+                            {agendamento.publico && (
+                                <Button type='primary' icon={<UserAddOutlined />} onClick={handleOpenModal} ghost className='hover:!bg-green-600 hover:!text-white'>
+                                    Solicitações
+                                </Button>
+                            )}
+                            <Popconfirm
+                                title="Cancelar Agendamento"
+                                description="Você tem certeza que quer cancelar?"
+                                onConfirm={handleConfirmCancel}
+                                okText="Sim, cancelar" cancelText="Não"
+                                okButtonProps={{ danger: true }}
+                            >
+                                <Button danger icon={<DeleteOutlined />}>
+                                    Cancelar
+                                </Button>
+                            </Popconfirm>
+                        </Flex>
+                    )}
+                </Flex>
+            </Card>
+
             <ModalSolicitacoesEntrada
                 open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
