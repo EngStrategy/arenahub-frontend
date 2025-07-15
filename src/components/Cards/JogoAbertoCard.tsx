@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Button, App, Popconfirm, Card, Flex, Avatar, Typography, Tag, Divider } from 'antd';
-import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, PictureOutlined, UserAddOutlined } from '@ant-design/icons';
+import React, { useMemo, useState } from 'react';
+import { Button, App, Popconfirm, Card, Flex, Avatar, Typography, Tag, Divider, Space } from 'antd';
+import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, LogoutOutlined, PictureOutlined, UserAddOutlined } from '@ant-design/icons';
 import { formatarData } from '@/context/functions/formatarData';
-import { JogosAbertos, solicitarEntrada } from '@/app/api/entities/jogosAbertos';
+import { JogosAbertos, solicitarEntrada, sairJogoAberto } from '@/app/api/entities/jogosAbertos';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
@@ -22,6 +22,7 @@ type JogoAbertoCardProps = {
         urlFotoQuadra?: string,
         status?: "PENDENTE" | "ACEITO" | "RECUSADO" | "CANCELADO";
     };
+    readonly onSaidaSucesso?: (solicitacaoId: number) => void;
 };
 
 const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number => {
@@ -41,13 +42,25 @@ const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number
     }
 };
 
-export function JogoAbertoCard({ jogoAberto }: JogoAbertoCardProps) {
+export function JogoAbertoCard({ jogoAberto, onSaidaSucesso }: JogoAbertoCardProps) {
     const { notification } = App.useApp();
     const [loading, setLoading] = useState(false);
+    const [sairLoading, setSairLoading] = useState(false);
     const router = useRouter();
     const { data: session, status } = useSession();
 
     const duracaoHoras = calcularDuracaoHoras(jogoAberto.horarioInicio, jogoAberto.horarioFim);
+
+    const podeSair = useMemo(() => {
+        const dataHoraDoJogo = new Date(`${jogoAberto.data}T${jogoAberto.horarioInicio}`);
+        const agora = new Date();
+
+        const diffEmMs = dataHoraDoJogo.getTime() - agora.getTime();
+
+        const diffEmHoras = diffEmMs / (1000 * 60 * 60);
+
+        return diffEmHoras > 3;
+    }, [jogoAberto.data, jogoAberto.horarioInicio]);
 
     const handleSolicitarEntrada = async () => {
         setLoading(true);
@@ -69,6 +82,25 @@ export function JogoAbertoCard({ jogoAberto }: JogoAbertoCardProps) {
             });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSairDoJogo = async () => {
+        if (!jogoAberto.solicitacaoId) {
+            notification.error({ message: "ID da solicitação não encontrado." });
+            return;
+        }
+        setSairLoading(true);
+        try {
+            await sairJogoAberto(jogoAberto.solicitacaoId);
+            notification.success({ message: "Você saiu do jogo com sucesso." });
+            if (onSaidaSucesso) {
+                onSaidaSucesso(jogoAberto.solicitacaoId);
+            }
+        } catch (error) {
+            notification.error({ message: "Erro ao sair do jogo.", description: (error as Error).message });
+        } finally {
+            setSairLoading(false);
         }
     };
 
@@ -124,7 +156,23 @@ export function JogoAbertoCard({ jogoAberto }: JogoAbertoCardProps) {
                     ) : <div />
                     }
 
-                    {jogoAberto.status ? <StatusTag /> : (
+                    {jogoAberto.status ? (
+                        <Flex align='center' justify='flex-end' gap={8}>
+                            {(jogoAberto.status === 'PENDENTE' || jogoAberto.status === 'ACEITO') && podeSair && (
+                                <Popconfirm
+                                    title={`Sair do Jogo?`}
+                                    description={jogoAberto.status === 'PENDENTE' ? "Sua solicitação será cancelada." : "Você sairá deste jogo."}
+                                    onConfirm={handleSairDoJogo}
+                                    okText="Sim, sair"
+                                    cancelText="Não"
+                                    okButtonProps={{ danger: true, loading: sairLoading }}
+                                >
+                                    <Button size="small" danger icon={<LogoutOutlined />} loading={sairLoading}>Sair</Button>
+                                </Popconfirm>
+                            )}
+                            <StatusTag />
+                        </Flex>
+                    ) : (
                         <Popconfirm
                             title="Confirmar solicitação?"
                             description="Deseja solicitar entrada neste jogo?"
@@ -133,7 +181,7 @@ export function JogoAbertoCard({ jogoAberto }: JogoAbertoCardProps) {
                             cancelButtonProps={{ style: { border: 0 } }}
                             onConfirm={handleSolicitarEntrada}
                             placement="topRight"
-                            >
+                        >
                             <Button
                                 type="primary"
                                 ghost

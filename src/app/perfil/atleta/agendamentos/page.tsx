@@ -97,6 +97,10 @@ export default function Agendamentos() {
         }
     }, [message]);
 
+    const handleSaidaComSucesso = (solicitacaoId: number) => {
+        setSolicitacoes(prev => prev.filter(s => s.solicitacaoId !== solicitacaoId));
+    };
+
 
     useEffect(() => {
         if (sessionStatus === 'authenticated') {
@@ -251,7 +255,10 @@ export default function Agendamentos() {
                             <Row gutter={[24, 24]} align="stretch">
                                 {solicitacoes.map(solicitacao => (
                                     <Col key={solicitacao.solicitacaoId} xs={24} md={12} lg={8}>
-                                        <JogoAbertoCard jogoAberto={solicitacao} />
+                                        <JogoAbertoCard
+                                            jogoAberto={solicitacao}
+                                            onSaidaSucesso={handleSaidaComSucesso}
+                                        />
                                     </Col>
                                 ))}
                             </Row>
