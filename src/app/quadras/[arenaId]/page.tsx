@@ -292,11 +292,18 @@ export default function QuadraPage() {
         <div className={`px-4 sm:px-10 lg:px-40 py-8 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
             {arena && (
                 <div className='flex flex-row items-start justify-between mb-6'>
-                    <ArenaCard arena={{
-                        ...arena,
-                        avaliacao: arena.avaliacao || 4.5,
-                        numeroAvaliacoes: arena.numeroAvaliacoes || 100,
-                    }} showDescription={true} showHover={false} showEsportes={false} />
+                    <div className="w-full max-w-sm">
+                        <ArenaCard
+                            arena={{
+                                ...arena,
+                                avaliacao: arena.avaliacao || 4.5,
+                                numeroAvaliacoes: arena.numeroAvaliacoes || 100,
+                            }}
+                            showDescription={true}
+                            showHover={false}
+                            showEsportes={false}
+                        />
+                    </div>
                     {selectedHorarios.length > 0 && (
                         <Button
                             type="primary"

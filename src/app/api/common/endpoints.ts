@@ -11,4 +11,6 @@ export const URLS = {
     ESPORTES: `/esportes`,
     QUADRAS: `/quadras`,
     ATLETAS: `/atletas`,
+
+    JOGOS_ABERTOS: `/jogos-abertos`,
 };

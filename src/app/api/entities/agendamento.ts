@@ -2,7 +2,7 @@ import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 import { TipoQuadra } from "./quadra";
 
-export type StatusAgendamento = "PENDENTE" | "AUSENTE" | "CANCELADO" | "PAGO";
+export type StatusAgendamento = "PENDENTE" | "AUSENTE" | "CANCELADO" | "PAGO" | "ACEITO" | "RECUSADO";
 
 export type PeriodoAgendamentoFixo = "UM_MES" | "TRES_MESES" | "SEIS_MESES";
 

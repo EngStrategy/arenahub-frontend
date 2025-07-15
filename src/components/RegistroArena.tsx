@@ -456,7 +456,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
             </Form.Item>
 
             <Form.Item className="flex flex-col">
-                <Flex align="center" justify="space-between" className="w-full bg-gray-200 !p-2 rounded-md border border-gray-300">
+                <Flex align="center" justify="space-between" className={`w-full !p-2 rounded-md ${isDarkMode ? 'bg-neutral-800' : 'bg-gray-200'}`}>
                     <span>Minha arena não tem CNPJ</span>
                     <Switch
                         size="small"

@@ -1,6 +1,6 @@
 import { TipoQuadra } from "@/app/api/entities/quadra";
 
-const mapeamentoEsportes: Record<TipoQuadra, string> = {
+export const mapeamentoEsportes: Record<TipoQuadra, string> = {
   FUTEBOL_SOCIETY: "Futebol Society",
   FUTEBOL_SETE: "Futebol 7",
   FUTEBOL_ONZE: "Futebol 11",
