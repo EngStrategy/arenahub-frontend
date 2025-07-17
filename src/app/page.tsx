@@ -37,7 +37,7 @@ export default function HomePage() {
   const { isDarkMode } = useTheme();
 
 
-  const [selectedSport, setSelectedSport] = useState('Todos');
+  const [selectedSport, setSelectedSport] = useState('');
   const [committedSearchTerm, setCommittedSearchTerm] = useState('');
   const [inputValue, setInputValue] = useState('');
 
@@ -80,12 +80,12 @@ export default function HomePage() {
 
   }, [currentPage, selectedSport, committedSearchTerm, status]);
 
-  const handleSearchCommit = () => {
-    setCommittedSearchTerm(inputValue);
+  const handleSearchCommit = (term: string) => {
+    setCommittedSearchTerm(term);
     setCurrentPage(1);
   };
 
-  const allSports = ['Todos', ...Object.keys(sportIcons)];
+  const allSports = Object.keys(sportIcons);
 
   const isPageLoading = loading || isLoadingSession;
 
@@ -150,7 +150,7 @@ export default function HomePage() {
           setSelectedSport={setSelectedSport}
           inputValue={inputValue}
           setInputValue={setInputValue}
-          handleSearchCommit={handleSearchCommit}
+          onSearchCommit={handleSearchCommit}
           setCurrentPage={setCurrentPage}
           allSports={allSports}
           sportIcons={sportIcons}

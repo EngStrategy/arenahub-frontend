@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Modal, List, Button, Avatar, Typography, Empty, Tag } from 'antd';
-import { UserOutlined, CheckOutlined, CloseOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import React, { useMemo, useState } from 'react';
+import { Modal, List, Button, Avatar, Typography, Empty, Tag, Popconfirm, Flex, Space } from 'antd';
+import { UserOutlined, CheckOutlined, CloseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { type SolicitacaoJogoAberto } from '@/app/api/entities/jogosAbertos';
 
 const { Title, Text } = Typography;
@@ -89,24 +89,42 @@ export default function ModalSolicitacoesEntrada({
                 renderItem={(solicitacao) => {
                     const actions = solicitacao.status === 'PENDENTE'
                         ? [
-                            <Button
-                                key="decline"
-                                type="text"
-                                danger
-                                shape="circle"
-                                icon={<CloseOutlined />}
-                                loading={loadingActionId === solicitacao.id}
-                                onClick={() => handleDecline(solicitacao.id)}
-                            />,
-                            <Button
-                                key="accept"
-                                type="primary"
-                                shape="circle"
-                                icon={<CheckOutlined />}
-                                loading={loadingActionId === solicitacao.id}
-                                onClick={() => handleAccept(solicitacao.id)}
-                                disabled={vagasDisponiveis <= 0 && loadingActionId !== solicitacao.id}
-                            />,
+                            <Popconfirm
+                                key="decline-popconfirm"
+                                title="Recusar solicitação"
+                                description="Tem certeza de que deseja recusar esta solicitação?"
+                                onConfirm={() => handleDecline(solicitacao.id)}
+                                onCancel={() => setLoadingActionId(null)}
+                                okText="Sim"
+                                cancelText="Não"
+                            >
+                                <Button
+                                    key="decline"
+                                    type="text"
+                                    danger
+                                    shape="circle"
+                                    icon={<CloseOutlined />}
+                                    loading={loadingActionId === solicitacao.id}
+                                />
+                            </Popconfirm>,
+                            <Popconfirm
+                                key="accept-popconfirm"
+                                title="Aprovar solicitação"
+                                description="Tem certeza de que deseja aprovar esta solicitação?"
+                                onConfirm={() => handleAccept(solicitacao.id)}
+                                onCancel={() => setLoadingActionId(null)}
+                                okText="Sim"
+                                cancelText="Não"
+                            >
+                                <Button
+                                    key="accept"
+                                    type="primary"
+                                    shape="circle"
+                                    icon={<CheckOutlined />}
+                                    loading={loadingActionId === solicitacao.id}
+                                    disabled={vagasDisponiveis <= 0 && loadingActionId !== solicitacao.id}
+                                />
+                            </Popconfirm>
                         ]
                         : [<StatusTag key="status" status={solicitacao.status} />];
 

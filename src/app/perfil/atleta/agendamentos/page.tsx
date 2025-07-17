@@ -165,7 +165,7 @@ export default function Agendamentos() {
                     <Segmented
                         options={[
                             { label: 'Meus Agendamentos', value: 'agendamentos' },
-                            { label: 'Minhas Solicitações', value: 'solicitacoes' }
+                            { label: 'Participações', value: 'solicitacoes' }
                         ]}
                         value={view}
                         onChange={(value) => setView(value as 'agendamentos' | 'solicitacoes')}

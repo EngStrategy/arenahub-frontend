@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Form, Input, App, Progress, Popover, Flex, Typography } from "antd";
+import { Form, Input, App, Progress, Popover, Flex, Typography, AutoCompleteProps, AutoComplete } from "antd";
 import Link from "next/link";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { createAtleta } from '@/app/api/entities/atleta';
@@ -65,7 +65,20 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [options, setOptions] = useState<AutoCompleteProps['options']>([]);
   const capsLockEstaAtivado = useCapsLock();
+
+  const handleSearch = (value: string) => {
+    setOptions(() => {
+      if (!value || value.includes('@')) {
+        return [];
+      }
+      return ['gmail.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'yahoo.com', 'live.com', 'aol.com', 'protonmail.com', 'zoho.com', 'gmx.com'].map((domain) => ({
+        label: `${value}@${domain}`,
+        value: `${value}@${domain}`,
+      }));
+    });
+  };
 
   const onFinishFailed = (errorInfo: any) => {
     message.error("Por favor, corrija os erros no formulário.", 5);
@@ -125,7 +138,11 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
           ]}
           className="sem-asterisco flex-1"
         >
-          <Input placeholder="Insira seu email" />
+          <AutoComplete
+            onSearch={handleSearch}
+            placeholder="Insira seu email"
+            options={options}
+          />
         </Form.Item>
 
         <Form.Item

@@ -3,7 +3,7 @@
 import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import { Checkbox, Form, Input, App, Flex, Typography } from 'antd';
+import { Checkbox, Form, Input, App, Flex, Typography, type AutoCompleteProps, AutoComplete } from 'antd';
 import Link from "next/link"
 import Image from "next/image";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
@@ -46,10 +46,23 @@ export default function Login() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { isDarkMode } = useTheme();
+    const [options, setOptions] = React.useState<AutoCompleteProps['options']>([]);
 
     const capsLockEstaAtivado = useCapsLock();
     const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/confirm-email", "redefinir-senha"];
     const callbackUrl = searchParams.get("callbackUrl");
+
+    const handleSearch = (value: string) => {
+        setOptions(() => {
+            if (!value || value.includes('@')) {
+                return [];
+            }
+            return ['gmail.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'yahoo.com', 'live.com', 'aol.com', 'protonmail.com', 'zoho.com', 'gmx.com'].map((domain) => ({
+                label: `${value}@${domain}`,
+                value: `${value}@${domain}`,
+            }));
+        });
+    };
 
     useEffect(() => {
         setPageLoading(false);
@@ -154,8 +167,10 @@ export default function Login() {
                                 ]}
                                 className="sem-asterisco"
                             >
-                                <Input
+                                <AutoComplete
+                                    onSearch={handleSearch}
                                     placeholder="Insira seu email"
+                                    options={options}
                                 />
                             </Form.Item>
 

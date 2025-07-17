@@ -7,7 +7,9 @@ import {
     Form, Input, Select, App, Switch, Avatar,
     Upload, UploadProps, Button, UploadFile,
     Progress, Flex, Popover,
-    Typography
+    Typography,
+    AutoComplete,
+    AutoCompleteProps
 } from "antd";
 import { Estados } from "@/data/Estados";
 import Link from "next/link";
@@ -92,6 +94,20 @@ export const RegistroArena = ({ className }: { className?: string }) => {
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
     const capsLockEstaAtivado = useCapsLock();
+    const [options, setOptions] = useState<AutoCompleteProps['options']>([]);
+
+
+    const handleSearch = (value: string) => {
+        setOptions(() => {
+            if (!value || value.includes('@')) {
+                return [];
+            }
+            return ['gmail.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'yahoo.com', 'live.com', 'aol.com', 'protonmail.com', 'zoho.com', 'gmx.com'].map((domain) => ({
+                label: `${value}@${domain}`,
+                value: `${value}@${domain}`,
+            }));
+        });
+    };
 
     const handlePreview = async (file: UploadFile) => {
         if (!file.url && !file.preview) {
@@ -290,7 +306,11 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                     ]}
                     className="flex-1"
                 >
-                    <Input placeholder="Insira seu email" />
+                    <AutoComplete
+                        onSearch={handleSearch}
+                        placeholder="Insira seu email"
+                        options={options}
+                    />
                 </Form.Item>
             </Flex>
 

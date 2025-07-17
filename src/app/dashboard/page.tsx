@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useSession } from 'next-auth/react';
-import { Button, Avatar, Card, Col, Row, Flex, Typography, Layout } from 'antd';
+import { Button, Avatar, Card, Col, Row, Flex, Typography, Layout, Tag } from 'antd';
 import {
   PlusOutlined,
   DollarCircleOutlined,
@@ -103,8 +103,8 @@ export default function Dashboard() {
   const quickAccessLinks = [
     { label: "Gerenciar Quadras", icon: <GiSoccerField />, path: "/perfil/arena/quadras" },
     { label: "Agendamentos", icon: <ScheduleOutlined />, path: "/perfil/arena/agendamentos" },
-    { label: "Relatórios Financeiros", icon: <BarChartOutlined />, path: "/perfil/arena/relatorios" },
-    { label: "Gestão de Clientes", icon: <TeamOutlined />, path: "/perfil/arena/clientes" },
+    { label: "Relatórios Financeiros", icon: <BarChartOutlined />, path: "#", inProgress: true },
+    { label: "Gestão de Clientes", icon: <TeamOutlined />, path: "#", inProgress: true },
   ];
 
   if (status === 'loading') {
@@ -175,6 +175,7 @@ export default function Dashboard() {
                   <Link key={link.label} href={link.path}>
                     <Button icon={link.icon} size="large" block style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 'auto', padding: '10px 15px' }}>
                       {link.label}
+                      {link.inProgress && <Tag color="blue" style={{ marginLeft: 'auto' }}>Em progresso</Tag>}
                     </Button>
                   </Link>
                 ))}

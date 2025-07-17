@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PictureOutlined, UserAddOutlined, DeleteOutlined, CalendarOutlined, ClockCircleOutlined, InfoCircleOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { App, Avatar, Button, Card, Divider, Flex, Popconfirm, Tag, Tooltip, Typography } from 'antd';
 import ModalSolicitacoesEntrada from '../Modais/ModalSolicitacoesEntrada';
@@ -70,6 +70,11 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
     const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(false);
 
     const valorFormatado = agendamento.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const [vagasDisponiveis, setVagasDisponiveis] = useState(agendamento.numeroJogadoresNecessarios || 0);
+
+    useEffect(() => {
+        setVagasDisponiveis(agendamento.numeroJogadoresNecessarios || 0);
+    }, [agendamento.numeroJogadoresNecessarios]);
 
     const duracaoHoras = calcularDuracaoHoras(agendamento.startTime, agendamento.endTime);
 
@@ -92,17 +97,37 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
             setLoadingSolicitacoes(false);
         }
     };
-    
+
     const handleAcceptRequest = async (solicitacaoId: number) => {
-        await aceitarOuRecusarEntrada(solicitacaoId, true);
-        message.success("Solicitação aceita!");
-        setSolicitacoes(prev => prev.filter(s => s.id !== solicitacaoId));
+        try {
+            await aceitarOuRecusarEntrada(solicitacaoId, true);
+            message.success("Solicitação aceita!");
+
+            setSolicitacoes(prev => prev.map(s =>
+                s.id === solicitacaoId ? { ...s, status: 'ACEITO' } : s
+            ));
+
+            setVagasDisponiveis(prevVagas => prevVagas - 1);
+
+        } catch (error) {
+            message.error((error as Error)?.message ?? "Falha ao aceitar solicitação.");
+            console.error(error);
+        }
     };
 
     const handleDeclineRequest = async (solicitacaoId: number) => {
-        await aceitarOuRecusarEntrada(solicitacaoId, false);
-        message.info("Solicitação recusada.");
-        setSolicitacoes(prev => prev.filter(s => s.id !== solicitacaoId));
+        try {
+            await aceitarOuRecusarEntrada(solicitacaoId, false);
+            message.info("Solicitação recusada.");
+
+            setSolicitacoes(prev => prev.map(s =>
+                s.id === solicitacaoId ? { ...s, status: 'RECUSADO' } : s
+            ));
+
+        } catch (error) {
+            message.error((error as Error)?.message ?? "Falha ao recusar solicitação.");
+            console.error(error);
+        }
     };
 
     return (
@@ -122,7 +147,7 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
                             </Flex>
                             <StatusTag status={agendamento.status} />
                         </Flex>
-                        
+
                         <Divider style={{ marginTop: 12, marginBottom: 12 }} />
 
                         <Flex vertical gap={8}>
@@ -156,7 +181,7 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
                         <Flex
                             justify={agendamento.publico ? "space-between" : "flex-end"}
                             align="center"
-                            style={{ padding: '12px 16px'}}
+                            style={{ padding: '12px 16px' }}
                         >
                             {agendamento.publico && (
                                 <Button type='primary' icon={<UserAddOutlined />} onClick={handleOpenModal} ghost className='hover:!bg-green-600 hover:!text-white'>
@@ -184,7 +209,7 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
                 onClose={() => setIsModalOpen(false)}
                 loading={loadingSolicitacoes}
                 solicitacoes={solicitacoes}
-                vagasDisponiveis={agendamento.numeroJogadoresNecessarios || 0}
+                vagasDisponiveis={vagasDisponiveis}
                 onAccept={handleAcceptRequest}
                 onDecline={handleDeclineRequest}
             />

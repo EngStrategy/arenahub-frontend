@@ -112,7 +112,7 @@ export default function InformacoesPessoaisAtleta() {
                 if (!userData) {
                     return message.warning('Dados do usuário não encontrados.');
                 }
-                form.setFieldsValue({ name: userData.nome, phone: userData.telefone });
+                form.setFieldsValue({ name: userData.nome, phone: userData.telefone, email: userData.email });
                 setImageUrl(userData.urlFoto ?? null);
                 setSelectedFile(null);
                 setIsFormAltered(false);
@@ -361,6 +361,15 @@ export default function InformacoesPessoaisAtleta() {
                                         form.setFieldsValue({ phone: formatarTelefone(e.target.value) });
                                     }}
                                 />
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                label="Email"
+                                name="email"
+                            >
+                                <Input disabled />
                             </Form.Item>
                         </Col>
                     </Row>
