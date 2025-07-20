@@ -89,19 +89,15 @@ export default function Login() {
             if (responseNextAuth?.ok) {
                 const session = await getSession();
 
-                // 1. Define um destino padrão baseado no perfil do usuário
                 let destination = "/";
                 if (session?.user?.role === "ARENA") {
                     destination = "/dashboard";
                 }
 
-                // 2. Verifica se existe um callbackUrl válido para sobrescrever o destino
                 if (callbackUrl) {
                     try {
-                        // Usa a origem DINÂMICA do navegador como base
                         const callbackPathname = new URL(callbackUrl, window.location.origin).pathname;
 
-                        // Só redireciona se não for uma rota de autenticação (evita loops)
                         if (!authRoutes.includes(callbackPathname)) {
                             destination = callbackUrl;
                         }
@@ -110,7 +106,6 @@ export default function Login() {
                     }
                 }
 
-                // 3. Redireciona para o destino final
                 router.push(destination);
 
             } else {

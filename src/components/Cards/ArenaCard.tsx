@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Card, Flex, Typography } from 'antd';
+import { Card, Flex, Typography, Avatar } from 'antd';
 import { StarFilled } from '@ant-design/icons';
-import Image from 'next/image';
 import { Arena } from '@/app/api/entities/arena';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { TipoQuadra } from '@/app/api/entities/quadra';
@@ -34,16 +33,16 @@ export const ArenaCard = ({ arena, showDescription, showHover = true, showEsport
       styles={{ body: { padding: '0.75rem', height: '100%' } }}
     >
       <Flex gap="middle" align="stretch">
-        <div className="relative w-full max-w-[120px] flex-shrink-0 aspect-square rounded-md overflow-hidden">
-          <Image
-            src={imgSrc}
-            alt={`Imagem da ${arena.nome}`}
-            fill
-            sizes="(max-width: 768px) 33vw, 120px"
-            className="object-cover"
-            onError={() => setImgSrc(fallbackSrc)}
-          />
-        </div>
+        <Avatar
+          shape="square"
+          size={120}
+          src={imgSrc}
+          onError={() => {
+            setImgSrc(fallbackSrc);
+            return true;
+          }}
+          style={{ flexShrink: 0 }}
+        />
 
         <Flex vertical justify="space-between" className="flex-1 min-w-0">
           <Flex vertical>

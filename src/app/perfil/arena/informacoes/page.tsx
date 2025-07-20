@@ -178,6 +178,7 @@ export default function InformacoesPessoaisArena() {
                 form.setFieldsValue({
                     nome: userData.nome,
                     telefone: userData.telefone,
+                    email: userData.email,
                     cep: userData.endereco?.cep ?? '',
                     estado: userData.endereco?.estado ?? '',
                     cidade: userData.endereco?.cidade ?? '',
@@ -337,7 +338,7 @@ export default function InformacoesPessoaisArena() {
         <Flex
             justify='center'
             align='start'
-            className="sm:!px-10 lg:!px-40 !px-4 !py-6"
+            className="sm:!px-10 lg:!px-40 !px-4 !pt-6 !pb-14"
             style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Card
@@ -364,8 +365,8 @@ export default function InformacoesPessoaisArena() {
                     onValuesChange={() => setIsFormAltered(true)}
                     disabled={isPageLoading || isSubmitting || status !== 'authenticated'}
                 >
-                    <Row gutter={[24, 24]}>
-                        <Col span={24}>
+                    <Row gutter={[24, 24]} className="!gap-0">
+                        <Col xs={24} md={12}>
                             <Form.Item label="Foto ou logomarca da arena" className="!mb-2">
                                 <Flex align="center" gap="middle">
                                     <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomLeft">
@@ -401,6 +402,18 @@ export default function InformacoesPessoaisArena() {
                                         </ImgCrop>
                                     </Flex>
                                 </Flex>
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                label="E-mail"
+                                name="email"
+                            >
+                                <Input
+                                    name='email'
+                                    disabled
+                                />
                             </Form.Item>
                         </Col>
 

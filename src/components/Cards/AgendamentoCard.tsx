@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { PictureOutlined, UserAddOutlined, DeleteOutlined, CalendarOutlined, ClockCircleOutlined, InfoCircleOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { App, Avatar, Button, Card, Divider, Flex, Popconfirm, Tag, Tooltip, Typography } from 'antd';
+import { App, Avatar, Button, Card, Divider, Flex, Popconfirm, Tag, Badge, Typography } from 'antd';
 import ModalSolicitacoesEntrada from '../Modais/ModalSolicitacoesEntrada';
 import { type SolicitacaoJogoAberto, listarSolicitacoesJogoAbertoMe, aceitarOuRecusarEntrada } from '@/app/api/entities/jogosAbertos';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
@@ -24,6 +24,7 @@ export type AgendamentoCardData = {
     urlFotoArena?: string;
     fixo: boolean;
     publico: boolean;
+    possuiSolicitacoes?: boolean;
 };
 
 type CardProps = {
@@ -58,7 +59,7 @@ const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number
         return parseFloat((diferencaEmMinutos / 60).toFixed(2));
     } catch (error) {
         console.error("Erro ao calcular duração:", error);
-        return 0; // Retorna 0 em caso de erro no formato da hora
+        return 0;
     }
 };
 
@@ -169,7 +170,7 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
                                 <Title
                                     level={4}
                                     style={{ margin: 0 }}
-                                    className={`${agendamento.status === "cancelado" ? "line-through" : ""} !text-green-600`}
+                                    className={`${agendamento.status === "cancelado" ? "line-through !text-red-500" : ""} !text-green-600`}
                                 >
                                     {valorFormatado}
                                 </Title>
@@ -177,17 +178,22 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
                         </Flex>
                     </div>
 
-                    {agendamento.status === 'pendente' && (
+                    {(agendamento.status === 'pendente' || agendamento.status === 'aceito') && (
                         <Flex
                             justify={agendamento.publico ? "space-between" : "flex-end"}
                             align="center"
                             style={{ padding: '12px 16px' }}
                         >
-                            {agendamento.publico && (
-                                <Button type='primary' icon={<UserAddOutlined />} onClick={handleOpenModal} ghost className='hover:!bg-green-600 hover:!text-white'>
+                            <Badge dot={agendamento.possuiSolicitacoes}>
+                                <Button
+                                    type='primary'
+                                    icon={<UserAddOutlined />}
+                                    onClick={handleOpenModal}
+                                    ghost
+                                >
                                     Solicitações
                                 </Button>
-                            )}
+                            </Badge>
                             <Popconfirm
                                 title="Cancelar Agendamento"
                                 description="Você tem certeza que quer cancelar?"

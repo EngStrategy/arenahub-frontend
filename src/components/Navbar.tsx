@@ -36,6 +36,22 @@ interface AppMenuItem {
   className?: string;
 }
 
+const segmentedIconStyle = { fontSize: 20 };
+const segmentedTextStyle = { fontSize: 12, lineHeight: 1 };
+
+interface SegmentedLabelProps {
+  icon: React.ReactNode;
+  text: string;
+}
+
+const SegmentedLabel = ({ icon, text }: SegmentedLabelProps) => (
+  <Flex vertical align="center" justify="center" gap={4} style={{ padding: '4px 0' }}>
+    {icon}
+    <span style={segmentedTextStyle}>{text}</span>
+  </Flex>
+);
+
+
 const Navbar = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -225,46 +241,29 @@ const Navbar = () => {
   );
 
   const mobileNavOptions = useMemo(() => {
-    const iconStyle = { fontSize: 20 };
-    const textStyle = { fontSize: 12, lineHeight: 1 };
-
     if (!session) {
       return [
         {
           value: '/jogos-abertos',
-          label: (
-            <Flex vertical align="center" justify="center" gap={4} style={{ padding: '4px 0' }}>
-              <BiWorld style={iconStyle} />
-              <span style={textStyle}>Jogos Abertos</span>
-            </Flex>
-          )
-        }
+          label: <SegmentedLabel icon={<BiWorld style={segmentedIconStyle} />} text="Jogos Abertos" />,
+        },
       ];
     }
 
     const options = [
       {
         value: session.user.role === 'ATLETA' ? "/perfil/atleta/agendamentos" : "/perfil/arena/agendamentos",
-        label: (
-          <Flex vertical align="center" justify="center" gap={4} style={{ padding: '4px 0' }}>
-            <FaRegCalendarAlt style={iconStyle} />
-            <span style={textStyle}>Agendamentos</span>
-          </Flex>
-        )
-      }
+        label: <SegmentedLabel icon={<FaRegCalendarAlt style={segmentedIconStyle} />} text="Agendamentos" />,
+      },
     ];
 
     if (session.user.role === 'ATLETA') {
       options.push({
         value: '/jogos-abertos',
-        label: (
-          <Flex vertical align="center" justify="center" gap={4} style={{ padding: '4px 0' }}>
-            <BiWorld style={iconStyle} />
-            <span style={textStyle}>Jogos Abertos</span>
-          </Flex>
-        )
+        label: <SegmentedLabel icon={<BiWorld style={segmentedIconStyle} />} text="Jogos Abertos" />,
       });
     }
+
     return options;
   }, [session]);
 
@@ -320,12 +319,12 @@ const Navbar = () => {
                 mode="horizontal"
                 items={[
                   {
-                      key: "/jogos-abertos",
-                      label: "Jogos abertos",
-                      onClick: () => navigateTo("/jogos-abertos"),
-                      icon: <BiWorld />,
-                      className: "!my-1"
-                    },
+                    key: "/jogos-abertos",
+                    label: "Jogos abertos",
+                    onClick: () => navigateTo("/jogos-abertos"),
+                    icon: <BiWorld />,
+                    className: "!my-1"
+                  },
                   ...commonMenuItems
                 ]}
                 selectable={false}

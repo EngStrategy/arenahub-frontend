@@ -105,10 +105,19 @@ export const updatePassword = async (
 ): Promise<void> => {
     return httpRequests.patchMethod<void>(
         `${URLS.ARENAS}/me/alterar-senha`,
-        { 
-            senhaAtual: currentPassword, 
-            novaSenha: newPassword, 
+        {
+            senhaAtual: currentPassword,
+            novaSenha: newPassword,
             confirmacaoNovaSenha: confirmNewPassword
         },
     );
+}
+
+export type CidadeDTO = {
+    nome: string;
+    estado: string;
+};
+
+export const getCidades = async (): Promise<CidadeDTO[]> => {
+    return httpRequests.getMethod<CidadeDTO[]>(`${URLS.ARENAS}/cidades`);
 }

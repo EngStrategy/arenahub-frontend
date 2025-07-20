@@ -2,7 +2,7 @@ import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 import { TipoQuadra } from "./quadra";
 
-export type StatusAgendamento = "PENDENTE" | "AUSENTE" | "CANCELADO" | "PAGO" | "ACEITO" | "RECUSADO";
+export type StatusAgendamento = "PENDENTE" | "AUSENTE" | "CANCELADO" | "PAGO" | "ACEITO" | "RECUSADO" | "FINALIZADO";
 
 export type PeriodoAgendamentoFixo = "UM_MES" | "TRES_MESES" | "SEIS_MESES";
 
@@ -33,7 +33,7 @@ export type AgendamentoNormal = {
     urlFotoArena: string;
     fixo: boolean;
     publico: boolean;
-    informacoesPreservadas: boolean;
+    possuiSolicitacoes: boolean;
 };
 
 export type AgendamentoCreate = {
@@ -47,14 +47,16 @@ export type AgendamentoCreate = {
     isPublico?: boolean;
 };
 
+
 export type AgendamentoQueryParams = {
     page?: number;
     size?: number;
     sort?: string;
     direction?: "asc" | "desc";
-    dataInicio?: string; // Formato YYYY-MM-DD
-    dataFim?: string; // Formato YYYY-MM-DD
+    dataInicio?: string;
+    dataFim?: string;
     tipoAgendamento?: "NORMAL" | "FIXO" | "AMBOS";
+    status?: StatusAgendamento;
 };
 
 export const createAgendamento = async (
@@ -93,4 +95,63 @@ export const cancelarAgendamentoFixo = async (agendamentoFixoId: number): Promis
         return Promise.reject(new Error("ID do agendamento fixo não fornecido."));
     }
     return httpRequests.deleteMethod(`${URLS.AGENDAMENTOS}/fixo/${agendamentoFixoId}`);
+}
+
+// ================================== Agendamentos Arena ==================================
+
+export type StatusAgendamentoArena = "PENDENTE" | "PAGO" | "CANCELADO" | "AUSENTE" | "FINALIZADO";
+
+export type AgendamentoArenaQueryParams = {
+    page?: number;
+    size?: number;
+    sort?: string;
+    direction?: "asc" | "desc";
+    dataInicio?: string;
+    dataFim?: string;
+    status?: StatusAgendamentoArena;
+    quadraId?: number;
+};
+
+export type AgendamentoArena = {
+    id: number;
+    dataAgendamento: string;
+    horarioInicio: string;
+    horarioFim: string;
+    valorTotal: number;
+    status: StatusAgendamentoArena;
+    vagasDisponiveis: number;
+    esporte: TipoQuadra;
+    quadraId: number;
+    nomeQuadra: string;
+    atletaId: number;
+    nomeAtleta: string;
+    emailAtleta: string;
+    telefoneAtleta: string;
+    urlFotoAtleta: string;
+    totalParticipantes: number;
+    participantes: Array<{
+        id: number;
+        nome: string;
+        email: string;
+        telefone: string;
+        dataEntrada: string;
+    }>;
+    slotsHorario: Array<{
+        id: number;
+        horarioInicio: string;
+        horarioFim: string;
+        valor: number;
+        statusDisponibilidade: "DISPONIVEL" | "INDISPONIVEL";
+    }>;
+    fixo: boolean;
+    publico: boolean;
+};
+
+export const getAllAgendamentosArena = async (
+    params: AgendamentoArenaQueryParams = {}
+): Promise<httpRequests.PaginatedResponse<AgendamentoArena>> => {
+    return httpRequests.getMethod<httpRequests.PaginatedResponse<AgendamentoArena>>(
+        `${URLS.ARENAAGENDAMENTOS}`,
+        params
+    );
 }

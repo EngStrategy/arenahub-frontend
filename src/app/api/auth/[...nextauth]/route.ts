@@ -4,8 +4,12 @@ import axios from "axios";
 
 declare module "next-auth" {
   interface User {
-    token?: string;
-    [key: string]: any; // Escolher um tipo melhor
+    accessToken: string;
+    userId: number;
+    name: string;
+    role: string;
+    expiresIn: number;
+    imageUrl: string;
   }
 }
 
@@ -35,7 +39,7 @@ const handler = NextAuth({
             console.log("API returned success, but no user object.");
             return null;
           }
-        } catch (error: any) { // Escolher um tipo melhor
+        } catch (error: any) {
           console.error("AXIOS ERROR:", error);
 
           if (error.response) {
@@ -63,7 +67,7 @@ const handler = NextAuth({
         token.picture = user.imageUrl;
 
         const nowInSeconds = Math.floor(Date.now() / 1000);
-        token.exp = nowInSeconds + (user.expiresIn as number);
+        token.exp = nowInSeconds + user.expiresIn;
 
         return token;
       }

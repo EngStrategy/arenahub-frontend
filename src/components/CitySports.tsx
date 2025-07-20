@@ -1,7 +1,8 @@
 "useClient"
 
+import React, { useEffect, useMemo, useState } from 'react'
 import { AutoComplete, Col, Input, Row, Select } from 'antd';
-import React, { useMemo } from 'react'
+import { getCidades, type CidadeDTO } from '@/app/api/entities/arena';
 
 interface CitySportsProps {
     readonly loading?: boolean;
@@ -16,7 +17,7 @@ interface CitySportsProps {
 }
 
 const LoadingSkeleton = () => (
-    <div className="animate-pulse">
+    <div className="animate-pulse flex gap-4">
         <div className="mb-6 h-12 w-full rounded-full bg-gray-300"></div>
         <div className="mb-8 h-12 w-full rounded-full bg-gray-300"></div>
     </div>
@@ -34,6 +35,28 @@ export default function CitySports({
     allSports,
     sportIcons,
 }: CitySportsProps) {
+
+    const [cities, setCities] = useState<CidadeDTO[]>([]);
+
+    useEffect(() => {
+        const fetchCities = async () => {
+            try {
+                const response = await getCidades();
+                setCities(response);
+            } catch (error) {
+                console.error("Erro ao buscar cidades:", error);
+            }
+        };
+        fetchCities();
+    }, []);
+
+    const cityOptions = useMemo(() =>
+        cities.map((city) => ({
+            value: city.nome,
+            label: `${city.nome} - ${city.estado}`,
+        })),
+        [cities]);
+
 
     const sportSelectOptions = useMemo(() => allSports.map((sport) => (
         <Select.Option key={sport} value={sport}>
@@ -65,11 +88,7 @@ export default function CitySports({
                     onBlur={() => {
                         if (onSearchCommit) onSearchCommit(inputValue);
                     }}
-                    options={[
-                        { value: 'Floriano' },
-                        { value: 'Quixadá' },
-                        { value: 'Fortaleza' },
-                    ]}
+                    options={cityOptions}
                     filterOption={(inputValue, option) =>
                         option!.value.toUpperCase().includes(inputValue.toUpperCase())
                     }
@@ -95,7 +114,6 @@ export default function CitySports({
                         if (setSelectedSport) setSelectedSport(sport);
                         setCurrentPage(1);
                     }}
-                    style={{ borderRadius: '9999px' }}
                     allowClear
                     onClear={() => {
                         if (setSelectedSport) setSelectedSport('');

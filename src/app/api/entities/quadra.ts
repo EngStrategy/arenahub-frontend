@@ -6,8 +6,8 @@ export type TipoQuadra = "FUTEBOL_SOCIETY" | "FUTEBOL_SETE" | "FUTEBOL_ONZE" | "
 export type DiaDaSemana = "DOMINGO" | "SEGUNDA" | "TERCA" | "QUARTA" | "QUINTA" | "SEXTA" | "SABADO";
 
 export type DuracaoReserva = "TRINTA_MINUTOS" | "UMA_HORA" | "UMA_HORA_E_MEIA" | "DUAS_HORAS";
-
-export type MaterialFornecido = "BOLA" | "COLETE" | "LUVA" | "CHUTEIRA" | "CONE";
+    
+export type MaterialFornecido = "BOLA" | "COLETE" | "LUVA" | "CONE" | "APITO" | "BOMBA" | "MARCADOR_PLACAR" | "BOTAO_GOL";
 
 export type StatusHorario = "DISPONIVEL" | "INDISPONIVEL" | "MANUTENCAO";
 
@@ -77,7 +77,6 @@ export interface QuadraQueryParams {
     sort?: string;
     arenaId?: number;
     esporte?: Array<TipoQuadra>;
-    [key: string]: any;
 }
 
 export const getAllQuadras = async (

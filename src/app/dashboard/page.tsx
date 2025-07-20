@@ -112,7 +112,7 @@ export default function Dashboard() {
   }
 
   return (
-    <Layout.Content style={{ padding: '2rem 8%', backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)', }} >
+    <Layout.Content style={{ padding: '2rem 8% 5rem 8%', backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)', }} >
       <Flex vertical gap="large">
         {/* Cabeçalho */}
         <Flex justify="space-between" align="center">

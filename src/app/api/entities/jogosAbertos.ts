@@ -4,9 +4,9 @@ import { TipoQuadra } from "./quadra";
 
 export type JogosAbertos = {
     agendamentoId: number;
-    data: string; // Formato YYYY-MM-DD
-    horarioInicio: string; // Formato HH:mm
-    horarioFim: string; // Formato HH:mm
+    data: string;
+    horarioInicio: string;
+    horarioFim: string;
     vagasDisponiveis: number;
     esporte: TipoQuadra;
     nomeArena: string;
@@ -68,9 +68,9 @@ export type JogoAbertoMeSolicitado = {
     nomeArena: string;
     nomeQuadra: string;
     urlFotoArena: string;
-    data: string; // Formato YYYY-MM-DD
-    horarioInicio: string; // Formato HH:mm
-    horarioFim: string; // Formato HH:mm
+    data: string;
+    horarioInicio: string;
+    horarioFim: string;
     esporte: TipoQuadra;
     status: "PENDENTE" | "ACEITO" | "RECUSADO" | "CANCELADO";
 };

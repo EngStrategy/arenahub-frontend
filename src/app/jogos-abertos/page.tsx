@@ -168,7 +168,7 @@ export default function JogosAbertos() {
             className="px-4 sm:px-10 lg:px-40 py-8 flex-1"
             style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
-            <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>Jogos abertos</Title>
+            <Title level={3} className="!text-center !mb-8">Jogos abertos</Title>
 
             <CitySports
                 loading={loading}
