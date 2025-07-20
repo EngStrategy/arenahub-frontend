@@ -10,6 +10,7 @@ type SportIconMap = {
 };
 
 export const sportIcons: SportIconMap = {
+  'Todos': <FaFutbol className="mr-2" />,
   'Futebol society': <FaFutbol className="mr-2" />,
   'Vôlei': <FaVolleyballBall className="mr-2" />,
   'Futebol Sete': <FaFutbol className="mr-2" />,

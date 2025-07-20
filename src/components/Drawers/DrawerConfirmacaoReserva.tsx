@@ -376,6 +376,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                         <span className="px-4 font-semibold">{numeroJogadoresFaltando}</span>
                                         <Button
                                             type='text'
+                                            disabled={numeroJogadoresFaltando >= 21}
                                             onClick={() => setNumeroJogadoresFaltando(p => p + 1)}
                                             icon={<AiOutlinePlus />}
                                         />

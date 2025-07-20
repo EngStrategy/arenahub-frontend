@@ -314,7 +314,7 @@ export default function CadastrarQuadra() {
 
     return (
         <Layout.Content
-            className="flex items-start justify-center px-4 sm:px-10 lg:px-40 py-6 !flex-1"
+            className="flex items-start justify-center px-4 sm:px-10 lg:px-40 pt-6 !pb-14"
             style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Card
@@ -432,9 +432,12 @@ export default function CadastrarQuadra() {
                                     options={[
                                         { value: 'BOLA', label: 'Bola' },
                                         { value: 'COLETE', label: 'Colete' },
+                                        { value: 'APITO', label: 'Apito' },
                                         { value: 'LUVA', label: 'Luva' },
-                                        { value: 'CHUTEIRA', label: 'Chuteira' },
                                         { value: 'CONE', label: 'Cone' },
+                                        { value: 'BOMBA', label: 'Bomba' },
+                                        { value: 'MARCADOR_PLACAR', label: 'Marcador de Placar' },
+                                        { value: 'BOTAO_GOL', label: 'Botão do Gol' },
                                     ]}
                                 />
                             </Form.Item>

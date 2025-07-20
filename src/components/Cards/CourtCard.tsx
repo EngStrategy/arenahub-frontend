@@ -14,7 +14,6 @@ import {
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { Quadra, TipoQuadra } from '@/app/api/entities/quadra';
-import Image from 'next/image';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { formatarDiaSemanaAbreviado } from '@/context/functions/mapeamentoDiaSemana';
 import { MdOutlineSports } from "react-icons/md";

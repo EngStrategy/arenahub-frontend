@@ -84,8 +84,8 @@ const RegisterPage = () => {
     >
       <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
         <Image
-          src="/icons/beachtenis.svg"
-          alt="Beach Tenis"
+          src="/icons/vector_futebol.svg"
+          alt="Futebol"
           width={400}
           height={400}
           className="!sticky !top-20 !w-full !object-cover"

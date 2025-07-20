@@ -4,9 +4,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { format, addDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
-import { Button, Card, Typography, Spin, Alert } from 'antd';
+import { Button, Card, Typography, Spin, Alert, Avatar } from 'antd';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
-import Image from 'next/image';
 import { TbSoccerField } from "react-icons/tb";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { DrawerConfirmacaoReserva } from '@/components/Drawers/DrawerConfirmacaoReserva';
@@ -83,8 +82,11 @@ const formatarMaterial = (material: MaterialFornecido): string => {
         BOLA: 'bola',
         COLETE: 'colete',
         LUVA: 'luva',
-        CHUTEIRA: 'chuteira',
-        CONE: 'cone'
+        CONE: 'cone',
+        APITO: 'apito',
+        BOMBA: 'bomba',
+        MARCADOR_PLACAR: 'marcador de placar',
+        BOTAO_GOL: 'botão do gol'
     };
     return materialMap[material] || material.toLowerCase();
 }
@@ -143,7 +145,7 @@ export default function QuadraPage() {
 
     const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
 
-    const allDates = Array.from({ length: 30 }, (_, i) => addDays(new Date(), i));
+    const allDates = Array.from({ length: 60 }, (_, i) => addDays(new Date(), i));
     const VISIBLE_DATES_WINDOW_SIZE = 10;
 
     useEffect(() => {
@@ -289,10 +291,10 @@ export default function QuadraPage() {
     }
 
     return (
-        <div className={`px-4 sm:px-10 lg:px-40 py-8 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
+        <div className={`px-4 sm:px-10 lg:px-40 pt-8 pb-16 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
             {arena && (
                 <div className='flex flex-row items-start justify-between mb-6'>
-                    <div className="w-full max-w-sm">
+                    <div className="w-full max-w-2xl">
                         <ArenaCard
                             arena={{
                                 ...arena,
@@ -308,8 +310,8 @@ export default function QuadraPage() {
                         <Button
                             type="primary"
                             onClick={() => setIsDrawerVisible(true)}
-                            className="!w-full !flex !flex-row hover:!bg-green-500 !py-7 !rounded-none !bg-green-primary 
-                            !fixed !bottom-0 !left-0 !z-40 sm:!z-0 sm:!static sm:!w-auto !text-white"
+                            className="!w-auto !flex !flex-row hover:!bg-green-500 !py-7 !rounded-none !bg-green-primary 
+                            !fixed !bottom-4 !left-10 !right-10 !z-40 sm:!z-0 sm:!static sm:!w-auto !text-white"
                         >
                             <span className="flex flex-row items-center justify-center w-full">
                                 <TbSoccerField className="w-8 h-9 mr-2 rotate-135" />
@@ -483,14 +485,15 @@ export default function QuadraPage() {
                             <div className="flex flex-col lg:flex-row py-4">
                                 <div className="w-full lg:w-82 lg:flex-shrink-0 p-2 pr-4">
                                     <div className='flex flex-row items-start gap-4'>
-                                        <div className='relative h-24 min-w-[120px] w-30 overflow-hidden flex-shrink-0'>
-                                            <Image
-                                                src={quadra.urlFotoQuadra || '/images/imagem-default.png'}
-                                                alt={`Imagem da ${quadra.nomeQuadra}`}
-                                                fill
-                                                className="!object-cover !rounded-md !bg-gray-200"
-                                            />
-                                        </div>
+                                        <Avatar
+                                            shape="square"
+                                            size={120}
+                                            src={quadra.urlFotoQuadra || '/images/imagem-default.png'}
+                                            onError={() => {
+                                                return true;
+                                            }}
+                                            style={{ flexShrink: 0 }}
+                                        />
                                         <div className="flex-grow pt-1">
                                             <Typography.Title level={5} className="!font-semibold !text-lg !leading-tight !mb-1">
                                                 {quadra.nomeQuadra}

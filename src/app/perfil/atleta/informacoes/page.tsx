@@ -112,7 +112,7 @@ export default function InformacoesPessoaisAtleta() {
                 if (!userData) {
                     return message.warning('Dados do usuário não encontrados.');
                 }
-                form.setFieldsValue({ name: userData.nome, phone: userData.telefone });
+                form.setFieldsValue({ name: userData.nome, phone: userData.telefone, email: userData.email });
                 setImageUrl(userData.urlFoto ?? null);
                 setSelectedFile(null);
                 setIsFormAltered(false);
@@ -252,7 +252,7 @@ export default function InformacoesPessoaisAtleta() {
         <Flex
             justify='center'
             align='start'
-            className="sm:!px-10 lg:!px-40 !px-4 !py-6 !flex-1"
+            className="sm:!px-10 lg:!px-40 !px-4 !pt-6 !pb-14"
             style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Card
@@ -279,7 +279,7 @@ export default function InformacoesPessoaisAtleta() {
                     onValuesChange={() => setIsFormAltered(true)}
                     disabled={isPageLoading || isSubmitting || status !== 'authenticated'}
                 >
-                    <Row gutter={[24, 24]}>
+                    <Row gutter={[24, 24]} className="!gap-0">
                         <Col span={24}>
                             <Form.Item label="Foto de perfil" className="!mb-2">
                                 <Flex align="center" gap="middle">
@@ -361,6 +361,15 @@ export default function InformacoesPessoaisAtleta() {
                                         form.setFieldsValue({ phone: formatarTelefone(e.target.value) });
                                     }}
                                 />
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                label="Email"
+                                name="email"
+                            >
+                                <Input disabled />
                             </Form.Item>
                         </Col>
                     </Row>

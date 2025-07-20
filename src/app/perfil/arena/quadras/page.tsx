@@ -111,7 +111,7 @@ const MinhasQuadrasPage: React.FC = () => {
 
   return (
     <Content
-      className="!px-4 sm:!px-10 lg:!px-40 !py-8 !flex-1"
+      className="!px-4 sm:!px-10 lg:!px-40 !pt-8 !pb-18"
       style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
     >
       <Title level={3}>Minhas quadras</Title>

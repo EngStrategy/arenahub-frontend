@@ -13,4 +13,5 @@ export const URLS = {
     ATLETAS: `/atletas`,
 
     JOGOS_ABERTOS: `/jogos-abertos`,
+    ARENAAGENDAMENTOS: `/arena/agendamentos`,
 };

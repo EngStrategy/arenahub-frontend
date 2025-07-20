@@ -55,7 +55,7 @@ export default function JogosAbertos() {
 
     const [jogos, setJogos] = useState<JogoAbertoAPI[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedSport, setSelectedSport] = useState('Todos');
+    const [selectedSport, setSelectedSport] = useState('');
     const [committedSearchTerm, setCommittedSearchTerm] = useState('');
     const [inputValue, setInputValue] = useState('');
     const [pagination, setPagination] = useState({
@@ -110,8 +110,8 @@ export default function JogosAbertos() {
         setPagination(prev => ({ ...prev, currentPage: 1 }));
     };
 
-    const handleSearchCommit = () => {
-        setCommittedSearchTerm(inputValue);
+    const handleSearchCommit = (term: string) => {
+        setCommittedSearchTerm(term);
         setPagination(prev => ({ ...prev, currentPage: 1 }));
     };
 
@@ -119,7 +119,7 @@ export default function JogosAbertos() {
         setPagination(prev => ({ ...prev, currentPage: page }));
     };
 
-    const allSports = ['Todos', ...Object.values(mapeamentoEsportes)];
+    const allSports = Object.keys(sportIcons);
 
     if (sessionStatus === 'loading') {
         return <JogoAbertoSkeleton />;
@@ -168,7 +168,7 @@ export default function JogosAbertos() {
             className="px-4 sm:px-10 lg:px-40 py-8 flex-1"
             style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
-            <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>Jogos abertos</Title>
+            <Title level={3} className="!text-center !mb-8">Jogos abertos</Title>
 
             <CitySports
                 loading={loading}
@@ -176,7 +176,7 @@ export default function JogosAbertos() {
                 setSelectedSport={handleSportChange}
                 inputValue={inputValue}
                 setInputValue={setInputValue}
-                handleSearchCommit={handleSearchCommit}
+                onSearchCommit={handleSearchCommit}
                 setCurrentPage={(page) => setPagination(prev => ({ ...prev, currentPage: page }))}
                 allSports={allSports}
                 sportIcons={sportIcons}

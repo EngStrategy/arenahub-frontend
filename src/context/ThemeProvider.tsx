@@ -21,7 +21,7 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-    const [theme, setThemeState] = useState(() => {
+    const [theme, setThemeState] = useState<string>(() => {
         if (typeof window === 'undefined') return 'light';
         return localStorage.getItem('theme') || 'system';
     });
@@ -40,7 +40,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         setMounted(true);
         const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-            if (localStorage.getItem('theme') === null) { // Só muda se o tema for 'system'
+            if (localStorage.getItem('theme') === null) {
                 document.documentElement.classList.toggle('dark', e.matches);
             }
         };
@@ -81,6 +81,13 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
                 theme={{
                     token: { colorPrimary: primary, borderRadius: 5 },
                     algorithm: isDarkMode ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+                    components: {
+                        Segmented: {
+                            itemSelectedBg: isDarkMode ? 'rgba(42, 75, 42, 0.5)' : 'rgba(198, 240, 198, 0.5)',
+                            itemSelectedColor: isDarkMode ? '#fff' : '#000',
+                            opacityImage: 0.5,
+                        },
+                    },
                 }}
             >
                 <App style={{ height: '100%' }}>{children}</App>
