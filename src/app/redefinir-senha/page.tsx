@@ -226,6 +226,10 @@ export default function RedefinirSenha() {
                                                 setPassword(newPassword);
                                                 form.setFieldsValue({ senha: newPassword });
                                             }}
+                                            onCopy={(e) => {
+                                                e.preventDefault();
+                                                message.warning("Copiar senha não é permitido!");
+                                            }}
                                         />
                                     </Popover>
                                 </Form.Item>
@@ -248,7 +252,13 @@ export default function RedefinirSenha() {
                                     ]}
                                     className="sem-asterisco"
                                 >
-                                    <Input.Password placeholder="Confirme a nova senha" />
+                                    <Input.Password
+                                        placeholder="Confirme a nova senha"
+                                        onCopy={(e) => {
+                                            e.preventDefault();
+                                            message.warning("Copiar senha não é permitido!");
+                                        }}
+                                    />
                                 </Form.Item>
 
                                 {capsLockEstaAtivado && (

@@ -310,8 +310,8 @@ export default function QuadraPage() {
                         <Button
                             type="primary"
                             onClick={() => setIsDrawerVisible(true)}
-                            className="!w-auto !flex !flex-row hover:!bg-green-500 !py-7 !rounded-none !bg-green-primary 
-                            !fixed !bottom-4 !left-10 !right-10 !z-40 sm:!z-0 sm:!static sm:!w-auto !text-white"
+                            className="!flex !items-center !justify-center !py-7 !rounded-lg !bg-green-primary hover:!bg-green-500 !text-white
+                            !fixed !bottom-4 !left-10 !right-10 !z-40 sm:!w-auto sm:!left-auto sm:!right-10"
                         >
                             <span className="flex flex-row items-center justify-center w-full">
                                 <TbSoccerField className="w-8 h-9 mr-2 rotate-135" />

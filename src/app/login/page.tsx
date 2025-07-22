@@ -8,7 +8,6 @@ import Link from "next/link"
 import Image from "next/image";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { useCapsLock } from "@/context/hooks/useCapsLook";
-import { ExclamationCircleFilled } from "@ant-design/icons";
 import CapsLock from "@/components/Alerts/CapsLock";
 import { useTheme } from "@/context/ThemeProvider";
 
@@ -88,13 +87,11 @@ export default function Login() {
 
             if (responseNextAuth?.ok) {
                 const session = await getSession();
-
                 let destination = "/";
+
                 if (session?.user?.role === "ARENA") {
                     destination = "/dashboard";
-                }
-
-                if (callbackUrl) {
+                } else if (callbackUrl) {
                     try {
                         const callbackPathname = new URL(callbackUrl, window.location.origin).pathname;
 
@@ -177,6 +174,10 @@ export default function Login() {
                             >
                                 <Input.Password
                                     placeholder="Insira sua senha"
+                                    onCopy={(e) => {
+                                        e.preventDefault();
+                                        message.warning("Copiar senha não é permitido!");
+                                    }}
                                 />
                             </Form.Item>
 

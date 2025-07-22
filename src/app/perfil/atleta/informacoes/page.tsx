@@ -252,7 +252,7 @@ export default function InformacoesPessoaisAtleta() {
         <Flex
             justify='center'
             align='start'
-            className="sm:!px-10 lg:!px-40 !px-4 !pt-6 !pb-14"
+            className="sm:!px-10 lg:!px-40 !px-4 !pt-6 !pb-14 !flex-1"
             style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Card
@@ -303,7 +303,7 @@ export default function InformacoesPessoaisAtleta() {
                                     </Dropdown>
                                     <Flex vertical>
                                         <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
-                                            Tamanho máximo: 5MB
+                                            Recomendamos uma imagem quadrada para melhor visualização.
                                         </Typography.Text>
                                         <ImgCrop rotationSlider>
                                             <Upload

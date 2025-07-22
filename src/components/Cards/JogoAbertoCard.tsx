@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Button, App, Popconfirm, Card, Flex, Avatar, Typography, Tag, Divider, Space } from 'antd';
-import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, LogoutOutlined, PictureOutlined, UserAddOutlined } from '@ant-design/icons';
+import { Button, App, Popconfirm, Card, Flex, Avatar, Typography, Tag, Divider } from 'antd';
+import { CalendarOutlined, CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, LogoutOutlined, PictureOutlined, UserAddOutlined } from '@ant-design/icons';
 import { formatarData } from '@/context/functions/formatarData';
 import { JogosAbertos, solicitarEntrada, sairJogoAberto } from '@/app/api/entities/jogosAbertos';
 import { useRouter } from 'next/navigation';
@@ -136,14 +136,24 @@ export function JogoAbertoCard({ jogoAberto, onSaidaSucesso }: JogoAbertoCardPro
                             <Text type="secondary">{jogoAberto.nomeQuadra}</Text>
                         </Flex>
                     </Flex>
-
                     <Divider style={{ margin: '12px 0' }} />
 
                     <Flex vertical gap={4}>
-                        <Text strong>{formatarData(jogoAberto.data)}</Text>
-                        <Text type="secondary">
-                            {`${jogoAberto.horarioInicio} às ${jogoAberto.horarioFim} (${duracaoHoras}h)`}
-                        </Text>
+                        <Flex align="center" gap="small">
+                            <CalendarOutlined className="mr-2"/>
+                            <Text strong>
+                                {(() => {
+                                    const dateStr = new Date(jogoAberto.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+                                    return dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+                                })()}
+                            </Text>
+                        </Flex>
+                        <Flex align="center" gap="small">
+                            <ClockCircleOutlined className="mr-2"/>
+                            <Text type="secondary">
+                                {`${jogoAberto.horarioInicio} às ${jogoAberto.horarioFim} (${duracaoHoras}h)`}
+                            </Text>
+                        </Flex>
                         <Text strong className="!text-green-600">{formatarEsporte(jogoAberto.esporte)}</Text>
                     </Flex>
                 </Flex>

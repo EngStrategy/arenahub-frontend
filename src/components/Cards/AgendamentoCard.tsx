@@ -170,7 +170,7 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
                                 <Title
                                     level={4}
                                     style={{ margin: 0 }}
-                                    className={`${agendamento.status === "cancelado" ? "line-through !text-red-500" : ""} !text-green-600`}
+                                    className={`${agendamento.status === "cancelado" || agendamento.status === "ausente" ? "line-through !text-red-500" : ""} !text-green-600`}
                                 >
                                     {valorFormatado}
                                 </Title>
@@ -180,20 +180,24 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
 
                     {(agendamento.status === 'pendente' || agendamento.status === 'aceito') && (
                         <Flex
-                            justify={agendamento.publico ? "space-between" : "flex-end"}
+                            justify="space-between"
                             align="center"
                             style={{ padding: '12px 16px' }}
                         >
-                            <Badge dot={agendamento.possuiSolicitacoes}>
-                                <Button
-                                    type='primary'
-                                    icon={<UserAddOutlined />}
-                                    onClick={handleOpenModal}
-                                    ghost
-                                >
-                                    Solicitações
-                                </Button>
-                            </Badge>
+                            {agendamento.publico ? (
+                                <Badge dot={agendamento.possuiSolicitacoes}>
+                                    <Button
+                                        type='primary'
+                                        icon={<UserAddOutlined />}
+                                        onClick={handleOpenModal}
+                                        ghost
+                                    >
+                                        Solicitações
+                                    </Button>
+                                </Badge>
+                            ) : (
+                                <Text type="secondary" strong>Jogo Privado</Text>
+                            )}
                             <Popconfirm
                                 title="Cancelar Agendamento"
                                 description="Você tem certeza que quer cancelar?"

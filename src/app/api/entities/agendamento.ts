@@ -155,3 +155,14 @@ export const getAllAgendamentosArena = async (
         params
     );
 }
+
+export const updateStatusAgendamentoArena = async (
+    agendamentoId: number,
+    status: StatusAgendamentoArena
+): Promise<void> => {
+    if (!agendamentoId) {
+        console.warn("ID do agendamento não fornecido.");
+        return Promise.reject(new Error("ID do agendamento não fornecido."));
+    }
+    return httpRequests.patchMethod(`${URLS.ARENAAGENDAMENTOS}/${agendamentoId}/status`, { status });
+}

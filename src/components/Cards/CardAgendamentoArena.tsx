@@ -24,6 +24,23 @@ interface CardAgendamentoArenaProps {
     onStatusChange: (agendamentoId: number, newStatus: 'PAGO' | 'AUSENTE' | 'CANCELADO') => Promise<void>;
 }
 
+const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number => {
+    try {
+        const [horaInicio, minutoInicio] = horarioInicio.split(':').map(Number);
+        const [horaFim, minutoFim] = horarioFim.split(':').map(Number);
+
+        const totalMinutosInicio = horaInicio * 60 + minutoInicio;
+        const totalMinutosFim = horaFim * 60 + minutoFim;
+
+        const diferencaEmMinutos = totalMinutosFim - totalMinutosInicio;
+
+        return diferencaEmMinutos / 60;
+    } catch (error) {
+        console.error("Erro ao calcular duração:", error);
+        return 0;
+    }
+};
+
 export const CardAgendamentoArena = ({ agendamento, onStatusChange }: CardAgendamentoArenaProps) => {
 
     const statusConfig = useMemo(() => ({
@@ -33,6 +50,8 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange }: CardAgenda
         CANCELADO: { color: 'error', icon: <CloseCircleOutlined />, text: 'Cancelado' },
         FINALIZADO: { color: 'default', icon: <CheckCircleOutlined />, text: 'Finalizado' },
     }), []);
+
+    const duracaoHoras = calcularDuracaoHoras(agendamento.horarioInicio, agendamento.horarioFim);
 
     const currentStatus = statusConfig[agendamento.status] || statusConfig.PENDENTE;
 
@@ -93,7 +112,8 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange }: CardAgenda
                     </Text>
                     <Text>
                         <ClockCircleOutlined className="mr-2" />
-                        {agendamento.horarioInicio} às {agendamento.horarioFim}
+                        {`${agendamento.horarioInicio} às ${agendamento.horarioFim} (${duracaoHoras}h)`}
+
                     </Text>
                     <Text strong className={`${agendamento.status === "CANCELADO" || agendamento.status === "AUSENTE" ?
                         "line-through !text-red-500" :

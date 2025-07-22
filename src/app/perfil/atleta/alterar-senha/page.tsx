@@ -189,7 +189,13 @@ export default function AlterarSenha() {
                         rules={[{ required: true, message: 'Por favor, insira sua senha atual!' }]}
                         className='sem-asterisco'
                     >
-                        <Input.Password placeholder="Digite sua senha atual" />
+                        <Input.Password
+                            placeholder="Digite sua senha atual"
+                            onCopy={(e) => {
+                                e.preventDefault();
+                                message.warning("Copiar senha não é permitido!");
+                            }}
+                        />
                     </Form.Item>
 
                     <Row gutter={24}>
@@ -218,6 +224,10 @@ export default function AlterarSenha() {
                                             setPassword(newPassword);
                                             form.setFieldsValue({ senha: newPassword });
                                         }}
+                                        onCopy={(e) => {
+                                            e.preventDefault();
+                                            message.warning("Copiar senha não é permitido!");
+                                        }}
                                     />
                                 </Popover>
                             </Form.Item>
@@ -241,7 +251,13 @@ export default function AlterarSenha() {
                                 className='sem-asterisco'
                                 hasFeedback
                             >
-                                <Input.Password placeholder="Confirme a nova senha" />
+                                <Input.Password
+                                    placeholder="Confirme a nova senha"
+                                    onCopy={(e) => {
+                                        e.preventDefault();
+                                        message.warning("Copiar senha não é permitido!");
+                                    }}
+                                />
                             </Form.Item>
                         </Col>
                     </Row>

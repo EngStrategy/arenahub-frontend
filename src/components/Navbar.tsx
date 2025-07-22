@@ -5,7 +5,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Button, Drawer, Dropdown, Menu, Avatar, Layout, Flex, Space, Typography, Segmented } from "antd";
+import { Button, Drawer, Dropdown, Menu, Avatar, Layout, Flex, Space, Typography, Segmented, Tag } from "antd";
 import type { MenuProps } from 'antd';
 import {
   UserOutlined,
@@ -15,7 +15,8 @@ import {
   LogoutOutlined,
   MenuOutlined,
   CloseOutlined,
-  BarChartOutlined
+  BarChartOutlined,
+  SyncOutlined
 } from "@ant-design/icons";
 import { FaAngleDown } from "react-icons/fa6";
 import alugailogoverde from "../../public/images/alugailogoverde.png";
@@ -34,6 +35,7 @@ interface AppMenuItem {
   icon?: React.ReactNode;
   onClick?: () => void;
   className?: string;
+  disabled?: boolean;
 }
 
 const segmentedIconStyle = { fontSize: 20 };
@@ -81,7 +83,7 @@ const Navbar = () => {
       icon: <UserOutlined />,
       label: "Meus dados",
       onClick: () => navigateTo("/perfil/atleta/informacoes"),
-      className: "!my-1"
+      className: "!my-1",
     },
     {
       key: "alterar-senha",
@@ -112,7 +114,8 @@ const Navbar = () => {
       icon: <BarChartOutlined />,
       label: "Relatório",
       onClick: () => navigateTo("/perfil/arena/relatorios"),
-      className: "!my-1"
+      className: "!my-1",
+      disabled: true
     },
     {
       key: "alterar-senha-arena",
@@ -142,7 +145,7 @@ const Navbar = () => {
       key: "/ajuda",
       icon: <QuestionCircleOutlined />,
       label: "Ajuda e suporte",
-      onClick: () => navigateTo("/ajuda"),
+      onClick: () => navigateTo("/ajuda-suporte"),
       className: "!my-1"
     },
   ];

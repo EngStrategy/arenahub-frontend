@@ -11,7 +11,8 @@ import {
     getAllAgendamentosArena,
     type AgendamentoArena,
     type AgendamentoArenaQueryParams,
-    type StatusAgendamentoArena
+    type StatusAgendamentoArena,
+    updateStatusAgendamentoArena
 } from '@/app/api/entities/agendamento';
 import {
     getAllQuadras,
@@ -20,58 +21,51 @@ import {
 
 const { Content } = Layout;
 const { RangePicker } = DatePicker;
-const { Title, Text } = Typography;
-
-
-async function atualizarStatusAgendamento(agendamentoId: number, newStatus: string): Promise<void> {
-    console.log(`Atualizando agendamento ${agendamentoId} para o status ${newStatus}`);
-    // await updateAgendamentoStatus(agendamentoId, newStatus);
-    await new Promise(resolve => setTimeout(resolve, 500));
-}
+const { Text } = Typography;
 
 const CardSkeleton = () => (
-    <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-md border border-gray-200 dark:border-neutral-700 p-4">
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
         <div className="flex justify-between items-start mb-3">
             <div className="flex items-center space-x-3">
-                <div className="h-12 w-12 bg-gray-300 dark:bg-neutral-600 rounded-full"></div>
+                <div className="h-12 w-12 bg-gray-300 rounded-full"></div>
                 <div className="space-y-2">
-                    <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-32"></div>
-                    <div className="h-4 bg-gray-300 dark:bg-neutral-600 rounded w-24"></div>
+                    <div className="h-5 bg-gray-300 rounded w-32"></div>
+                    <div className="h-4 bg-gray-300 rounded w-24"></div>
                 </div>
             </div>
-            <div className="h-6 w-6 bg-gray-300 dark:bg-neutral-600 rounded-full"></div>
+            <div className="h-6 w-6 bg-gray-300 rounded-full"></div>
         </div>
         <div className="space-y-2 mb-4">
-            <div className="h-4 bg-gray-300 dark:bg-neutral-600 rounded w-40"></div>
-            <div className="h-4 bg-gray-300 dark:bg-neutral-600 rounded w-36"></div>
-            <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-28"></div>
+            <div className="h-4 bg-gray-300 rounded w-40"></div>
+            <div className="h-4 bg-gray-300 rounded w-36"></div>
+            <div className="h-5 bg-gray-300 rounded w-28"></div>
         </div>
-        <div className="pt-3 border-t border-gray-200 dark:border-neutral-700">
-            <div className="h-8 w-24 bg-gray-300 dark:bg-neutral-600 rounded-md"></div>
+        <div className="pt-3 border-t border-gray-200">
+            <div className="h-8 w-24 bg-gray-300 rounded-md"></div>
         </div>
     </div>
 );
 
 const AgendamentosArenaSkeleton = () => (
     <div className="animate-pulse">
-        <div className="h-8 bg-gray-300 dark:bg-neutral-700 rounded-md w-1/3 max-w-xs mx-auto mb-8"></div>
+        <div className="h-8 bg-gray-300 rounded-md w-1/3 max-w-xs mx-auto mb-8"></div>
 
         <div className="mb-6">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                 <div className="md:col-span-12 lg:col-span-5">
-                    <div className="h-5 bg-gray-300 dark:bg-neutral-700 rounded w-16 mb-2"></div>
-                    <div className="h-9 bg-gray-300 dark:bg-neutral-700 rounded-md w-full"></div>
+                    <div className="h-5 bg-gray-300 rounded w-16 mb-2"></div>
+                    <div className="h-9 bg-gray-300 rounded-md w-full"></div>
                 </div>
                 <div className="md:col-span-6 lg:col-span-3">
-                    <div className="h-5 bg-gray-300 dark:bg-neutral-700 rounded w-8 mb-2"></div>
-                    <div className="h-9 bg-gray-300 dark:bg-neutral-700 rounded-md w-full"></div>
+                    <div className="h-5 bg-gray-300 rounded w-8 mb-2"></div>
+                    <div className="h-9 bg-gray-300 rounded-md w-full"></div>
                 </div>
                 <div className="md:col-span-5 lg:col-span-3">
-                    <div className="h-5 bg-gray-300 dark:bg-neutral-700 rounded w-12 mb-2"></div>
-                    <div className="h-9 bg-gray-300 dark:bg-neutral-700 rounded-md w-full"></div>
+                    <div className="h-5 bg-gray-300 rounded w-12 mb-2"></div>
+                    <div className="h-9 bg-gray-300 rounded-md w-full"></div>
                 </div>
                 <div className="md:col-span-1 lg:col-span-1 flex justify-start md:justify-center">
-                    <div className="h-9 w-9 bg-gray-300 dark:bg-neutral-700 rounded-md"></div>
+                    <div className="h-9 w-9 bg-gray-300 rounded-md"></div>
                 </div>
             </div>
         </div>
@@ -84,11 +78,11 @@ const AgendamentosArenaSkeleton = () => (
     </div>
 );
 
-type ArenaView = 'pendentes' | 'finalizados';
+type ArenaView = 'pendentes' | 'historico';
 
 const statusForView: Record<ArenaView, StatusAgendamentoArena> = {
     pendentes: 'PENDENTE',
-    finalizados: 'FINALIZADO',
+    historico: 'FINALIZADO',
 };
 
 export default function MeusAgendamentosArena() {
@@ -179,17 +173,22 @@ export default function MeusAgendamentosArena() {
 
     const handleViewChange = (newView: ArenaView) => {
         setView(newView);
-        setPagination(prev => ({ ...prev, currentPage: 1 }));
+        handleLimparFiltros();
     };
 
     const handleStatusChange = async (agendamentoId: number, newStatus: 'PAGO' | 'AUSENTE' | 'CANCELADO') => {
         try {
-            await atualizarStatusAgendamento(agendamentoId, newStatus);
-            setAgendamentos(prev =>
-                prev.map(ag =>
-                    ag.id === agendamentoId ? { ...ag, status: newStatus as StatusAgendamentoArena } : ag
-                )
+            await updateStatusAgendamentoArena(agendamentoId, newStatus);
+
+            setAgendamentos(prevAgendamentos =>
+                prevAgendamentos.filter(ag => ag.id !== agendamentoId)
             );
+
+            setPagination(prev => ({
+                ...prev,
+                totalElements: prev.totalElements > 0 ? prev.totalElements - 1 : 0
+            }));
+
             message.success(`Status do agendamento alterado com sucesso!`);
         } catch (error) {
             console.error("Falha ao atualizar status:", error);
@@ -253,7 +252,7 @@ export default function MeusAgendamentosArena() {
                             <Segmented<ArenaView>
                                 options={[
                                     { label: 'Pendentes', value: 'pendentes' },
-                                    { label: 'Finalizados', value: 'finalizados' }
+                                    { label: 'Histórico', value: 'historico' }
                                 ]}
                                 value={view}
                                 onChange={handleViewChange}
@@ -265,7 +264,7 @@ export default function MeusAgendamentosArena() {
                     <div className="mt-2">
                         <Row gutter={[16, 16]} align="bottom">
                             <Col xs={24} lg={11}>
-                                <Text strong className="dark:!text-gray-300">Período</Text>
+                                <Text strong>Período</Text>
                                 <RangePicker
                                     value={filters.dateRange}
                                     onChange={(dates) => handleFilterChange('dateRange', dates)}
@@ -275,7 +274,7 @@ export default function MeusAgendamentosArena() {
                                 />
                             </Col>
                             <Col xs={24} lg={11}>
-                                <Text strong className="dark:!text-gray-300">Quadra</Text>
+                                <Text strong>Quadra</Text>
                                 <Select
                                     placeholder="Selecione a quadra"
                                     value={filters.quadraId}

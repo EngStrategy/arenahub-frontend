@@ -173,7 +173,13 @@ export default function Dashboard() {
               <Flex vertical gap="small">
                 {quickAccessLinks.map((link) => (
                   <Link key={link.label} href={link.path}>
-                    <Button icon={link.icon} size="large" block style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 'auto', padding: '10px 15px' }}>
+                    <Button
+                      icon={link.icon}
+                      size="large"
+                      block
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 'auto', padding: '10px 15px' }}
+                      disabled={link.inProgress}
+                    >
                       {link.label}
                       {link.inProgress && <Tag color="blue" style={{ marginLeft: 'auto' }}>Em progresso</Tag>}
                     </Button>

@@ -384,7 +384,7 @@ export default function InformacoesPessoaisArena() {
                                     </Dropdown>
                                     <Flex vertical>
                                         <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
-                                            Tamanho máximo: 5MB
+                                            Recomendamos uma imagem quadrada para melhor visualização.
                                         </Typography.Text>
                                         <ImgCrop rotationSlider>
                                             <Upload
