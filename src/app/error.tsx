@@ -4,15 +4,15 @@ import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary'
 import React from 'react'
 import localFont from 'next/font/local'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
 import { useTheme } from '@/context/ThemeProvider'
+import { useAuth } from '@/context/hooks/use-auth'
 
 const minhaFonteCustomizada = localFont({
   src: '../../public/fonts/jsMath-cmr10.ttf',
 })
 
 export default function ErrorPage() {
-  const { data: session } = useSession()
+  const { isUserArena } = useAuth()
   const { isDarkMode } = useTheme();
 
   return (
@@ -27,7 +27,7 @@ export default function ErrorPage() {
         <div>
           <Link
             href={
-              session?.user?.role === 'ARENA' ? '/dashboard' : '/'
+              isUserArena ? '/dashboard' : '/'
             }
             className='text-blue-500 hover:underline'
           >

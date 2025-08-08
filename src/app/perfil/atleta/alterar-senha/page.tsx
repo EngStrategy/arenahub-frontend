@@ -5,11 +5,11 @@ import { Form, Input, App, Flex, Card, Typography, Row, Col, Space, Popover, Pro
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { useRouter } from 'next/navigation';
-import { useSession, signOut } from "next-auth/react";
 import { updatePassword } from '@/app/api/entities/atleta';
-import { useCapsLock } from '@/context/hooks/useCapsLook';
+import { useCapsLock } from '@/context/hooks/use-caps-look';
 import CapsLock from '@/components/Alerts/CapsLock';
 import { useTheme } from '@/context/ThemeProvider';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const PasswordStrengthIndicator = ({ password = '' }: { password?: string }) => {
     const evaluatePassword = () => {
@@ -88,7 +88,7 @@ const AlterarSenhaSkeleton = () => (
 );
 
 export default function AlterarSenha() {
-    const { data: session, status } = useSession();
+    const { user, signOut, isAuthenticated, isLoadingSession } = useAuth();
     const { message } = App.useApp();
     const [form] = Form.useForm();
     const router = useRouter();
@@ -102,9 +102,9 @@ export default function AlterarSenha() {
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
     const onFinish = async (values: any) => {
-        if (status !== 'authenticated' || !session?.user?.userId || !session?.user?.accessToken) {
+        if (!isAuthenticated || !user?.userId || !user?.accessToken) {
             message.error('Você não está autenticado.');
-            signOut({ callbackUrl: '/login' });
+            signOut({ redirect: '/login' });
             return;
         }
         setIsSubmitting(true);
@@ -120,7 +120,7 @@ export default function AlterarSenha() {
             form.resetFields();
 
             await new Promise(resolve => setTimeout(() => {
-                signOut({ callbackUrl: '/login' });
+                signOut({ redirect: '/login' });
                 resolve(null);
             }, 2000));
         } catch (error: any) {
@@ -148,7 +148,7 @@ export default function AlterarSenha() {
         }
     };
 
-    if (status === 'loading') {
+    if (isLoadingSession) {
         return <AlterarSenhaSkeleton />;
     }
 
@@ -181,7 +181,7 @@ export default function AlterarSenha() {
                     onFinishFailed={onFinishFailed}
                     onValuesChange={handleValuesChange}
                     autoComplete="off"
-                    disabled={isSubmitting || status !== 'authenticated'}
+                    disabled={isSubmitting || !isAuthenticated}
                 >
                     <Form.Item
                         label="Senha atual"
@@ -280,7 +280,7 @@ export default function AlterarSenha() {
                                 type="primary"
                                 htmlType="submit"
                                 loading={isSubmitting}
-                                disabled={isSubmitting || status !== 'authenticated' || !isFormAltered}
+                                disabled={isSubmitting || !isAuthenticated || !isFormAltered}
                             />
                         </Space>
                     </Flex>

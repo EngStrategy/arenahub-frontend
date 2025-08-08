@@ -3,13 +3,13 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Pagination, Layout, Row, Col, Flex, Empty, App, Segmented, Typography, Select, DatePicker, Button, Tooltip } from 'antd';
 import { CardAgendamento, type AgendamentoCardData } from '@/components/Cards/AgendamentoCard';
-import { useSession } from 'next-auth/react';
 import { getAllAgendamentosNormalAtleta, cancelarAgendamentoNormal, type AgendamentoNormal, type StatusAgendamento } from '@/app/api/entities/agendamento';
 import { useTheme } from '@/context/ThemeProvider';
 import { JogoAbertoCard } from '@/components/Cards/JogoAbertoCard';
 import { listarJogosAbertosSolicitadosMe, type JogoAbertoMeSolicitado } from '@/app/api/entities/jogosAbertos';
 import { Dayjs } from 'dayjs';
 import { ClearOutlined } from '@ant-design/icons';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const { Content } = Layout;
 const { RangePicker } = DatePicker;
@@ -51,7 +51,7 @@ const statusForView: Record<AgendamentoView, StatusAgendamento | undefined> = {
 };
 
 export default function Agendamentos() {
-    const { status: sessionStatus } = useSession();
+    const { isAuthenticated, isLoadingSession } = useAuth();
     const { message } = App.useApp();
     const { isDarkMode } = useTheme();
 
@@ -126,7 +126,7 @@ export default function Agendamentos() {
     }, []);
 
     useEffect(() => {
-        if (sessionStatus === 'authenticated') {
+        if (isAuthenticated && !isLoadingSession) {
             const currentStatus = statusForView[view];
             if (view === 'participacoes') {
                 fetchSolicitacoes();
@@ -134,7 +134,7 @@ export default function Agendamentos() {
                 fetchAgendamentos(1, currentStatus, filters);
             }
         }
-    }, [view, filters, sessionStatus, fetchAgendamentos, fetchSolicitacoes]);
+    }, [view, filters, isAuthenticated, isLoadingSession, fetchAgendamentos, fetchSolicitacoes]);
 
 
     const handlePageChange = (page: number) => {
@@ -187,7 +187,7 @@ export default function Agendamentos() {
         }));
     }, [agendamentos]);
 
-    if (sessionStatus === 'loading') {
+    if (isLoadingSession) {
         return <MeusAgendamentosSkeleton />;
     }
 

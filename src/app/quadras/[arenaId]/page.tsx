@@ -20,10 +20,10 @@ import {
 } from '@/app/api/entities/quadra';
 import type { Arena as ArenaOficial } from '@/app/api/entities/arena';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
-import { useSession, signOut } from 'next-auth/react';
 import { getArenaById } from '@/app/api/entities/arena';
 import { ModalRedirecionamentoLogin } from '@/components/Modais/ModalRedirecionamentoLogin';
 import { useTheme } from '@/context/ThemeProvider';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const ArenaCardSkeleton = () => (
     <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 w-full max-w-sm animate-pulse">
@@ -123,7 +123,7 @@ const subDuration = (time: string, durationMinutes: number): string => {
 };
 
 export default function QuadraPage() {
-    const { data: session, status } = useSession();
+    const { isLoadingSession, signOut, isUserAtleta } = useAuth();
     const params = useParams();
     const arenaId = Number(params?.arenaId as string);
     const router = useRouter();
@@ -278,7 +278,7 @@ export default function QuadraPage() {
         }).reduce((acc, preco) => acc + preco, 0);
     };
 
-    if (loading || status === "loading") {
+    if (loading || isLoadingSession) {
         return <QuadraPageSkeleton />;
     }
 
@@ -458,7 +458,7 @@ export default function QuadraPage() {
                                 className={`!flex !flex-col !items-center !justify-center !p-2
                                     !duration-150 !w-auto !h-auto !gap-1 !rounded-md ${horarioClass}`}
                                 onClick={() => {
-                                    if (session?.user?.role !== 'ATLETA') {
+                                    if (!isUserAtleta) {
                                         handleLoginRedirect();
                                         return;
                                     }
@@ -564,8 +564,7 @@ export default function QuadraPage() {
                 open={isLoginModalVisible}
                 onClose={() => setIsLoginModalVisible(false)}
                 onConfirm={async () => {
-                    router.push('/login?callbackUrl=/quadras/' + arenaId)
-                    await signOut({ redirect: false });
+                    signOut({ redirect: '/login?callbackUrl=/quadras/' + arenaId });
                 }}
                 countdownSeconds={20}
             />

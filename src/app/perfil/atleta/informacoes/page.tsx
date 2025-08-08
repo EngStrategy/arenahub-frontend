@@ -5,7 +5,6 @@ import { Form, Input, Upload, Avatar, App, Button, Dropdown, Flex, Card, Typogra
 import { UserOutlined, UploadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
-import { useSession } from "next-auth/react";
 import type { GetProp, MenuProps, UploadFile, UploadProps } from 'antd';
 import ImgCrop from 'antd-img-crop';
 import {
@@ -16,6 +15,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { formatarTelefone } from '@/context/functions/formatarTelefone';
 import { useTheme } from '@/context/ThemeProvider';
+import { useAuth } from '@/context/hooks/use-auth';
 
 interface PersonalInfoFormValues {
     name: string;
@@ -92,7 +92,7 @@ const InformacoesPessoaisArenaSkeleton = () => (
 );
 
 export default function InformacoesPessoaisAtleta() {
-    const { data: session, status, update } = useSession();
+    const { user, updateSession, isAuthenticated, isLoadingSession } = useAuth();
     const { message } = App.useApp();
     const [form] = Form.useForm();
     const router = useRouter();
@@ -105,10 +105,10 @@ export default function InformacoesPessoaisAtleta() {
     const [isPageLoading, setIsPageLoading] = useState(true);
 
     const fetchAndSetUserData = useCallback(async () => {
-        if (status === 'authenticated' && session?.user?.userId && session?.user?.accessToken) {
+        if (isAuthenticated && user?.userId && user?.accessToken) {
             setIsSubmitting(true);
             try {
-                const userData = await getAtletaById(session.user.userId);
+                const userData = await getAtletaById(user.userId);
                 if (!userData) {
                     return message.warning('Dados do usuário não encontrados.');
                 }
@@ -123,16 +123,16 @@ export default function InformacoesPessoaisAtleta() {
                 setIsSubmitting(false);
             }
         }
-    }, [status, session, form, message]);
+    }, [isAuthenticated, user, form, message]);
 
     useEffect(() => {
-        if (status !== 'loading') {
+        if (!isLoadingSession) {
             setIsPageLoading(true);
             fetchAndSetUserData().finally(() => {
                 setIsPageLoading(false);
             });
         }
-    }, [status, fetchAndSetUserData]);
+    }, [isLoadingSession, fetchAndSetUserData]);
 
     const handlePreview = async (file: UploadFile) => {
         if (!file.url && !file.preview) {
@@ -141,7 +141,7 @@ export default function InformacoesPessoaisAtleta() {
     };
 
     const onFinish = async (values: PersonalInfoFormValues) => {
-        if (status !== 'authenticated' || !session?.user?.userId || !session?.user?.accessToken) {
+        if (!isAuthenticated || !user?.userId || !user?.accessToken) {
             message.error('Você não está autenticado.'); return;
         }
         setIsSubmitting(true);
@@ -158,8 +158,8 @@ export default function InformacoesPessoaisAtleta() {
                 telefone: values.phone,
                 urlFoto: urlParaSalvar ?? undefined,
             };
-            await updateAtleta(session.user.userId, updatedData,);
-            await update({
+            await updateAtleta(user.userId, updatedData);
+            await updateSession({
                 name: updatedData.nome,
                 picture: updatedData.urlFoto,
             });
@@ -222,7 +222,7 @@ export default function InformacoesPessoaisAtleta() {
                         maxCount={1}
                         multiple={false}
                         accept="image/jpeg,image/png"
-                        disabled={isSubmitting || status !== 'authenticated'}
+                        disabled={isSubmitting || !isAuthenticated}
                     >
                         <div className="flex items-center w-full">
                             <UploadOutlined className="mr-2" />
@@ -277,7 +277,7 @@ export default function InformacoesPessoaisAtleta() {
                     onFinishFailed={onFinishFailed}
                     autoComplete="off"
                     onValuesChange={() => setIsFormAltered(true)}
-                    disabled={isPageLoading || isSubmitting || status !== 'authenticated'}
+                    disabled={isPageLoading || isSubmitting || !isAuthenticated}
                 >
                     <Row gutter={[24, 24]} className="!gap-0">
                         <Col span={24}>
@@ -314,7 +314,7 @@ export default function InformacoesPessoaisAtleta() {
                                                 maxCount={1}
                                                 multiple={false}
                                                 accept="image/jpeg,image/png"
-                                                disabled={isSubmitting ?? status !== 'authenticated'}
+                                                disabled={isSubmitting || !isAuthenticated}
                                             >
                                                 {uploadButton}
                                             </Upload>
@@ -379,7 +379,7 @@ export default function InformacoesPessoaisAtleta() {
                             <ButtonCancelar
                                 text={!isFormAltered ? 'Voltar' : 'Cancelar'}
                                 onClick={() => {
-                                    if (!isFormAltered || isSubmitting || status !== 'authenticated') {
+                                    if (!isFormAltered || isSubmitting || !isAuthenticated) {
                                         router.back();
                                         return;
                                     }
@@ -393,7 +393,7 @@ export default function InformacoesPessoaisAtleta() {
                                 type="primary"
                                 htmlType="submit"
                                 loading={isSubmitting}
-                                disabled={!isFormAltered || isSubmitting || status !== 'authenticated'}
+                                disabled={!isFormAltered || isSubmitting || !isAuthenticated}
                             />
                         </Space>
                     </Flex>

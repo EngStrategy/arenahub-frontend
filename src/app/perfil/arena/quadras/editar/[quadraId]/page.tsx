@@ -13,7 +13,6 @@ import {
     EditOutlined,
     DeleteOutlined,
 } from '@ant-design/icons';
-import { useSession } from "next-auth/react";
 import ImgCrop from 'antd-img-crop';
 import { useRouter, useParams } from 'next/navigation';
 import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
@@ -25,6 +24,7 @@ import {
 } from '@/app/api/entities/quadra';
 import { formatarDiaSemanaCompleto } from '@/context/functions/mapeamentoDiaSemana';
 import { useTheme } from '@/context/ThemeProvider';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const { Title, Text } = Typography;
 
@@ -130,7 +130,7 @@ export default function EditarQuadra() {
 
     const [form] = Form.useForm();
     const { message } = App.useApp();
-    const { data: session, status } = useSession();
+    const { session, isLoadingSession, isAuthenticated } = useAuth();
     const router = useRouter();
 
     const [pageLoading, setPageLoading] = useState(true);
@@ -147,7 +147,7 @@ export default function EditarQuadra() {
     useEffect(() => {
         const fetchQuadraData = async () => {
             setPageLoading(true);
-            if (status === 'authenticated' && quadraId) {
+            if (isAuthenticated && quadraId) {
                 try {
                     const quadraData = await getQuadraById(quadraId);
                     if (quadraData) {
@@ -184,15 +184,15 @@ export default function EditarQuadra() {
                 } finally {
                     setPageLoading(false);
                 }
-            } else if (status === 'unauthenticated') {
+            } else if (!isAuthenticated) {
                 setPageLoading(false);
             }
         };
 
-        if (status !== 'loading') {
+        if (!isLoadingSession) {
             fetchQuadraData();
         }
-    }, [status, quadraId, session, form, message, router]);
+    }, [quadraId, session, form, message, router]);
 
 
     const handleSubmit = async (values: any) => {
@@ -309,7 +309,7 @@ export default function EditarQuadra() {
                         maxCount={1}
                         multiple={false}
                         accept="image/jpeg,image/png"
-                        disabled={isSubmitting || status !== 'authenticated'}
+                        disabled={isSubmitting || !isAuthenticated}
                     >
                         <div className="flex items-center w-full">
                             <UploadOutlined className="mr-2" />
@@ -331,7 +331,7 @@ export default function EditarQuadra() {
         });
     }
 
-    if (pageLoading || status === 'loading') {
+    if (pageLoading || isLoadingSession) {
         return <EditarQuadraSkeleton />;
     }
 
@@ -358,7 +358,7 @@ export default function EditarQuadra() {
                     layout="vertical"
                     onFinish={handleSubmit}
                     autoComplete='off'
-                    disabled={isSubmitting || status !== 'authenticated'}
+                    disabled={isSubmitting || !isAuthenticated}
                     onValuesChange={() => setIsFormAltered(true)}
                 >
                     <Row gutter={[24, 16]}>
@@ -391,7 +391,7 @@ export default function EditarQuadra() {
                                                 maxCount={1}
                                                 multiple={false}
                                                 accept="image/jpeg,image/png,image/jpg"
-                                                disabled={isSubmitting || status !== 'authenticated'}
+                                                disabled={isSubmitting || !isAuthenticated}
                                             >
                                                 {uploadButton}
                                             </Upload>
@@ -557,7 +557,7 @@ export default function EditarQuadra() {
                                 text='Salvar alterações'
                                 htmlType="submit"
                                 loading={isSubmitting}
-                                disabled={!isFormAltered || isSubmitting || status !== 'authenticated'}
+                                disabled={!isFormAltered || isSubmitting || !isAuthenticated}
                             />
                         </Space>
                     </Flex>

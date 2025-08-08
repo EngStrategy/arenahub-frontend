@@ -1,11 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Button, App, Popconfirm, Card, Flex, Avatar, Typography, Tag, Divider } from 'antd';
 import { CalendarOutlined, CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, LogoutOutlined, PictureOutlined, UserAddOutlined } from '@ant-design/icons';
-import { formatarData } from '@/context/functions/formatarData';
 import { JogosAbertos, solicitarEntrada, sairJogoAberto } from '@/app/api/entities/jogosAbertos';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const { Text, Title } = Typography;
 
@@ -47,7 +46,7 @@ export function JogoAbertoCard({ jogoAberto, onSaidaSucesso }: JogoAbertoCardPro
     const [loading, setLoading] = useState(false);
     const [sairLoading, setSairLoading] = useState(false);
     const router = useRouter();
-    const { data: session, status } = useSession();
+    const { isUserAtleta, isAuthenticated} = useAuth();
 
     const duracaoHoras = calcularDuracaoHoras(jogoAberto.horarioInicio, jogoAberto.horarioFim);
 
@@ -196,9 +195,9 @@ export function JogoAbertoCard({ jogoAberto, onSaidaSucesso }: JogoAbertoCardPro
                                 type="primary"
                                 ghost
                                 icon={<UserAddOutlined />}
-                                className={`${session?.user?.role !== "ATLETA" || status !== 'authenticated' || loading ? '' : 'hover:!bg-green-500 hover:!text-green-50 hover:!border-green-500'}`}
+                                className={`${!isUserAtleta || !isAuthenticated || loading ? '' : 'hover:!bg-green-500 hover:!text-green-50 hover:!border-green-500'}`}
                                 loading={loading}
-                                disabled={session?.user?.role !== "ATLETA" || status !== 'authenticated' || loading}
+                                disabled={!isUserAtleta || !isAuthenticated || loading}
                             >
                                 Entrar
                             </Button>

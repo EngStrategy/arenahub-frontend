@@ -7,8 +7,7 @@ import Link from "next/link";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { createAtleta } from '@/app/api/entities/atleta';
 import { formatarTelefone } from "@/context/functions/formatarTelefone";
-import { ExclamationCircleFilled } from "@ant-design/icons";
-import { useCapsLock } from "@/context/hooks/useCapsLook";
+import { useCapsLock } from "@/context/hooks/use-caps-look";
 import CapsLock from "./Alerts/CapsLock";
 import { ButtonCancelar } from "./Buttons/ButtonCancelar";
 

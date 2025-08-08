@@ -1,13 +1,13 @@
 "use client";
 
-import { signIn, getSession } from "next-auth/react";
+import { useAuth } from "@/context/hooks/use-auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { Checkbox, Form, Input, App, Flex, Typography, type AutoCompleteProps, AutoComplete } from 'antd';
 import Link from "next/link"
 import Image from "next/image";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
-import { useCapsLock } from "@/context/hooks/useCapsLook";
+import { useCapsLock } from "@/context/hooks/use-caps-look";
 import CapsLock from "@/components/Alerts/CapsLock";
 import { useTheme } from "@/context/ThemeProvider";
 
@@ -39,6 +39,7 @@ const LoginSkeleton = () => (
 );
 
 export default function Login() {
+    const { signIn, getSession } = useAuth();
     const { message } = App.useApp();
     const [pageLoading, setPageLoading] = useState(true);
     const [loading, setLoading] = useState(false);

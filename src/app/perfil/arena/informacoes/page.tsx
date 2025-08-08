@@ -12,7 +12,6 @@ import {
 import { PictureOutlined, UploadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
-import { useSession } from "next-auth/react";
 import ImgCrop from 'antd-img-crop';
 import {
     getArenaById,
@@ -25,6 +24,7 @@ import { formatarCEP } from '@/context/functions/formatarCEP';
 import axios from 'axios';
 import { Estados } from '@/data/Estados'
 import { useTheme } from '@/context/ThemeProvider';
+import { useAuth } from '@/context/hooks/use-auth';
 
 type CITYResponse = {
     id: number;
@@ -115,7 +115,7 @@ const InformacoesPessoaisArenaSkeleton = () => (
 );
 
 export default function InformacoesPessoaisArena() {
-    const { data: session, status, update } = useSession();
+    const { user, statusSession, updateSession, isAuthenticated, isLoadingSession } = useAuth();
     const { message } = App.useApp();
     const [form] = Form.useForm();
     const router = useRouter();
@@ -171,9 +171,9 @@ export default function InformacoesPessoaisArena() {
     };
 
     const fetchAndSetUserData = useCallback(async () => {
-        if (status === 'authenticated' && session?.user?.userId && session?.user?.accessToken) {
+        if (isAuthenticated && user?.userId && user?.accessToken) {
             try {
-                const userData = await getArenaById(session.user.userId);
+                const userData = await getArenaById(user.userId);
                 if (!userData) return message.warning('Dados do usuário não encontrados.');
                 form.setFieldsValue({
                     nome: userData.nome,
@@ -199,16 +199,16 @@ export default function InformacoesPessoaisArena() {
                 setIsSubmitting(false);
             }
         }
-    }, [status, session, form, message]);
+    }, [statusSession, user, form, message]);
 
     useEffect(() => {
-        if (status !== 'loading') {
+        if (!isLoadingSession) {
             setIsPageLoading(true);
             fetchAndSetUserData().finally(() => {
                 setIsPageLoading(false);
             });
         }
-    }, [status, fetchAndSetUserData]);
+    }, [statusSession, fetchAndSetUserData]);
 
     const handlePreview = async (file: UploadFile) => {
         if (!file.url && !file.preview) {
@@ -249,7 +249,7 @@ export default function InformacoesPessoaisArena() {
     };
 
     const onFinish = async (values: PersonalInfoFormValues) => {
-        if (status !== 'authenticated' || !session?.user?.userId || !session?.user?.accessToken) {
+        if (!isAuthenticated || !user?.userId || !user?.accessToken) {
             message.error('Você não está autenticado.'); return;
         }
         setIsSubmitting(true);
@@ -276,8 +276,8 @@ export default function InformacoesPessoaisArena() {
                 descricao: values.descricao ?? '',
                 urlFoto: urlParaSalvar ?? undefined,
             };
-            await updateArena(session.user.userId, updatedData,);
-            await update({
+            await updateArena(user.userId, updatedData);
+            await updateSession({
                 name: updatedData.nome,
                 picture: updatedData.urlFoto,
             });
@@ -308,7 +308,7 @@ export default function InformacoesPessoaisArena() {
                         maxCount={1}
                         multiple={false}
                         accept="image/jpeg,image/png"
-                        disabled={isSubmitting ?? status !== 'authenticated'}
+                        disabled={isSubmitting ?? !isAuthenticated}
                     >
                         <div className="flex items-center w-full">
                             <UploadOutlined className="mr-2" />
@@ -363,7 +363,7 @@ export default function InformacoesPessoaisArena() {
                     onFinishFailed={onFinishFailed}
                     autoComplete="off"
                     onValuesChange={() => setIsFormAltered(true)}
-                    disabled={isPageLoading || isSubmitting || status !== 'authenticated'}
+                    disabled={isPageLoading || isSubmitting || !isAuthenticated}
                 >
                     <Row gutter={[24, 24]} className="!gap-0">
                         <Col xs={24} md={12}>
@@ -395,7 +395,7 @@ export default function InformacoesPessoaisArena() {
                                                 maxCount={1}
                                                 multiple={false}
                                                 accept="image/jpeg,image/png"
-                                                disabled={isSubmitting ?? status !== 'authenticated'}
+                                                disabled={isSubmitting ?? !isAuthenticated}
                                             >
                                                 {uploadButton}
                                             </Upload>
@@ -560,7 +560,7 @@ export default function InformacoesPessoaisArena() {
                             <ButtonCancelar
                                 text={!isFormAltered ? 'Voltar' : 'Cancelar'}
                                 onClick={() => {
-                                    if (!isFormAltered || isSubmitting || status !== 'authenticated') {
+                                    if (!isFormAltered || isSubmitting || !isAuthenticated) {
                                         router.back();
                                         return;
                                     }
@@ -572,7 +572,7 @@ export default function InformacoesPessoaisArena() {
                                 type="primary"
                                 htmlType="submit"
                                 loading={isSubmitting}
-                                disabled={!isFormAltered || isSubmitting || status !== 'authenticated'}
+                                disabled={!isFormAltered || isSubmitting || !isAuthenticated}
                             />
                         </Space>
                     </Flex>

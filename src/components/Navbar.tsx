@@ -1,11 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Button, Drawer, Dropdown, Menu, Avatar, Layout, Flex, Space, Typography, Segmented, Tag } from "antd";
+import { Button, Drawer, Dropdown, Menu, Avatar, Layout, Flex, Space, Typography, Segmented } from "antd";
 import type { MenuProps } from 'antd';
 import {
   UserOutlined,
@@ -16,7 +15,6 @@ import {
   MenuOutlined,
   CloseOutlined,
   BarChartOutlined,
-  SyncOutlined
 } from "@ant-design/icons";
 import { FaAngleDown } from "react-icons/fa6";
 import alugailogoverde from "../../public/images/alugailogoverde.png";
@@ -25,6 +23,7 @@ import { useTheme } from "@/context/ThemeProvider";
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { TbLockPassword, TbSoccerField } from "react-icons/tb";
 import { BiWorld } from "react-icons/bi";
+import { useAuth } from "@/context/hooks/use-auth";
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -55,20 +54,18 @@ const SegmentedLabel = ({ icon, text }: SegmentedLabelProps) => (
 
 
 const Navbar = () => {
-  const { data: session, status } = useSession();
+  const { session, user, isLoadingSession, signOut, isUserArena, isUserAtleta } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDarkMode } = useTheme();
-
-  const isLoadingSession = status === "loading";
 
   const handleLogin = () => {
     router.push(`/login?callbackUrl=${pathname}`);
     if (mobileMenuOpen) setMobileMenuOpen(false);
   };
   const handleSignOut = () => {
-    signOut({ callbackUrl: '/' });
+    signOut({ redirect: "/" });
     if (mobileMenuOpen) setMobileMenuOpen(false);
   };
 
@@ -150,7 +147,7 @@ const Navbar = () => {
     },
   ];
 
-  let userMenuItems: AppMenuItem[] = session?.user?.role === "ATLETA" ? atletaMenuItems : arenaMenuItems;
+  let userMenuItems: AppMenuItem[] = isUserAtleta ? atletaMenuItems : arenaMenuItems;
 
   const desktopUserDropdownItems: MenuProps['items'] = [
     ...userMenuItems,
@@ -167,7 +164,7 @@ const Navbar = () => {
     },
   ];
 
-  const desktopCenterMenuItems: MenuProps['items'] = session?.user?.role === 'ATLETA'
+  const desktopCenterMenuItems: MenuProps['items'] = isUserAtleta
     ? [
       {
         key: "/perfil/atleta/agendamentos",
@@ -201,9 +198,9 @@ const Navbar = () => {
         {session ? (
           <>
             <Flex vertical align="center" style={{ padding: '1.5rem 1rem' }}>
-              <Avatar size={64} src={session.user?.imageUrl} icon={<UserOutlined />} />
+              <Avatar size={64} src={user?.imageUrl} icon={<UserOutlined />} />
               <Text strong style={{ marginTop: '0.75rem', fontSize: '1.1rem' }}>
-                {session.user.name?.split(' ').slice(0, 3).join(' ')}
+                {user?.name?.split(' ').slice(0, 3).join(' ')}
               </Text>
             </Flex>
             <Menu
@@ -255,12 +252,12 @@ const Navbar = () => {
 
     const options = [
       {
-        value: session.user.role === 'ATLETA' ? "/perfil/atleta/agendamentos" : "/perfil/arena/agendamentos",
+        value: isUserAtleta ? "/perfil/atleta/agendamentos" : "/perfil/arena/agendamentos",
         label: <SegmentedLabel icon={<FaRegCalendarAlt style={segmentedIconStyle} />} text="Agendamentos" />,
       },
     ];
 
-    if (session.user.role === 'ATLETA') {
+    if (isUserAtleta) {
       options.push({
         value: '/jogos-abertos',
         label: <SegmentedLabel icon={<BiWorld style={segmentedIconStyle} />} text="Jogos Abertos" />,
@@ -272,7 +269,7 @@ const Navbar = () => {
 
   if (isLoadingSession) {
     return (
-      <div className="!p-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff' }}>
+      <div className="p-2 flex justify-between items-center bg-white">
         <div className="h-8 w-24 bg-gray-200 rounded animate-pulse"></div>
         <div className="flex items-center space-x-4">
           <div className="hidden md:block h-5 w-20 bg-gray-200 rounded animate-pulse"></div>
@@ -284,7 +281,7 @@ const Navbar = () => {
     );
   }
 
-  const homeHref = session?.user?.role === "ARENA" ? "/dashboard" : "/";
+  const homeHref = isUserArena ? "/dashboard" : "/";
 
   return (
     <>
@@ -349,8 +346,8 @@ const Navbar = () => {
                 overlayClassName="!mt-2 !w-50 !shadow-none !rounded-md"
               >
                 <Space style={{ cursor: 'pointer' }}>
-                  <Avatar size={32} src={session.user.imageUrl} icon={<UserOutlined />} />
-                  <Text>{session.user.name?.split(' ').slice(0, 2).join(' ')}</Text>
+                  <Avatar size={32} src={user?.imageUrl} icon={<UserOutlined />} />
+                  <Text>{user?.name?.split(' ').slice(0, 2).join(' ')}</Text>
                   <FaAngleDown style={{ color: '#888' }} />
                 </Space>
               </Dropdown>
@@ -389,7 +386,7 @@ const Navbar = () => {
         <Segmented
           options={mobileNavOptions}
           value={pathname}
-          onChange={(value) => navigateTo(value as string)}
+          onChange={(value) => navigateTo(value)}
           block
           size="large"
         />

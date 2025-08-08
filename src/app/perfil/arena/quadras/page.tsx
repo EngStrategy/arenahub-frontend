@@ -2,14 +2,14 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Select, Typography, Row, Col, Modal, message, Flex, Empty, Layout } from 'antd';
-import { PlusOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import CourtCard from '@/components/Cards/CourtCard';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import { getQuadraByIdArena, Quadra, TipoQuadra, deleteQuadra } from '@/app/api/entities/quadra';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { useTheme } from '@/context/ThemeProvider';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const { Title } = Typography;
 const { confirm } = Modal;
@@ -51,7 +51,7 @@ const MinhasQuadrasPageSkeleton = () => (
 );
 
 const MinhasQuadrasPage: React.FC = () => {
-  const { data: session, status } = useSession();
+  const { user, isLoadingSession } = useAuth();
   const { isDarkMode } = useTheme();
 
   const [courts, setCourts] = useState<Quadra[]>([]);
@@ -60,10 +60,10 @@ const MinhasQuadrasPage: React.FC = () => {
 
   useEffect(() => {
     const fetchCourts = async () => {
-      if (session?.user?.userId) {
+      if (user?.userId) {
         setLoading(true);
         try {
-          const arenaData = await getQuadraByIdArena(session.user.userId);
+          const arenaData = await getQuadraByIdArena(user.userId);
           setCourts(Array.isArray(arenaData) ? arenaData : arenaData ? [arenaData] : []);
         } catch (error) {
           console.error('Erro ao buscar quadras:', error);
@@ -71,13 +71,13 @@ const MinhasQuadrasPage: React.FC = () => {
         } finally {
           setLoading(false);
         }
-      } else if (status !== 'loading') {
+      } else if (!isLoadingSession) {
         setLoading(false);
       }
     };
 
     fetchCourts();
-  }, [session, status]);
+  }, [user, isLoadingSession]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -105,7 +105,7 @@ const MinhasQuadrasPage: React.FC = () => {
     }));
   }, [courts]);
 
-  if (loading || status === 'loading') {
+  if (loading || isLoadingSession) {
     return <MinhasQuadrasPageSkeleton />;
   }
 

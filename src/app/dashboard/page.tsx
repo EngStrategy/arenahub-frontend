@@ -1,8 +1,7 @@
 "use client";
 
-import React from 'react';
-import { useSession } from 'next-auth/react';
-import { Button, Avatar, Card, Col, Row, Flex, Typography, Layout, Tag } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, Avatar, Card, Col, Row, Flex, Typography, Layout, Tag, Alert } from 'antd';
 import {
   PlusOutlined,
   DollarCircleOutlined,
@@ -16,6 +15,8 @@ import Link from 'next/link';
 import { GiSoccerField } from 'react-icons/gi';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { useTheme } from '@/context/ThemeProvider';
+import { getDashboardData, DashboardData } from '../api/entities/arena';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const { Title, Text } = Typography;
 
@@ -88,28 +89,96 @@ const DashboardSkeleton = () => (
 
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
+  const { user, isLoadingSession, isAuthenticated } = useAuth();
   const { isDarkMode } = useTheme();
 
-  const kpiData = [
-    { icon: <DollarCircleOutlined className="!text-green-600 text-2xl" />, title: "Receita do Mês", value: "R$ 7.850,00", change: "+12% vs. mês passado", changeType: 'increase' as const },
-    { icon: <ScheduleOutlined className="!text-blue-600 text-2xl" />, title: "Agendamentos Hoje", value: "12", change: "2 horários livres", changeType: 'decrease' as const },
-    { icon: <UserOutlined className="!text-purple-600 text-2xl" />, title: "Novos Clientes", value: "23", change: "+5 nesta semana", changeType: 'increase' as const },
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchDashboardData = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          const data = await getDashboardData();
+          setDashboardData(data);
+        } catch (err) {
+          console.error("Erro ao buscar dados do dashboard:", err);
+          setError("Não foi possível carregar os dados do dashboard. Tente novamente mais tarde.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchDashboardData();
+    } else if (!isAuthenticated) {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  if (loading || isLoadingSession) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <Layout.Content style={{ padding: '2rem 8%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Alert message="Erro" description={error} type="error" showIcon />
+      </Layout.Content>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <Layout.Content style={{ padding: '2rem 8%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Nenhum dado disponível para o dashboard.</Text>
+      </Layout.Content>
+    )
+  }
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+  const kpiData: StatCardProps[] = [
+    {
+      icon: <DollarCircleOutlined className="!text-green-600 text-2xl" />,
+      title: "Receita do Mês (Pagos)",
+      value: formatCurrency(dashboardData.receitaDoMes),
+      change: `${dashboardData.percentualReceitaVsMesAnterior.toFixed(1).replace('.', ',')}% vs. mês passado`,
+      changeType: dashboardData.percentualReceitaVsMesAnterior >= 0 ? 'increase' : 'decrease'
+    },
+    {
+      icon: <BarChartOutlined className="!text-blue-600 text-2xl" />,
+      title: "Taxa de Ocupação Hoje",
+      value: `${dashboardData.taxaOcupacaoHoje.toFixed(0)}%`,
+      change: `${dashboardData.agendamentosHoje} agendamentos confirmados`,
+      changeType: 'increase'
+    },
+    {
+      icon: <UserOutlined className="!text-purple-600 text-2xl" />,
+      title: "Novos Clientes na Semana",
+      value: dashboardData.novosClientes.toString(),
+      change: `${dashboardData.diferencaNovosClientesVsSemanaAnterior >= 0 ? '+' : ''}${dashboardData.diferencaNovosClientesVsSemanaAnterior} vs. semana passada`,
+      changeType: dashboardData.diferencaNovosClientesVsSemanaAnterior >= 0 ? 'increase' : 'decrease'
+    },
   ];
-  const upcomingBookings = [
-    { time: "18:00 - 19:00", court: "Quadra 1", client: "Sávio Soares", avatar: "https://api.dicebear.com/7.x/miniavs/svg?seed=1", phoneNumber: "85992490695" },
-    { time: "21:00 - 22:00", court: "Quadra 2", client: "Cristiano Ronaldo", avatar: "https://api.dicebear.com/7.x/miniavs/svg?seed=3", phoneNumber: "89994706972" },
-  ];
+
+  const upcomingBookings = dashboardData.proximosAgendamentos.map(booking => ({
+    time: `${booking.horarioInicio.slice(0, 5)} - ${booking.horarioFim.slice(0, 5)}`,
+    court: booking.quadraNome,
+    client: booking.clienteNome,
+    avatar: booking.urlFoto || `https://api.dicebear.com/7.x/miniavs/svg?seed=${booking.agendamentoId}`,
+    phoneNumber: booking.clienteTelefone.replace(/\D/g, ''),
+  }));
+
   const quickAccessLinks = [
     { label: "Gerenciar Quadras", icon: <GiSoccerField />, path: "/perfil/arena/quadras" },
     { label: "Agendamentos", icon: <ScheduleOutlined />, path: "/perfil/arena/agendamentos" },
     { label: "Relatórios Financeiros", icon: <BarChartOutlined />, path: "#", inProgress: true },
     { label: "Gestão de Clientes", icon: <TeamOutlined />, path: "#", inProgress: true },
   ];
-
-  if (status === 'loading') {
-    return <DashboardSkeleton />;
-  }
 
   return (
     <Layout.Content style={{ padding: '2rem 8% 5rem 8%', backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)', }} >
@@ -118,7 +187,7 @@ export default function Dashboard() {
         <Flex justify="space-between" align="center">
           <Flex vertical>
             <Title level={2}>
-              Olá, {session?.user?.name ? session.user.name.split(' ').slice(0, 3).join(' ') : "Arena"}!
+              Olá, {user?.name ? user.name.split(' ').slice(0, 3).join(' ') : "Arena"}!
             </Title>
             <Text type="secondary">Aqui está um resumo do seu dia.</Text>
           </Flex>
@@ -157,6 +226,8 @@ export default function Dashboard() {
                           icon={<FaWhatsapp />}
                           href={`https://wa.me/55${booking.phoneNumber}?text=Olá, ${booking.client}! Lembrete do seu agendamento hoje, ${booking.time}.`}
                           style={{ paddingRight: 0 }}
+                          target="_blank"
+                          rel="noopener noreferrer"
                         >
                           Lembrar
                         </Button>
