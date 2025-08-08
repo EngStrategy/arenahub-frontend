@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { RegistroAtleta } from "@/components/RegistroAtleta";
@@ -8,6 +7,7 @@ import { RegistroArena } from "@/components/RegistroArena";
 import Image from "next/image";
 import { Flex, Typography } from "antd";
 import { useTheme } from "@/context/ThemeProvider";
+import { useAuth } from "@/context/hooks/use-auth";
 
 const RegisterPageSkeleton = () => (
   <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-center md:items-start justify-center animate-pulse">
@@ -50,7 +50,7 @@ const RegisterPageSkeleton = () => (
 );
 
 const RegisterPage = () => {
-  const { data: session, status } = useSession();
+  const { user, isAuthenticated, isLoadingSession, isUserAtleta } = useAuth();
   const [accountType, setAccountType] = useState<"atleta" | "arena">("atleta");
   const [isFading, setIsFading] = useState(false);
   const router = useRouter();
@@ -66,12 +66,12 @@ const RegisterPage = () => {
   };
 
   useEffect(() => {
-    if (status === "authenticated" && session?.user?.role === "ATLETA") {
+    if (isAuthenticated && isUserAtleta) {
       router.push("/");
     }
-  }, [status, router, session?.user?.role]);
+  }, [isAuthenticated, router, user?.role]);
 
-  if (status === 'loading') {
+  if (isLoadingSession) {
     return <RegisterPageSkeleton />;
   }
 

@@ -12,7 +12,6 @@ import {
 } from '@ant-design/icons';
 import ArenaCard from '@/components/Cards/ArenaCard';
 import { Arena, getArenaById } from '@/app/api/entities/arena';
-import { useSession } from "next-auth/react";
 import ImgCrop from 'antd-img-crop';
 import { useRouter } from 'next/navigation';
 import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
@@ -22,6 +21,7 @@ import ModalCriarHorarios from '@/components/Modais/ModalCriarHorarios';
 import { createQuadra, QuadraCreate, DiaDaSemana, StatusHorario } from '@/app/api/entities/quadra';
 import { formatarDiaSemanaCompleto } from '@/context/functions/mapeamentoDiaSemana';
 import { useTheme } from '@/context/ThemeProvider';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const { Title, Text } = Typography;
 
@@ -133,7 +133,7 @@ const CadastrarQuadraSkeleton = () => (
 export default function CadastrarQuadra() {
     const [form] = Form.useForm();
     const { message } = App.useApp();
-    const { data: session, status } = useSession();
+    const { user, isAuthenticated, isLoadingSession } = useAuth();
     const router = useRouter();
     const [arena, setArena] = useState<Arena>();
     const { isDarkMode } = useTheme();
@@ -153,8 +153,8 @@ export default function CadastrarQuadra() {
         const fetchArena = async () => {
             setPageLoading(true);
             try {
-                if (session?.user?.accessToken && session?.user?.userId) {
-                    const arenaData = await getArenaById(session.user.userId);
+                if (user?.accessToken && user?.userId) {
+                    const arenaData = await getArenaById(user.userId);
                     if (arenaData) {
                         setArena(arenaData);
                     }
@@ -167,10 +167,10 @@ export default function CadastrarQuadra() {
             }
         };
 
-        if (status !== 'loading') {
+        if (!isLoadingSession) {
             fetchArena();
         }
-    }, [session, status]);
+    }, [user, isLoadingSession]);
 
     const showModal = (day: any) => {
         setEditingDay(day);
@@ -236,7 +236,7 @@ export default function CadastrarQuadra() {
                         maxCount={1}
                         multiple={false}
                         accept="image/jpeg,image/png"
-                        disabled={loading || status !== 'authenticated'}
+                        disabled={loading || !isAuthenticated}
                     >
                         <div className="flex items-center w-full">
                             <UploadOutlined className="mr-2" />
@@ -259,7 +259,7 @@ export default function CadastrarQuadra() {
     }
 
     const handleSubmit = async (values: any) => {
-        if (!session) {
+        if (!user) {
             message.error("Sua sessão expirou. Por favor, faça login novamente.");
             return;
         }
@@ -308,7 +308,7 @@ export default function CadastrarQuadra() {
         }
     };
 
-    if (pageLoading || status === 'loading') {
+    if (pageLoading || isLoadingSession) {
         return <CadastrarQuadraSkeleton />;
     }
 
@@ -345,7 +345,7 @@ export default function CadastrarQuadra() {
                     layout="vertical"
                     onFinish={handleSubmit}
                     autoComplete='off'
-                    disabled={loading || status !== 'authenticated'}
+                    disabled={loading || !isAuthenticated}
                 >
                     <Row gutter={[24, 16]}>
                         <Col span={24}>
@@ -377,7 +377,7 @@ export default function CadastrarQuadra() {
                                                 maxCount={1}
                                                 multiple={false}
                                                 accept="image/jpeg,image/png,image/jpg"
-                                                disabled={loading || status !== 'authenticated'}
+                                                disabled={loading || !isAuthenticated}
                                             >
                                                 {uploadButton}
                                             </Upload>

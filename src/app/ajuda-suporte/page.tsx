@@ -7,9 +7,7 @@ import { useTheme } from '@/context/ThemeProvider';
 
 const { Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
-const { Panel } = Collapse;
 
-// Conteúdo das Perguntas Frequentes
 const faqGeral = [
     {
         key: 'g1',
@@ -63,7 +61,6 @@ const faqArenas = [
 export default function AjudaSuporte() {
     const { message } = App.useApp();
     const [form] = Form.useForm();
-        // Aqui você integraria com um serviço de email ou sistema de tickets
     const { isDarkMode } = useTheme();
 
     const onFinish = (values: any) => {

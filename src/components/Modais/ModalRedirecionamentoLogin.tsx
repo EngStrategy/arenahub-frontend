@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Typography, Space } from 'antd';
 import { ButtonCancelar } from '../Buttons/ButtonCancelar';
 import { ButtonPrimary } from '../Buttons/ButtonPrimary';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/context/hooks/use-auth';
 
 interface LoginPromptModalProps {
     open: boolean;
@@ -19,7 +19,7 @@ export const ModalRedirecionamentoLogin = ({
     onConfirm,
     countdownSeconds = 5,
 }: LoginPromptModalProps) => {
-    const { data: session, status } = useSession();
+    const { isUserArena, isAuthenticated } = useAuth();
     const [secondsLeft, setSecondsLeft] = useState(countdownSeconds);
 
     useEffect(() => {
@@ -29,7 +29,7 @@ export const ModalRedirecionamentoLogin = ({
     }, [open, countdownSeconds]);
 
     useEffect(() => {
-        if (status !== 'authenticated') {
+        if (!isAuthenticated) {
             if (open && secondsLeft > 0) {
                 const timerId = setInterval(() => {
                     setSecondsLeft(prev => prev - 1);
@@ -40,10 +40,10 @@ export const ModalRedirecionamentoLogin = ({
                 onConfirm();
             }
         }
-    }, [open, secondsLeft, onConfirm, status]);
+    }, [open, secondsLeft, onConfirm, isAuthenticated]);
 
     let redirectText = '';
-    if (status !== 'authenticated') {
+    if (!isAuthenticated) {
         redirectText = `Você será redirecionado automaticamente em ${secondsLeft} segundo${secondsLeft !== 1 ? 's' : ''}...`;
     }
 
@@ -53,15 +53,15 @@ export const ModalRedirecionamentoLogin = ({
             onCancel={onClose}
             title={<Typography.Title className='!text-center' level={4}>
                 {
-                    status !== 'authenticated' ? 'Login Necessário' :
+                    !isAuthenticated ? 'Login Necessário' :
                         (
-                            session?.user?.role === 'ARENA' && 'Acesso Negado'
+                            isUserArena && 'Acesso Negado'
                         )
                 }
             </Typography.Title>
             }
             footer={
-                status !== 'authenticated'
+                !isAuthenticated
                     ? [
                         <ButtonCancelar text='Cancelar' key="cancelar" onClick={onClose} />,
                         <ButtonPrimary text="Ir para o Login" key="login" type="primary" onClick={onConfirm} />,
@@ -73,15 +73,15 @@ export const ModalRedirecionamentoLogin = ({
             <Space direction="vertical" size="small" className='!mb-2'>
                 <Typography.Text>
                     {
-                        status !== 'authenticated' ? 'Você precisa estar conectado para realizar agendamentos.' :
+                        !isAuthenticated ? 'Você precisa estar conectado para realizar agendamentos.' :
                             (
-                                session?.user?.role === 'ARENA' && 'Para realizar um agendamento, você precisa estar conectado como ATLETA.'
+                                isUserArena && 'Para realizar um agendamento, você precisa estar conectado como ATLETA.'
                             )
                     }
                 </Typography.Text>
                 <Typography.Text type="secondary">
                     {redirectText}
-                    
+
                 </Typography.Text>
             </Space>
         </Modal>

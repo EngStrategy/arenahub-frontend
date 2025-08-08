@@ -10,7 +10,7 @@ import Image from "next/image";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { resetPassword } from "@/app/api/entities/verifyEmail";
 import { CheckOutlined } from "@ant-design/icons";
-import { useCapsLock } from "@/context/hooks/useCapsLook";
+import { useCapsLock } from "@/context/hooks/use-caps-look";
 import CapsLock from "@/components/Alerts/CapsLock";
 import { useTheme } from "@/context/ThemeProvider";
 

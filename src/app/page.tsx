@@ -5,10 +5,10 @@ import { Col, Flex, Pagination, Row } from 'antd';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
 import { sportIcons } from '@/data/sportIcons';
 import { type Arena, getAllArenas, type ArenaQueryParams } from '@/app/api/entities/arena';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import CitySports from '@/components/CitySports';
 import { useTheme } from '@/context/ThemeProvider';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const ArenaCardSkeleton = () => (
   <div className="bg-white rounded-lg overflow-hidden shadow-lg border border-gray-200 flex flex-col animate-pulse">
@@ -33,7 +33,7 @@ const sportNameToBackendEnum: { [key: string]: ArenaQueryParams['esporte'] } = {
 };
 
 export default function HomePage() {
-  const { status } = useSession();
+  const { isLoadingSession } = useAuth();
   const { isDarkMode } = useTheme();
 
 
@@ -47,8 +47,6 @@ export default function HomePage() {
   const [arenas, setArenas] = useState<Arena[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalArenas, setTotalArenas] = useState(0);
-
-  const isLoadingSession = status === "loading";
 
   useEffect(() => {
     const fetchArenas = async () => {
@@ -74,11 +72,11 @@ export default function HomePage() {
       }
     };
 
-    if (status !== 'loading') {
+    if (!isLoadingSession) {
       fetchArenas();
     }
 
-  }, [currentPage, selectedSport, committedSearchTerm, status]);
+  }, [currentPage, selectedSport, committedSearchTerm, isLoadingSession]);
 
   const handleSearchCommit = (term: string) => {
     setCommittedSearchTerm(term);

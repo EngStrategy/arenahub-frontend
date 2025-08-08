@@ -21,10 +21,10 @@ import { formatarCNPJ } from "@/context/functions/formatarCNPJ";
 import { formatarCPF } from "@/context/functions/formatarCPF";
 import { formatarCEP } from "@/context/functions/formatarCEP";
 import { createArena, ArenaCreate } from "@/app/api/entities/arena";
-import { ExclamationCircleFilled, PictureOutlined, UploadOutlined } from "@ant-design/icons";
+import { PictureOutlined, UploadOutlined } from "@ant-design/icons";
 import ImgCrop from "antd-img-crop";
 import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
-import { useCapsLock } from "@/context/hooks/useCapsLook";
+import { useCapsLock } from "@/context/hooks/use-caps-look";
 import CapsLock from "./Alerts/CapsLock";
 import { useTheme } from "@/context/ThemeProvider";
 
@@ -614,9 +614,9 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                         />
                     </div>
                     <Flex vertical className="gap-2">
-                        <Typography.Text type="secondary" className="!mb-0 !text-xs">
+                        <Text type="secondary" className="!mb-0 !text-xs">
                             Recomendamos uma imagem quadrada para melhor visualização
-                        </Typography.Text>
+                        </Text>
                         <ImgCrop rotationSlider>
                             <Upload
                                 showUploadList={false}
@@ -669,14 +669,14 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 />
             </Flex>
 
-            <Typography.Text>
+            <Text>
                 Já possui uma conta?{" "}
                 <Link
                     href="/login"
                     className="!underline !underline-offset-4 !text-green-500 hover:!text-green-500 ">
                     Entrar
                 </Link>
-            </Typography.Text>
+            </Text>
         </Form>
     );
 };

@@ -121,3 +121,26 @@ export type CidadeDTO = {
 export const getCidades = async (): Promise<CidadeDTO[]> => {
     return httpRequests.getMethod<CidadeDTO[]>(`${URLS.ARENAS}/cidades`);
 }
+
+export interface DashboardData {
+    nomeArena: string;
+    receitaDoMes: number;
+    percentualReceitaVsMesAnterior: number;
+    agendamentosHoje: number;
+    taxaOcupacaoHoje: number;
+    novosClientes: number;
+    diferencaNovosClientesVsSemanaAnterior: number;
+    proximosAgendamentos: {
+        agendamentoId: number;
+        clienteNome: string;
+        urlFoto: string;
+        quadraNome: string;
+        horarioInicio: string;
+        horarioFim: string;
+        clienteTelefone: string;
+    }[];
+}
+
+export const getDashboardData = async () => {
+    return httpRequests.getMethod<DashboardData>(`${URLS.ARENAS}/dashboard`);
+};

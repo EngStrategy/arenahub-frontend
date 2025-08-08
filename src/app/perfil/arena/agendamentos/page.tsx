@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Layout, Row, Col, Flex, Empty, App, Select, Tooltip, Button, DatePicker, Pagination, Typography, Segmented } from 'antd';
 import { Dayjs } from 'dayjs';
-import { useSession } from 'next-auth/react';
 import { CardAgendamentoArena, type AgendamentoArenaCardData } from '@/components/Cards/CardAgendamentoArena';
 import { useTheme } from '@/context/ThemeProvider';
 import { ClearOutlined } from '@ant-design/icons';
@@ -18,6 +17,7 @@ import {
     getAllQuadras,
     type Quadra
 } from '@/app/api/entities/quadra';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const { Content } = Layout;
 const { RangePicker } = DatePicker;
@@ -86,7 +86,7 @@ const statusForView: Record<ArenaView, StatusAgendamentoArena> = {
 };
 
 export default function MeusAgendamentosArena() {
-    const { data: session, status: sessionStatus } = useSession();
+    const { session, user, isAuthenticated, isLoadingSession } = useAuth();
     const { message } = App.useApp();
     const { isDarkMode } = useTheme();
 
@@ -104,7 +104,7 @@ export default function MeusAgendamentosArena() {
 
 
     const fetchQuadras = useCallback(async () => {
-        const arenaId = (session?.user as any)?.userId;
+        const arenaId = (user as any)?.userId;
         if (!arenaId) {
             console.warn("Arena ID not found in session.");
             return;
@@ -121,7 +121,7 @@ export default function MeusAgendamentosArena() {
     }, [session, message]);
 
     const fetchAgendamentos = useCallback(async (page: number, currentFilters: typeof filters, currentView: ArenaView) => {
-        if (sessionStatus !== 'authenticated') return;
+        if (!isAuthenticated) return;
         setLoading(true);
         try {
             const params: AgendamentoArenaQueryParams = {
@@ -144,19 +144,19 @@ export default function MeusAgendamentosArena() {
         } finally {
             setLoading(false);
         }
-    }, [sessionStatus, pagination.pageSize, message, statusForView]);
+    }, [session, isAuthenticated, pagination.pageSize, message]);
 
     useEffect(() => {
-        if (sessionStatus === 'authenticated') {
+        if (isAuthenticated) {
             fetchQuadras();
         }
-    }, [sessionStatus, fetchQuadras]);
+    }, [isAuthenticated, fetchQuadras]);
 
     useEffect(() => {
-        if (sessionStatus === 'authenticated') {
+        if (isAuthenticated) {
             fetchAgendamentos(pagination.currentPage, filters, view);
         }
-    }, [pagination.currentPage, filters, view, fetchAgendamentos, sessionStatus]);
+    }, [pagination.currentPage, filters, view, fetchAgendamentos, isAuthenticated]);
 
     const handleFilterChange = (key: keyof typeof filters, value: any) => {
         setPagination(prev => ({ ...prev, currentPage: 1 }));
@@ -239,7 +239,7 @@ export default function MeusAgendamentosArena() {
 
     return (
         <Content className={`!px-4 sm:!px-10 lg:!px-40 !pt-8 !pb-18 !flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
-            {loading ? (
+            {loading || isLoadingSession ? (
                 <AgendamentosArenaSkeleton />
             ) : (
                 <>

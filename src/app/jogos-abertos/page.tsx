@@ -4,12 +4,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Pagination, Layout, Typography, Row, Col, Flex, Empty, App } from 'antd';
 import { JogoAbertoCard } from '@/components/Cards/JogoAbertoCard';
 import CitySports from '@/components/CitySports';
-import { useSession } from 'next-auth/react';
 import { sportIcons } from '@/data/sportIcons';
 import { useTheme } from '@/context/ThemeProvider';
 import { getAllJogosAbertos, JogosAbertosQueryParams, type JogosAbertos as JogoAbertoAPI } from '@/app/api/entities/jogosAbertos';
 import { mapeamentoEsportes } from '@/context/functions/mapeamentoEsportes';
 import { TipoQuadra } from '../api/entities/quadra';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const { Title } = Typography;
 const { Content } = Layout;
@@ -49,7 +49,7 @@ const friendlyNameToBackendEnum = Object.entries(mapeamentoEsportes).reduce((acc
 }, {} as Record<string, TipoQuadra>);
 
 export default function JogosAbertos() {
-    const { status: sessionStatus } = useSession();
+    const { statusSession } = useAuth();
     const { isDarkMode } = useTheme();
     const { message } = App.useApp();
 
@@ -121,7 +121,7 @@ export default function JogosAbertos() {
 
     const allSports = Object.keys(sportIcons);
 
-    if (sessionStatus === 'loading') {
+    if (statusSession === 'loading') {
         return <JogoAbertoSkeleton />;
     }
 
