@@ -34,6 +34,8 @@ export type AgendamentoNormal = {
     fixo: boolean;
     publico: boolean;
     possuiSolicitacoes: boolean;
+    avaliacao: { idAvaliacao: number, nota: number; comentario?: string } | null;
+    avaliacaoDispensada: boolean;
 };
 
 export type AgendamentoCreate = {
@@ -95,6 +97,50 @@ export const cancelarAgendamentoFixo = async (agendamentoFixoId: number): Promis
         return Promise.reject(new Error("ID do agendamento fixo não fornecido."));
     }
     return httpRequests.deleteMethod(`${URLS.AGENDAMENTOS}/fixo/${agendamentoFixoId}`);
+}
+
+export const getAgendamentosAvaliacoesPendentes = async (): Promise<AgendamentoNormal[]> => {
+    return httpRequests.getMethod<AgendamentoNormal[]>(
+        `${URLS.AGENDAMENTOS}/avaliacoes-pendentes`
+    );
+}
+
+export interface AvaliacaoResponse {
+    id: number;
+    nota: number;
+    comentario?: string;
+    dataAvaliacao: string;
+    nomeAtleta: string;
+    urlFotoAtleta: string;
+}
+
+export interface AvaliacaoQueryParams {
+    page?: number;
+    size?: number;
+    sort?: string;
+    direction?: "asc" | "desc";
+}
+
+export const criarOuDispensarAvaliacao = async (
+    agendamentoId: number,
+    avaliacao?: { nota?: number; comentario?: string }
+): Promise<AvaliacaoResponse> => {
+    if (!agendamentoId) {
+        console.warn("ID do agendamento não fornecido.");
+        return Promise.reject(new Error("ID do agendamento não fornecido."));
+    }
+    return httpRequests.postMethod(`${URLS.AGENDAMENTOS}/${agendamentoId}/avaliacoes`, avaliacao);
+}
+
+export const atualizarAvaliacao = async (
+    avaliacaoId: number,
+    avaliacao: { nota?: number; comentario?: string }
+): Promise<AvaliacaoResponse> => {
+    if (!avaliacaoId) {
+        console.warn("ID da avaliação não fornecido.");
+        return Promise.reject(new Error("ID da avaliação não fornecido."));
+    }
+    return httpRequests.putMethod(`${URLS.AGENDAMENTOS}/avaliacoes/${avaliacaoId}`, avaliacao);
 }
 
 // ================================== Agendamentos Arena ==================================
@@ -165,4 +211,10 @@ export const updateStatusAgendamentoArena = async (
         return Promise.reject(new Error("ID do agendamento não fornecido."));
     }
     return httpRequests.patchMethod(`${URLS.ARENAAGENDAMENTOS}/${agendamentoId}/status`, { status });
+}
+
+export const getAgendamentosPendentesResolucao = async (): Promise<AgendamentoArena[]> => {
+    return httpRequests.getMethod<AgendamentoArena[]>(
+        `${URLS.ARENAAGENDAMENTOS}/pendentes-resolucao` 
+    );
 }

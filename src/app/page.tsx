@@ -104,11 +104,7 @@ export default function HomePage() {
             <Col key={arena.id} xs={24} sm={24} lg={12}>
               <Link href={`/quadras/${arena.id}`} passHref>
                 <ArenaCard
-                  arena={{
-                    ...arena,
-                    avaliacao: arena.avaliacao ?? 1.0,
-                    numeroAvaliacoes: arena.numeroAvaliacoes ?? 10,
-                  }}
+                  arena={arena}
                   showDescription={false}
                 />
               </Link>

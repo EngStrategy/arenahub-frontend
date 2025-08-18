@@ -20,8 +20,8 @@ export interface Arena {
     dataCriacao: string;
     role: string;
     esportes?: string[];
-    avaliacao?: number;
-    numeroAvaliacoes?: number;
+    notaMedia?: number;
+    quantidadeAvaliacoes?: number;
 }
 
 export interface ArenaCreate {

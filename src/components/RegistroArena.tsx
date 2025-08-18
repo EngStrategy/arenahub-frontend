@@ -432,7 +432,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                             if (!haveCnpj || !value) return Promise.resolve();
                             const cnpj = value.replace(/\D/g, "");
                             if (cnpj.length !== 14) {
-                                return Promise.reject("CNPJ deve ter 14 dígitos");
+                                return Promise.reject(new Error("CNPJ deve ter 14 dígitos"));
                             }
                             let tamanho = cnpj.length - 2;
                             let numeros = cnpj.substring(0, tamanho);
@@ -467,10 +467,15 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 <Input
                     placeholder="Insira seu CNPJ"
                     disabled={!haveCnpj}
-                    onChange={(e) => { form.setFieldsValue({ cnpj: formatarCNPJ(e.target.value) }) }}
-                    onBlur={(e) => {
-                        if (!haveCnpj) return;
-                        consultarCnpj(e.target.value);
+                    onChange={(e) => {
+                        const valorFormatado = formatarCNPJ(e.target.value);
+                        form.setFieldsValue({ cnpj: valorFormatado });
+
+                        const cnpjLimpo = valorFormatado.replace(/\D/g, "");
+
+                        if (haveCnpj && cnpjLimpo.length === 14) {
+                            consultarCnpj(cnpjLimpo);
+                        }
                     }}
                 />
             </Form.Item>
@@ -510,7 +515,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                             if (!value) return Promise.resolve();
                             const cep = value.replace(/\D/g, "");
                             if (cep.length !== 8) {
-                                return Promise.reject("CEP deve ter 8 dígitos");
+                                return Promise.reject(new Error("CEP deve ter 8 dígitos"));
                             }
                             return Promise.resolve();
                         },
@@ -521,11 +526,14 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 <Input
                     placeholder="Insira o CEP da sua arena"
                     onChange={(e) => {
-                        form.setFieldsValue({ cep: formatarCEP(e.target.value) });
-                    }}
-                    onBlur={e => {
-                        if (haveCnpj) return;
-                        consultarCep(e.target.value);
+                        const valorFormatado = formatarCEP(e.target.value);
+                        form.setFieldsValue({ cep: valorFormatado });
+
+                        const cepLimpo = valorFormatado.replace(/\D/g, "");
+
+                        if (!haveCnpj && cepLimpo.length === 8) {
+                            consultarCep(cepLimpo);
+                        }
                     }}
                 />
             </Form.Item>
