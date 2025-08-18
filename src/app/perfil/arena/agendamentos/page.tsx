@@ -100,7 +100,7 @@ export default function MeusAgendamentosArena() {
         quadraId: 'TODAS' as 'TODAS' | number,
     });
 
-    const [pagination, setPagination] = useState({ currentPage: 1, pageSize: 12, totalElements: 0 });
+    const [pagination, setPagination] = useState({ currentPage: 1, pageSize: 18, totalElements: 0 });
 
 
     const fetchQuadras = useCallback(async () => {
