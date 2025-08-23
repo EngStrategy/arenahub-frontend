@@ -15,7 +15,6 @@ import dayjs from 'dayjs';
 import { ButtonCancelar } from '../Buttons/ButtonCancelar';
 import { ButtonPrimary } from '../Buttons/ButtonPrimary';
 import { DiaDaSemana } from '@/app/api/entities/quadra';
-import ptBR from 'antd/es/date-picker/locale/pt_BR';
 
 const { Title } = Typography;
 
@@ -74,17 +73,27 @@ const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel,
                     status: 'DISPONIVEL' | 'INDISPONIVEL' | 'MANUTENCAO';
                 }
 
-                const horariosParaSalvar: HorarioParaSalvar[] = values.horarios
-                    ? (values.horarios as HorarioFormValues[]).map((h: HorarioFormValues) => ({
-                        ...h,
-                        inicio: h.inicio ? dayjs(h.inicio).format('HH:mm') : null,
-                        fim: h.fim ? dayjs(h.fim).format('HH:mm') : null,
-                    })).filter((h: HorarioParaSalvar) => h.inicio && h.fim)
+                const horariosParaSalvar = values.horarios
+                    ? (values.horarios as any[]).map(h => {
+                        const inicioFormatado = h.inicio ? dayjs(h.inicio).format('HH:mm') : null;
+                        let fimFormatado = h.fim ? dayjs(h.fim).format('HH:mm') : null;
+
+                        if (fimFormatado === '00:00') {
+                            fimFormatado = '23:59';
+                        }
+
+                        return {
+                            ...h,
+                            inicio: inicioFormatado,
+                            fim: fimFormatado,
+                        };
+                    }).filter((h: any) => h.inicio && h.fim)
                     : [];
+
                 onOk({ horarios: horariosParaSalvar });
             })
             .catch(info => {
-                console.log('Falha na validação:', info);
+                console.log('Falha na validação:', info.errorFields);
             });
     };
 
@@ -129,13 +138,19 @@ const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel,
                                                 ({ getFieldValue }) => ({
                                                     validator(_, value) {
                                                         const inicioValue = getFieldValue(['horarios', name, 'inicio']);
-
                                                         if (!value || !inicioValue) {
                                                             return Promise.resolve();
                                                         }
 
                                                         const fimTime = dayjs.isDayjs(value) ? value : dayjs(value, "HH:mm");
                                                         const inicioTime = dayjs.isDayjs(inicioValue) ? inicioValue : dayjs(inicioValue, "HH:mm");
+
+                                                        if (fimTime.hour() === 0 && fimTime.minute() === 0) {
+                                                            if (inicioTime.hour() === 0 && inicioTime.minute() === 0) {
+                                                                return Promise.reject(new Error('Início e Fim não podem ser 00:00!'));
+                                                            }
+                                                            return Promise.resolve();
+                                                        }
 
                                                         if (fimTime.isBefore(inicioTime) || fimTime.isSame(inicioTime)) {
                                                             return Promise.reject(new Error('O horário final deve ser maior que o inicial!'));
@@ -156,7 +171,7 @@ const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel,
                                             <Select placeholder="Selecione" style={{ width: '100%' }} options={[{ value: 'DISPONIVEL', label: 'Disponível' }, { value: 'INDISPONIVEL', label: 'Indisponível' }, { value: 'MANUTENCAO', label: 'Manutenção' }]} />
                                         </Form.Item>
                                     </div>
-                                    <Button type="text" danger icon={<CloseOutlined />} onClick={() => remove(name)} className='mt-1'/>
+                                    <Button type="text" danger icon={<CloseOutlined />} onClick={() => remove(name)} className='mt-1' />
                                 </div>
                             ))}
                             <Form.Item>

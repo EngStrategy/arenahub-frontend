@@ -102,11 +102,24 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
       } else {
         message.error("Erro ao criar conta. Tente novamente.", 5);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setLoading(false);
-      message.error(error.message ?? "Erro ao criar conta. Tente novamente.", 5);
+      console.error("Erro ao criar conta:", error);
+
+      const apiError = error as { code?: string; message?: string };
+
+      message.error(
+        apiError.message || "Erro ao criar conta. Tente novamente.",
+        5
+      );
+
+      if (apiError.code === "EXTERNAL_ACCOUNT_EXISTS") {
+        setTimeout(() => {
+          router.push('/ativacao-conta');
+        }, 2000);
+      }
     }
-  }
+  };
 
   return (
     <Form
@@ -120,7 +133,35 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
         <Form.Item
           label="Nome"
           name="nome"
-          rules={[{ required: true, message: "Insira seu nome!" }]}
+          rules={[
+            {
+              required: true,
+              message: 'Insira seu nome'
+            },
+            {
+              min: 3,
+              message: 'O nome deve ter no mínimo 3 caracteres.'
+            },
+            {
+              validator: (_, value) => {
+                // Se o valor estiver vazio, a regra 'required' já cuida disso
+                if (!value) return Promise.resolve();
+
+                // Verifica se há números no nome
+                if (/\d/.test(value)) {
+                  return Promise.reject(new Error('O nome não pode conter números.'));
+                }
+
+                // Verifica se há caracteres especiais (permite letras, espaços e acentos comuns)
+                if (!/^[a-zA-ZÀ-ú\s]+$/.test(value)) {
+                  return Promise.reject(new Error('O nome não pode conter caracteres especiais.'));
+                }
+
+                // Se passou em todas as validações
+                return Promise.resolve();
+              }
+            }
+          ]}
           className="sem-asterisco flex-1"
         >
           <Input placeholder="Insira o seu nome" />

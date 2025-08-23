@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Select, Typography, Row, Col, Modal, message, Flex, Empty, Layout } from 'antd';
+import { Select, Typography, Row, Col, message, Flex, Empty, Layout } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import CourtCard from '@/components/Cards/CourtCard';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
@@ -12,7 +12,6 @@ import { useTheme } from '@/context/ThemeProvider';
 import { useAuth } from '@/context/hooks/use-auth';
 
 const { Title } = Typography;
-const { confirm } = Modal;
 const { Content } = Layout;
 
 const CourtCardSkeleton = () => (

@@ -123,7 +123,7 @@ export default function AjudaSuporte() {
                         </Col>
                     </Row>
 
-                    <Title level={3} className="mb-6">Ou nos envie uma mensagem</Title>
+                    {/* <Title level={3} className="mb-6">Ou nos envie uma mensagem</Title>
                     <Form
                         form={form}
                         layout="vertical"
@@ -169,7 +169,7 @@ export default function AjudaSuporte() {
                                 Enviar Mensagem
                             </Button>
                         </Form.Item>
-                    </Form>
+                    </Form> */}
                 </section>
             </div>
         </Content>

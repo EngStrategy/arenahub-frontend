@@ -100,3 +100,52 @@ export const updatePassword = async (
         },
     );
 }
+
+export type AtletaSimple = {
+    id: number;
+    nome: string;
+    telefone: string;
+    urlFoto: string;
+};
+
+export const searchAtletaByNomeOrTelefone = async (
+    query: string
+): Promise<AtletaSimple[]> => {
+    if (!query) {
+        console.warn("Consulta é obrigatória para buscar atleta.");
+        return [];
+    }
+    return httpRequests.getMethod<AtletaSimple[]>(
+        `${URLS.ATLETAS}/buscar-atleta`,
+        { query },
+    );
+};
+
+export const iniciarProcessoAtivacaoContaAtletaExterno = async (
+    telefone: string
+): Promise<void> => {
+    if (!telefone) {
+        console.warn("Telefone do atleta é obrigatório para iniciar o processo de ativação.");
+        return;
+    }
+    return httpRequests.postMethod<void>(
+        `${URLS.ATLETAS}/iniciar-ativacao`,
+        { telefone }
+    );
+};
+
+export const ativarContaAtletaExterno = async (
+    telefone: string,
+    codigo: string,
+    email: string,
+    senha: string
+): Promise<void> => {
+    if (!telefone || !codigo || !email || !senha) {
+        console.warn("Todos os campos são obrigatórios para ativar a conta.");
+        return;
+    }
+    return httpRequests.postMethod<void>(
+        `${URLS.ATLETAS}/ativar-conta`,
+        { telefone, codigo, email, senha }
+    );
+};

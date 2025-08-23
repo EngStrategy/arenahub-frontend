@@ -51,7 +51,7 @@ export const ArenaCard = ({ arena, showDescription, showHover = true, showEsport
             </Title>
             <Text type="secondary">
               {arena.endereco.cidade} - {arena.endereco.estado} <br />
-              {arena.endereco.rua}, {arena.endereco.numero} - {arena.endereco.bairro} - CEP {arena.endereco.cep}
+              {arena.endereco.rua}, {arena.endereco.numero} - {arena.endereco.bairro} - {arena.endereco.cep}
             </Text>
             {(esportesFormatados.length > 0 && showEsportes) && (
               <Text strong className="!text-green-600 !mt-1" style={{ fontSize: '0.8rem' }}>
@@ -68,8 +68,8 @@ export const ArenaCard = ({ arena, showDescription, showHover = true, showEsport
 
           <Flex align="center">
             <StarFilled className="!text-yellow-500 mr-1" />
-            <Text strong>{arena.avaliacao?.toFixed(1)}</Text>
-            <Text type="secondary" className="ml-1">({arena.numeroAvaliacoes} avaliações)</Text>
+            <Text strong>{arena.notaMedia?.toFixed(1)}</Text>
+            <Text type="secondary" className="ml-1">({arena.quantidadeAvaliacoes} avaliações)</Text>
           </Flex>
         </Flex>
       </Flex>

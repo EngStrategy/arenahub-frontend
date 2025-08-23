@@ -17,6 +17,8 @@ import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { useTheme } from '@/context/ThemeProvider';
 import { getDashboardData, DashboardData } from '../api/entities/arena';
 import { useAuth } from '@/context/hooks/use-auth';
+import { type AgendamentoArena, getAgendamentosPendentesResolucao } from '../api/entities/agendamento';
+import { useRouter } from 'next/navigation';
 
 const { Title, Text } = Typography;
 
@@ -91,10 +93,13 @@ const DashboardSkeleton = () => (
 export default function Dashboard() {
   const { user, isLoadingSession, isAuthenticated } = useAuth();
   const { isDarkMode } = useTheme();
+  const router = useRouter();
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [pendentesResolucao, setPendentesResolucao] = useState<AgendamentoArena[]>([]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -106,13 +111,26 @@ export default function Dashboard() {
           setDashboardData(data);
         } catch (err) {
           console.error("Erro ao buscar dados do dashboard:", err);
-          setError("Não foi possível carregar os dados do dashboard. Tente novamente mais tarde.");
+          setError("Não foi possível carregar os dados do dashboard. Faça login novamente.");
         } finally {
           setLoading(false);
         }
       };
 
-      fetchDashboardData();
+      const fetchPendentesResolucao = async () => {
+        try {
+          const data = await getAgendamentosPendentesResolucao();
+          console.log("Agendamentos pendentes para resolução:", data);
+          setPendentesResolucao(data);
+        } catch (err) {
+          console.error("Erro ao buscar agendamentos pendentes para resolução:", err);
+        }
+      };
+
+      Promise.all([
+        fetchDashboardData(),
+        fetchPendentesResolucao()
+      ]);
     } else if (!isAuthenticated) {
       setLoading(false);
     }
@@ -124,7 +142,9 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <Layout.Content style={{ padding: '2rem 8%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Layout.Content
+        style={{ padding: '2rem 8%', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
+      >
         <Alert message="Erro" description={error} type="error" showIcon />
       </Layout.Content>
     );
@@ -132,7 +152,9 @@ export default function Dashboard() {
 
   if (!dashboardData) {
     return (
-      <Layout.Content style={{ padding: '2rem 8%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Layout.Content
+        style={{ padding: '2rem 8%', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
+      >
         <Text>Nenhum dado disponível para o dashboard.</Text>
       </Layout.Content>
     )
@@ -181,18 +203,45 @@ export default function Dashboard() {
   ];
 
   return (
-    <Layout.Content style={{ padding: '2rem 8% 5rem 8%', backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)', }} >
+    <Layout.Content
+      style={{ padding: '2rem 8% 5rem 8%', backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)', }}
+    >
       <Flex vertical gap="large">
+
+        {pendentesResolucao.length > 0 && (
+          <Alert
+            message={`${pendentesResolucao.length} Agendamento(s) Pendente(s)`}
+            // description="Existem agendamentos que já ocorreram e precisam que você defina o status (Pago, Ausente, etc.) para manter seus relatórios atualizados."
+            type="warning"
+            showIcon
+            action={
+              <Button
+                type="primary"
+                onClick={() => router.push('/perfil/arena/agendamentos')}
+              >
+                Resolver Agora
+              </Button>
+            }
+            closable
+            onClose={() => setPendentesResolucao([])}
+          />
+        )}
+
         {/* Cabeçalho */}
-        <Flex justify="space-between" align="center">
+        <Flex className="flex-col justify-between md:flex-row md:!items-start">
           <Flex vertical>
             <Title level={2}>
               Olá, {user?.name ? user.name.split(' ').slice(0, 3).join(' ') : "Arena"}!
             </Title>
             <Text type="secondary">Aqui está um resumo do seu dia.</Text>
           </Flex>
-          <Link href="/perfil/arena/quadras/nova">
-            <ButtonPrimary text="Nova Quadra" icon={<PlusOutlined />} size="large" />
+          <Link href="/perfil/arena/agendamentos/novo" className="w-full md:w-auto">
+            <ButtonPrimary
+              className="w-full mt-4 md:w-auto md:mt-0"
+              text="Registrar agendamento externo"
+              icon={<PlusOutlined />}
+              size="large"
+            />
           </Link>
         </Flex>
 

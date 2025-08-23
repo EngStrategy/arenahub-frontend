@@ -159,7 +159,7 @@ export default function JogosAbertos() {
         );
     } else {
         contentToRender = (
-            <Empty description="Nenhum jogo aberto encontrado para o esporte selecionado." className="mt-10" />
+            <Empty description="Nenhum jogo aberto encontrado." className="mt-10" />
         );
     }
 

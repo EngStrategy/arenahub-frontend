@@ -29,8 +29,12 @@ const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number
         const [horaInicio, minutoInicio] = horarioInicio.split(':').map(Number);
         const [horaFim, minutoFim] = horarioFim.split(':').map(Number);
 
-        const totalMinutosInicio = horaInicio * 60 + minutoInicio;
-        const totalMinutosFim = horaFim * 60 + minutoFim;
+        let totalMinutosInicio = horaInicio * 60 + minutoInicio;
+        let totalMinutosFim = horaFim * 60 + minutoFim;
+
+        if (totalMinutosFim < totalMinutosInicio) {
+            totalMinutosFim += 24 * 60;
+        }
 
         const diferencaEmMinutos = totalMinutosFim - totalMinutosInicio;
 
@@ -67,12 +71,10 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange }: CardAgenda
         {
             key: 'PAGO',
             label: 'Marcar como Pago',
-            disabled: agendamento.status === 'PAGO' || agendamento.status === 'CANCELADO',
         },
         {
             key: 'AUSENTE',
             label: 'Marcar como Ausente',
-            disabled: agendamento.status !== 'PENDENTE',
         },
         {
             type: 'divider',
@@ -81,7 +83,6 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange }: CardAgenda
             key: 'CANCELADO',
             label: 'Cancelar Agendamento',
             danger: true,
-            disabled: agendamento.status === 'PAGO' || agendamento.status === 'CANCELADO',
         },
     ];
 
@@ -100,9 +101,11 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange }: CardAgenda
                             <Text type="secondary">{agendamento.nomeQuadra}</Text>
                         </div>
                     </Space>
-                    <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>
-                        <Button type="text" shape="circle" icon={<MoreOutlined />} />
-                    </Dropdown>
+                    {agendamento.status === 'PENDENTE' && (
+                        <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>
+                            <Button type="text" shape="circle" icon={<MoreOutlined />} />
+                        </Dropdown>
+                    )}
                 </div>
 
                 <Space direction="vertical" size="small" className="w-full">

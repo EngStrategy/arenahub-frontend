@@ -25,6 +25,8 @@ import { ModalRedirecionamentoLogin } from '@/components/Modais/ModalRedireciona
 import { useTheme } from '@/context/ThemeProvider';
 import { useAuth } from '@/context/hooks/use-auth';
 
+const { Title, Text } = Typography;
+
 const ArenaCardSkeleton = () => (
     <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 w-full max-w-sm animate-pulse">
         <div className="flex items-center space-x-4">
@@ -89,20 +91,6 @@ const formatarMaterial = (material: MaterialFornecido): string => {
         BOTAO_GOL: 'botão do gol'
     };
     return materialMap[material] || material.toLowerCase();
-}
-
-const formatarIntervalo = (horaInicio: string, duracaoReserva: DuracaoReserva) => {
-    const duracaoEmMinutos = duracaoReserva === 'UMA_HORA' ? 60 : 30;
-    const [horaStr, minStr] = horaInicio.split(':');
-    const minutosInicio = parseInt(horaStr) * 60 + parseInt(minStr);
-    const minutosFim = minutosInicio + duracaoEmMinutos;
-    const formatarMinutos = (m: number) => {
-        let h = Math.floor(m / 60);
-        const min = m % 60;
-        if (h >= 24) h = h % 24;
-        return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-    };
-    return `${horaInicio} às ${formatarMinutos(minutosFim)}`;
 }
 
 const addDuration = (time: string, durationMinutes: number): string => {
@@ -296,11 +284,7 @@ export default function QuadraPage() {
                 <div className='flex flex-row items-start justify-between mb-6'>
                     <div className="w-full max-w-2xl">
                         <ArenaCard
-                            arena={{
-                                ...arena,
-                                avaliacao: arena.avaliacao || 4.5,
-                                numeroAvaliacoes: arena.numeroAvaliacoes || 100,
-                            }}
+                            arena={arena}
                             showDescription={true}
                             showHover={false}
                             showEsportes={false}
@@ -329,9 +313,9 @@ export default function QuadraPage() {
                 </div>
             )}
 
-            <Typography.Title level={4} className="!text-center !capitalize !pt-4 !border-t-2 !border-transparent !border-t-gray-300">
+            <Title level={4} className="!text-center !capitalize !pt-4 !border-t-2 !border-transparent !border-t-gray-300">
                 {selectedDate && format(parseISO(selectedDate), 'MMMM Y', { locale: ptBR })}
-            </Typography.Title>
+            </Title>
 
             <div className="flex items-center justify-center gap-3 my-6">
                 <Button
@@ -466,12 +450,15 @@ export default function QuadraPage() {
                                     console.log(`ID horário: ${horario.id}`);
                                 }}
                             >
-                                <Typography.Text className="!text-sm !leading-tight" style={{ color: 'inherit' }}>
-                                    {formatarIntervalo(horario.horarioInicio, quadra.duracaoReserva)}
-                                </Typography.Text>
-                                <Typography.Text strong className="!text-sm" style={{ color: 'inherit' }}>
+                                <Text className="!font-semibold !leading-tight" style={{ color: 'inherit' }}>
+                                    {horario.horarioInicio} às {horario.horarioFim}
+                                </Text>
+                                <Text
+                                    type="secondary"
+                                    className="!text-xs"
+                                >
                                     {horario.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                </Typography.Text>
+                                </Text>
                             </Button>
                         );
                     };
@@ -495,19 +482,19 @@ export default function QuadraPage() {
                                             style={{ flexShrink: 0 }}
                                         />
                                         <div className="flex-grow pt-1">
-                                            <Typography.Title level={5} className="!font-semibold !text-lg !leading-tight !mb-1">
+                                            <Title level={5} className="!font-semibold !text-lg !leading-tight !mb-1">
                                                 {quadra.nomeQuadra}
-                                            </Typography.Title>
-                                            <Typography.Text className="!text-green-600 !text-sm !font-semibold !capitalize">
+                                            </Title>
+                                            <Text className="!text-green-600 !text-sm !font-semibold !capitalize">
                                                 {quadra.tipoQuadra.map(formatarEsporte).join(', ')}
-                                            </Typography.Text>
+                                            </Text>
                                             {quadra.materiaisFornecidos && quadra.materiaisFornecidos.length > 0 && (
-                                                <Typography.Text type='secondary' className="!mt-2 !block !text-sm">
+                                                <Text type='secondary' className="!mt-2 !block !text-sm">
                                                     A Arena vai disponibilizar para você:{' '}
                                                     <span className="text-green-600 font-bold">
                                                         {quadra.materiaisFornecidos.map(formatarMaterial).join(', ')}
                                                     </span>
-                                                </Typography.Text>
+                                                </Text>
                                             )}
                                         </div>
                                     </div>
@@ -524,19 +511,19 @@ export default function QuadraPage() {
                                                 <div className='flex flex-col sm:flex-row sm:space-x-4'>
                                                     {horariosManha.length > 0 && (
                                                         <div className="mb-4">
-                                                            <Typography.Text strong className="text-sm text-gray-500 mb-2 block">Manhã</Typography.Text>
+                                                            <Text strong className="text-sm text-gray-500 mb-2 block">Manhã</Text>
                                                             <div className="flex flex-wrap gap-2">{horariosManha.map(renderHorario)}</div>
                                                         </div>
                                                     )}
                                                     {horariosTarde.length > 0 && (
                                                         <div className="mb-4">
-                                                            <Typography.Text strong className="text-sm text-gray-500 mb-2 block">Tarde</Typography.Text>
+                                                            <Text strong className="text-sm text-gray-500 mb-2 block">Tarde</Text>
                                                             <div className="flex flex-wrap gap-2">{horariosTarde.map(renderHorario)}</div>
                                                         </div>
                                                     )}
                                                     {horariosNoite.length > 0 && (
                                                         <div className="mb-4">
-                                                            <Typography.Text strong className="text-sm text-gray-500 mb-2 block">Noite</Typography.Text>
+                                                            <Text strong className="text-sm text-gray-500 mb-2 block">Noite</Text>
                                                             <div className="flex flex-wrap gap-2">{horariosNoite.map(renderHorario)}</div>
                                                         </div>
                                                     )}
@@ -545,11 +532,11 @@ export default function QuadraPage() {
                                         }
                                         return (
                                             <div className="flex items-center justify-start h-full p-4">
-                                                <Typography.Text className="text-gray-500">
+                                                <Text className="text-gray-500">
                                                     Nenhum horário disponível {['sábado', 'domingo'].includes(diaDaSemanaFormatado.replace("-feira", "").toLowerCase())
                                                         ? 'no'
                                                         : 'na'} {diaDaSemanaFormatado.replace("-feira", "")}
-                                                </Typography.Text>
+                                                </Text>
                                             </div>
                                         );
                                     })()}

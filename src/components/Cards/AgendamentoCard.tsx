@@ -1,12 +1,38 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { PictureOutlined, UserAddOutlined, DeleteOutlined, CalendarOutlined, ClockCircleOutlined, InfoCircleOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { App, Avatar, Button, Card, Divider, Flex, Popconfirm, Tag, Badge, Typography } from 'antd';
+import {
+    PictureOutlined,
+    UserAddOutlined,
+    DeleteOutlined,
+    CalendarOutlined,
+    ClockCircleOutlined,
+    InfoCircleOutlined,
+    CheckCircleOutlined,
+    CloseCircleOutlined,
+    StarOutlined,
+    EditOutlined
+} from '@ant-design/icons';
+import {
+    App,
+    Avatar,
+    Button,
+    Card,
+    Divider,
+    Flex,
+    Popconfirm,
+    Tag,
+    Badge,
+    Typography,
+    Rate,
+    Form
+} from 'antd';
 import ModalSolicitacoesEntrada from '../Modais/ModalSolicitacoesEntrada';
 import { type SolicitacaoJogoAberto, listarSolicitacoesJogoAbertoMe, aceitarOuRecusarEntrada } from '@/app/api/entities/jogosAbertos';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { TipoQuadra } from '@/app/api/entities/quadra';
+import TextArea from 'antd/es/input/TextArea';
+import { RiStarOffFill } from "react-icons/ri";
 
 const { Text, Title } = Typography;
 
@@ -25,11 +51,14 @@ export type AgendamentoCardData = {
     fixo: boolean;
     publico: boolean;
     possuiSolicitacoes?: boolean;
+    avaliacao: { idAvaliacao: number; nota: number; comentario?: string } | null;
+    avaliacaoDispensada: boolean;
 };
 
 type CardProps = {
     readonly agendamento: AgendamentoCardData;
     readonly onCancel: (id: number) => Promise<void>;
+    readonly onAvaliacaoSubmit: (idAvaliacao: number, nota: number, comentario?: string) => void;
 };
 
 const StatusTag = ({ status }: { status: AgendamentoCardData['status'] }) => {
@@ -64,7 +93,7 @@ const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number
 };
 
 
-export function CardAgendamento({ agendamento, onCancel }: CardProps) {
+export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: CardProps) {
     const { message } = App.useApp();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [solicitacoes, setSolicitacoes] = useState<SolicitacaoJogoAberto[]>([]);
@@ -73,9 +102,29 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
     const valorFormatado = agendamento.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const [vagasDisponiveis, setVagasDisponiveis] = useState(agendamento.numeroJogadoresNecessarios || 0);
 
+    const [isAvaliando, setIsAvaliando] = useState(false);
+    const [form] = Form.useForm();
+
+    const handleFormSubmit = (values: { nota: number; comentario?: string }) => {
+        if (agendamento.avaliacao) {
+            onAvaliacaoSubmit(agendamento.avaliacao.idAvaliacao, values.nota, values.comentario);
+        }
+        setIsAvaliando(false);
+        form.resetFields();
+    };
+
     useEffect(() => {
         setVagasDisponiveis(agendamento.numeroJogadoresNecessarios || 0);
     }, [agendamento.numeroJogadoresNecessarios]);
+
+    useEffect(() => {
+        if (isAvaliando) {
+            form.setFieldsValue({
+                nota: agendamento.avaliacao?.nota || 0,
+                comentario: agendamento.avaliacao?.comentario || ''
+            });
+        }
+    }, [isAvaliando, agendamento.avaliacao, form]);
 
     const duracaoHoras = calcularDuracaoHoras(agendamento.startTime, agendamento.endTime);
 
@@ -131,6 +180,76 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
         }
     };
 
+    const CardFooter = () => {
+        // Se o agendamento já foi avaliado
+        if (agendamento.avaliacao) {
+            return (
+                <Flex justify="space-between" align="center" style={{ padding: '12px 16px' }}>
+                    <Text strong>Sua avaliação:</Text>
+                    <Flex align="center" gap="small">
+                        <Rate disabled defaultValue={agendamento.avaliacao.nota} />
+                        <Button type="text" shape="circle" icon={<EditOutlined />} onClick={() => setIsAvaliando(true)} />
+                    </Flex>
+                </Flex>
+            );
+        }
+
+        // Se pode ser avaliado, mas ainda não foi
+        if (agendamento.status === 'pago' && agendamento.avaliacaoDispensada === null) {
+            return (
+                <Flex justify="end" style={{ padding: '12px 16px' }}>
+                    <Button icon={<StarOutlined />} onClick={() => setIsAvaliando(true)}>
+                        Deixar uma avaliação
+                    </Button>
+                </Flex>
+            );
+        }
+
+        if (agendamento.avaliacaoDispensada === true) {
+            return (
+                <Flex justify="center" align='center' gap={8} style={{ padding: '12px 16px' }}>
+                    <RiStarOffFill color='gold' />
+                    Avaliação dispensada
+                </Flex>
+            );
+        }
+
+        // Se for pendente, mostra as ações normais
+        if (agendamento.status === 'pendente' || agendamento.status === 'aceito') {
+            return (
+                <Flex justify="space-between" align="center" style={{ padding: '12px 16px' }}>
+                    {agendamento.publico ? (
+                        <Badge dot={agendamento.possuiSolicitacoes}>
+                            <Button
+                                type='primary'
+                                icon={<UserAddOutlined />}
+                                onClick={handleOpenModal}
+                                ghost
+                            >
+                                Solicitações
+                            </Button>
+                        </Badge>
+                    ) : (
+                        <Text type="secondary" strong>Jogo Privado</Text>
+                    )}
+                    <Popconfirm
+                        title="Cancelar Agendamento"
+                        description="Você tem certeza que quer cancelar?"
+                        onConfirm={handleConfirmCancel}
+                        okText="Sim, cancelar" cancelText="Não"
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Button danger icon={<DeleteOutlined />}>
+                            Cancelar
+                        </Button>
+                    </Popconfirm>
+                </Flex>
+            );
+        }
+
+        return null;
+    };
+
     return (
         <>
             <Card hoverable style={{ height: '100%' }} styles={{ body: { padding: 0, height: '100%' } }}>
@@ -178,39 +297,28 @@ export function CardAgendamento({ agendamento, onCancel }: CardProps) {
                         </Flex>
                     </div>
 
-                    {(agendamento.status === 'pendente' || agendamento.status === 'aceito') && (
-                        <Flex
-                            justify="space-between"
-                            align="center"
-                            style={{ padding: '12px 16px' }}
-                        >
-                            {agendamento.publico ? (
-                                <Badge dot={agendamento.possuiSolicitacoes}>
-                                    <Button
-                                        type='primary'
-                                        icon={<UserAddOutlined />}
-                                        onClick={handleOpenModal}
-                                        ghost
-                                    >
-                                        Solicitações
-                                    </Button>
-                                </Badge>
-                            ) : (
-                                <Text type="secondary" strong>Jogo Privado</Text>
-                            )}
-                            <Popconfirm
-                                title="Cancelar Agendamento"
-                                description="Você tem certeza que quer cancelar?"
-                                onConfirm={handleConfirmCancel}
-                                okText="Sim, cancelar" cancelText="Não"
-                                okButtonProps={{ danger: true }}
+                    {isAvaliando && (
+                        <div className="p-4 border-t">
+                            <Form
+                                key={agendamento.avaliacao?.idAvaliacao}
+                                form={form}
+                                onFinish={handleFormSubmit}
                             >
-                                <Button danger icon={<DeleteOutlined />}>
-                                    Cancelar
-                                </Button>
-                            </Popconfirm>
-                        </Flex>
+                                <Form.Item name="nota" rules={[{ required: true, message: 'Por favor, selecione uma nota!' }]}>
+                                    <Rate />
+                                </Form.Item>
+                                <Form.Item name="comentario">
+                                    <TextArea rows={3} placeholder="Deixe um comentário (opcional)" />
+                                </Form.Item>
+                                <Flex justify="end" gap="small">
+                                    <Button onClick={() => setIsAvaliando(false)}>Cancelar</Button>
+                                    <Button type="primary" htmlType="submit">Enviar</Button>
+                                </Flex>
+                            </Form>
+                        </div>
                     )}
+
+                    <CardFooter />
                 </Flex>
             </Card>
 

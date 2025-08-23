@@ -1,7 +1,8 @@
 import React from 'react';
 import {
     Button, Tooltip, Tag, Popconfirm, Flex, Divider,
-    Typography, Avatar, Card, Space
+    Typography, Avatar, Card, Space,
+    Rate
 } from 'antd';
 import {
     EditOutlined,
@@ -11,12 +12,14 @@ import {
     CheckCircleOutlined,
     TagOutlined,
     CalendarOutlined,
+    StarOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { Quadra, TipoQuadra } from '@/app/api/entities/quadra';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { formatarDiaSemanaAbreviado } from '@/context/functions/mapeamentoDiaSemana';
 import { MdOutlineSports } from "react-icons/md";
+import { useRouter } from 'next/navigation';
 
 interface CourtCardProps {
     court: Quadra;
@@ -24,6 +27,7 @@ interface CourtCardProps {
 }
 
 const CourtCard: React.FC<CourtCardProps> = ({ court, onDelete }) => {
+    const navigate = useRouter();
 
     const amenities = [];
     if (court.cobertura) amenities.push('Coberta');
@@ -58,6 +62,7 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onDelete }) => {
             hoverable
             style={{ height: '100%' }}
             styles={{ body: { padding: 16, height: '100%', display: 'flex', flexDirection: 'column' } }}
+            onClick={() => navigate.push(`/perfil/arena/quadras/editar/${court.id}`)}
         >
             <Flex vertical flex={1}>
                 <Flex gap="middle" align="start">
@@ -101,6 +106,18 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onDelete }) => {
                 </Flex>
             </Flex>
 
+            {court.quantidadeAvaliacoes > 0 && (
+                <>
+                    <Divider style={{ margin: '12px 0' }} />
+                    <Flex align="center" gap="small">
+                        <Rate disabled allowHalf defaultValue={court.notaMedia} style={{ fontSize: 16 }} />
+                        <Typography.Text type="secondary">
+                            {court.notaMedia.toFixed(1)} ({court.quantidadeAvaliacoes} avaliações)
+                        </Typography.Text>
+                    </Flex>
+                </>
+            )}
+
             <Divider style={{ margin: '12px 0' }} />
 
             <Flex justify="end" align="center">
@@ -113,18 +130,43 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onDelete }) => {
                             cancelText="Cancelar"
                             cancelButtonProps={{ style: { border: 0 } }}
                             okButtonProps={{ danger: true }}
-                            onConfirm={() => onDelete(court.id)}
+                            onConfirm={(e) => {
+                                e?.stopPropagation();
+                                onDelete(court.id)
+                            }}
+                            onCancel={(e) => {
+                                e?.stopPropagation();
+                            }}
                             icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
                         >
                             <Button
                                 shape="circle"
                                 icon={<DeleteOutlined />}
                                 className="!bg-red-100 !text-red-600 !border-none hover:!bg-red-200"
+                                onClick={(e) => e.stopPropagation()}
                             />
                         </Popconfirm>
                     </Tooltip>
+
+                    <Tooltip title="Avaliações">
+                        <Link
+                            href={`/perfil/arena/quadras/${court.id}/avaliacoes`}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <Button
+                                shape="circle"
+                                icon={<StarOutlined />}
+                                className="!bg-yellow-100 !text-yellow-600 !border-none hover:!bg-yellow-200"
+                            />
+                        </Link>
+                    </Tooltip>
+
+
                     <Tooltip title="Editar">
-                        <Link href={`/perfil/arena/quadras/editar/${court.id}`}>
+                        <Link
+                            href={`/perfil/arena/quadras/editar/${court.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                        >
                             <Button
                                 shape="circle"
                                 icon={<EditOutlined />}

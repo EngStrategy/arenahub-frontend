@@ -1,12 +1,13 @@
 import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
+import { AvaliacaoQueryParams, AvaliacaoResponse } from "./agendamento";
 
 export type TipoQuadra = "FUTEBOL_SOCIETY" | "FUTEBOL_SETE" | "FUTEBOL_ONZE" | "FUTSAL" | "BEACHTENNIS" | "VOLEI" | "FUTEVOLEI" | "BASQUETE" | "HANDEBOL";
 
 export type DiaDaSemana = "DOMINGO" | "SEGUNDA" | "TERCA" | "QUARTA" | "QUINTA" | "SEXTA" | "SABADO";
 
 export type DuracaoReserva = "TRINTA_MINUTOS" | "UMA_HORA" | "UMA_HORA_E_MEIA" | "DUAS_HORAS";
-    
+
 export type MaterialFornecido = "BOLA" | "COLETE" | "LUVA" | "CONE" | "APITO" | "BOMBA" | "MARCADOR_PLACAR" | "BOTAO_GOL";
 
 export type StatusHorario = "DISPONIVEL" | "INDISPONIVEL" | "MANUTENCAO";
@@ -56,6 +57,8 @@ export interface Quadra {
     arenaId: number;
     nomeArena: string;
     horariosFuncionamento: Array<HorarioFuncionamento>;
+    notaMedia: number;
+    quantidadeAvaliacoes: number;
 }
 
 export interface QuadraCreate {
@@ -145,4 +148,19 @@ export const getQuadraByIdArena = async (arenaId: number): Promise<Quadra | unde
         return undefined;
     }
     return httpRequests.getMethod<Quadra>(`${URLS.QUADRAS}/arena/${arenaId}`);
+};
+
+
+export const getAvaliacoesQuadra = async (
+    quadraId: number,
+    params: AvaliacaoQueryParams = {}
+): Promise<httpRequests.PaginatedResponse<AvaliacaoResponse>> => {
+    if (!quadraId) {
+        console.warn("ID da quadra não fornecido.");
+        return Promise.reject(new Error("ID da quadra não fornecido."));
+    }
+    return httpRequests.getMethod<httpRequests.PaginatedResponse<any>>(
+        `${URLS.QUADRAS}/${quadraId}/avaliacoes`,
+        params
+    );
 };

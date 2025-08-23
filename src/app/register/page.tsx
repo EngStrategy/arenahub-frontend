@@ -79,7 +79,7 @@ const RegisterPage = () => {
     <Flex
       align="flex-center"
       justify="center"
-      className="!flex-1 sm:!px-10 lg:!px-40"
+      className="!flex-1 sm:!px-10 sm:!pb-16 lg:!px-40"
       style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
     >
       <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">

@@ -60,7 +60,7 @@ api.interceptors.response.use(
         if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
           await signOut({ callbackUrl: '/login', redirect: true });
         }
-        return Promise.reject(error); 
+        return Promise.reject(error);
       }
     }
     return Promise.reject(error);
@@ -94,18 +94,17 @@ export const request = async <T = any>(
       ...config,
     });
     return response.data;
-  } catch (error: any) { // Escolher um tipo melhor
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       if (error.response) {
-        const errorMessage = error.response.data?.message ?? error.response.data ?? error.response.status;
-        console.error("Erro na requisição:", errorMessage);
-        throw new Error(`${errorMessage}`);
+        console.error("Erro na requisição:", error.response.data);
+        throw error.response.data;
       }
       if (error.request) {
         throw new Error("Erro de rede: Não foi possível obter uma resposta do servidor.");
       }
     }
-    throw new Error(`Erro desconhecido: ${error.message ?? String(error)}`);
+    throw new Error(`Erro desconhecido: ${String(error)}`);
   }
 };
 

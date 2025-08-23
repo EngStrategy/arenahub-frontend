@@ -15,13 +15,14 @@ export interface Arena {
         numero: string;
         complemento: string;
     };
+    horasCancelarAgendamento: number;
     descricao: string;
     urlFoto: string;
     dataCriacao: string;
     role: string;
     esportes?: string[];
-    avaliacao?: number;
-    numeroAvaliacoes?: number;
+    notaMedia?: number;
+    quantidadeAvaliacoes?: number;
 }
 
 export interface ArenaCreate {
@@ -31,6 +32,7 @@ export interface ArenaCreate {
     senha: string;
     cpfProprietario: string;
     cnpj: string | null;
+    horasCancelarAgendamento: number;
     endereco: {
         cep: string;
         estado: string;
