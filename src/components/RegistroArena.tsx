@@ -9,7 +9,8 @@ import {
     Progress, Flex, Popover,
     Typography,
     AutoComplete,
-    AutoCompleteProps
+    AutoCompleteProps,
+    InputNumber
 } from "antd";
 import { Estados } from "@/data/Estados";
 import Link from "next/link";
@@ -239,7 +240,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
 
         const {
             nome, email, telefone, senha, cpfProprietario, cnpj, descricao,
-            cep, estado, cidade, bairro, rua, numero, complemento
+            cep, estado, cidade, bairro, rua, numero, complemento, horasCancelarAgendamento
         } = values;
 
         const payload: ArenaCreate = {
@@ -251,6 +252,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
             cnpj: haveCnpj ? cnpj : null,
             descricao,
             urlFoto: urlParaSalvar ?? null,
+            horasCancelarAgendamento: horasCancelarAgendamento ?? 2,
             endereco: {
                 cep: formatarCEP(cep),
                 estado,
@@ -641,6 +643,22 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                         </ImgCrop>
                     </Flex>
                 </Flex>
+            </Form.Item>
+
+            <Form.Item
+                label="Política de Cancelamento"
+                name="horasCancelarAgendamento"
+                tooltip="Defina o prazo mínimo, em horas, que um atleta pode cancelar um agendamento sem custos."
+                rules={[{ required: true, message: 'Este campo é obrigatório.' }]}
+                initialValue={2}
+                className="!mt-5"
+            >
+                <InputNumber
+                    min={1}
+                    max={168} // Máximo de 1 semana (7 * 24 = 168 horas)
+                    addonAfter="horas de antecedência"
+                    style={{ width: '100%' }}
+                />
             </Form.Item>
 
             <Form.Item
