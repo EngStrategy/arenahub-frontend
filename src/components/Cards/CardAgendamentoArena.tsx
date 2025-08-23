@@ -29,8 +29,12 @@ const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number
         const [horaInicio, minutoInicio] = horarioInicio.split(':').map(Number);
         const [horaFim, minutoFim] = horarioFim.split(':').map(Number);
 
-        const totalMinutosInicio = horaInicio * 60 + minutoInicio;
-        const totalMinutosFim = horaFim * 60 + minutoFim;
+        let totalMinutosInicio = horaInicio * 60 + minutoInicio;
+        let totalMinutosFim = horaFim * 60 + minutoFim;
+
+        if (totalMinutosFim < totalMinutosInicio) {
+            totalMinutosFim += 24 * 60;
+        }
 
         const diferencaEmMinutos = totalMinutosFim - totalMinutosInicio;
 

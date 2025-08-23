@@ -148,7 +148,7 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onDelete }) => {
                         </Popconfirm>
                     </Tooltip>
 
-                    <Tooltip title="Ver Avaliações">
+                    <Tooltip title="Avaliações">
                         <Link
                             href={`/perfil/arena/quadras/${court.id}/avaliacoes`}
                             onClick={(e) => e.stopPropagation()}

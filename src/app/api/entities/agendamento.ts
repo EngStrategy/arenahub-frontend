@@ -193,6 +193,27 @@ export type AgendamentoArena = {
     publico: boolean;
 };
 
+export type AgendamentoExterno = {
+    quadraId: number;
+    dataAgendamento: string;
+    slotHorarioIds: number[];
+    esporte: TipoQuadra;
+    atletaExistenteId?: number;
+    novoAtleta?: {
+        nome: string;
+        telefone: string;
+    };
+}
+
+export const createAgendamentoExterno = async (
+    agendamento: AgendamentoExterno
+): Promise<AgendamentoNormal> => {
+    return httpRequests.postMethod<AgendamentoNormal>(
+        `${URLS.ARENAAGENDAMENTOS}/externo`,
+        agendamento
+    );
+}
+
 export const getAllAgendamentosArena = async (
     params: AgendamentoArenaQueryParams = {}
 ): Promise<httpRequests.PaginatedResponse<AgendamentoArena>> => {

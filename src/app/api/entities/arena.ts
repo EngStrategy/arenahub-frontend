@@ -15,6 +15,7 @@ export interface Arena {
         numero: string;
         complemento: string;
     };
+    horasCancelarAgendamento: number;
     descricao: string;
     urlFoto: string;
     dataCriacao: string;
@@ -31,6 +32,7 @@ export interface ArenaCreate {
     senha: string;
     cpfProprietario: string;
     cnpj: string | null;
+    horasCancelarAgendamento: number;
     endereco: {
         cep: string;
         estado: string;

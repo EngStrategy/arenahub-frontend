@@ -17,7 +17,6 @@ import {
   BarChartOutlined,
 } from "@ant-design/icons";
 import { FaAngleDown } from "react-icons/fa6";
-import alugailogoverde from "../../public/images/alugailogoverde.png";
 import { ThemeSwitcher } from "./Switchs/ThemeSwitcher";
 import { useTheme } from "@/context/ThemeProvider";
 import { FaRegCalendarAlt } from "react-icons/fa";
@@ -105,14 +104,6 @@ const Navbar = () => {
       label: "Quadras",
       onClick: () => navigateTo("/perfil/arena/quadras"),
       className: "!my-1"
-    },
-    {
-      key: "relatorio-arena",
-      icon: <BarChartOutlined />,
-      label: "Relatório",
-      onClick: () => navigateTo("/perfil/arena/relatorios"),
-      className: "!my-1",
-      disabled: true
     },
     {
       key: "alterar-senha-arena",
@@ -301,7 +292,7 @@ const Navbar = () => {
         <Flex justify="space-between" align="center" style={{ height: '100%' }} className="!w-full">
           {/* Logo */}
           <Link href={homeHref} aria-label="Página Inicial Alugaí">
-            <Image src={alugailogoverde} alt="Alugaí Logo" width={100} height={50} style={{ height: '2.75rem', width: 'auto' }} priority />
+            <Image src="/icons/arenahub.svg" alt="ArenaHub Logo" width={100} height={50} style={{ height: '2.75rem', width: 'auto' }} priority />
           </Link>
 
           {/* Exibir o menu central (logado) ou o menu comum (deslogado) */}
@@ -366,7 +357,7 @@ const Navbar = () => {
         <Drawer
           title={
             <Flex justify="space-between" align="center">
-              <Image src={alugailogoverde} alt="Alugaí Logo Drawer" width={100} height={40} style={{ height: '2rem', width: 'auto' }} />
+              <Image src="/icons/arenahub.svg" alt="ArenaHub Logo Drawer" width={100} height={40} style={{ height: '2rem', width: 'auto' }} />
               <Button type="text" icon={<CloseOutlined />} onClick={() => setMobileMenuOpen(false)} aria-label="Fechar menu" />
             </Flex>
           }

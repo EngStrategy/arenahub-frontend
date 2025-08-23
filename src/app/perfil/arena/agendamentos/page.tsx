@@ -263,7 +263,7 @@ export default function MeusAgendamentosArena() {
 
                     <div className="mt-2">
                         <Row gutter={[16, 16]} align="bottom">
-                            <Col xs={24} lg={11}>
+                            <Col xs={24} sm={12} lg={10}>
                                 <Text strong>Período</Text>
                                 <RangePicker
                                     value={filters.dateRange}
@@ -273,7 +273,7 @@ export default function MeusAgendamentosArena() {
                                     format="DD/MM/YYYY"
                                 />
                             </Col>
-                            <Col xs={24} lg={11}>
+                            <Col xs={21} sm={8} lg={6}>
                                 <Text strong>Quadra</Text>
                                 <Select
                                     placeholder="Selecione a quadra"
@@ -286,7 +286,7 @@ export default function MeusAgendamentosArena() {
                                     ]}
                                 />
                             </Col>
-                            <Col xs={24} lg={2} className="flex">
+                            <Col xs={3} sm={4} lg={2} className="flex">
                                 <Tooltip title="Limpar filtros">
                                     <Button icon={<ClearOutlined />} onClick={handleLimparFiltros} className="!w-full" />
                                 </Tooltip>

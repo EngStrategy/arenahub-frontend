@@ -7,7 +7,8 @@ import {
     Select, Dropdown, Flex,
     Col, Row, Card, Typography,
     Space, type MenuProps, type GetProp,
-    type UploadFile, type UploadProps
+    type UploadFile, type UploadProps,
+    InputNumber
 } from 'antd';
 import { PictureOutlined, UploadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
@@ -41,6 +42,7 @@ interface PersonalInfoFormValues {
     rua: string;
     numero: string;
     complemento?: string;
+    horasCancelarAgendamento: number;
     descricao: string;
     urlFoto: string;
 }
@@ -273,6 +275,7 @@ export default function InformacoesPessoaisArena() {
                     numero: values.numero ?? '',
                     complemento: values.complemento ?? '',
                 },
+                horasCancelarAgendamento: values.horasCancelarAgendamento ?? 2,
                 descricao: values.descricao ?? '',
                 urlFoto: urlParaSalvar ?? undefined,
             };
@@ -338,7 +341,7 @@ export default function InformacoesPessoaisArena() {
         <Flex
             justify='center'
             align='start'
-            className="sm:!px-10 lg:!px-40 !px-4 !pt-6 !pb-14"
+            className="sm:!px-10 lg:!px-40 !px-4 !pt-6 !pb-20"
             style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Card
@@ -540,7 +543,25 @@ export default function InformacoesPessoaisArena() {
                             </Form.Item>
                         </Col>
 
-                        <Col span={24}>
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                label="Política de Cancelamento"
+                                name="horasCancelarAgendamento"
+                                tooltip="Defina o prazo mínimo, em horas, que um atleta pode cancelar um agendamento sem custos."
+                                rules={[{ required: true, message: 'Este campo é obrigatório.' }]}
+                                initialValue={2}
+                                className="!mt-5"
+                            >
+                                <InputNumber
+                                    min={1}
+                                    max={168} // Máximo de 1 semana (7 * 24 = 168 horas)
+                                    addonAfter="horas de antecedência"
+                                    style={{ width: '100%' }}
+                                />
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
                             <Form.Item
                                 label="Descrição (opcional)"
                                 name="descricao"
@@ -553,6 +574,7 @@ export default function InformacoesPessoaisArena() {
                                 />
                             </Form.Item>
                         </Col>
+
                     </Row>
 
                     <Flex justify="end" className="mt-8">

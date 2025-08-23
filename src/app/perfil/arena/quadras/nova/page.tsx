@@ -161,7 +161,7 @@ export default function CadastrarQuadra() {
                 }
             } catch (error) {
                 console.error("Erro ao buscar dados da arena:", error);
-                message.error("Não foi possível carregar os dados da arena.");
+                message.error("Não foi possível carregar os dados da arena. Faça login novamente.");
             } finally {
                 setPageLoading(false);
             }
@@ -301,9 +301,10 @@ export default function CadastrarQuadra() {
             message.success("Quadra cadastrada com sucesso!");
             setLoading(false);
             router.push('/perfil/arena/quadras');
-        } catch (error) {
-            console.error("Erro no handleSubmit:", error);
-            message.error(error instanceof Error ? error.message : 'Erro ao cadastrar quadra.');
+        } catch (error: unknown) {
+            const apiError = error as { code?: string; message?: string };
+            console.error("Erro ao criar quadra:", apiError);
+            message.error(apiError.message || 'Erro ao cadastrar quadra.', 5);
             setLoading(false);
         }
     };
@@ -314,7 +315,7 @@ export default function CadastrarQuadra() {
 
     return (
         <Layout.Content
-            className="flex items-start justify-center px-4 sm:px-10 lg:px-40 pt-6 !pb-14"
+            className="flex items-start justify-center px-4 sm:px-10 lg:px-40 pt-6 !pb-20"
             style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Card
@@ -332,7 +333,7 @@ export default function CadastrarQuadra() {
                 {arena ? (
                     <div className='mb-6'>
                         <ArenaCard
-                            arena={{ ...arena, avaliacao: 1.0, numeroAvaliacoes: 10 }}
+                            arena={arena}
                             showDescription={false}
                             showHover={false}
                         />

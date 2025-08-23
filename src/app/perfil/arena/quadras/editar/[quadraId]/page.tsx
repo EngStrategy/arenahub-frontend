@@ -337,7 +337,7 @@ export default function EditarQuadra() {
 
     return (
         <Layout.Content
-            className="flex items-start justify-center px-4 sm:px-10 lg:px-40 pt-6 pb-14"
+            className="flex items-start justify-center px-4 sm:px-10 lg:px-40 pt-6 pb-20"
             style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
             <Card
