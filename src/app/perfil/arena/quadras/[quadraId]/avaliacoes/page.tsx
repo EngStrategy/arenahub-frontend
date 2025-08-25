@@ -92,7 +92,7 @@ const QuadraAvaliacoesPage = ({ params: paramsPromise }: PageProps) => {
             }
         };
         fetchAvaliacoesData();
-    }, [quadraId, pagination]);
+    }, [quadraId, pagination.current, pagination.pageSize]);
 
 
     const handlePageChange = (page: number, pageSize: number) => {

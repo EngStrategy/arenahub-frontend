@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Layout, Typography, Collapse, Input, Form, Button, Divider, Card, Space, Row, Col, App } from 'antd';
+import { Layout, Typography, Collapse, Divider, Card, Space, Row, Col } from 'antd';
 import { MailOutlined, WhatsAppOutlined, QuestionCircleOutlined, UserOutlined, ShopOutlined } from '@ant-design/icons';
 import { useTheme } from '@/context/ThemeProvider';
 
@@ -43,87 +43,90 @@ const faqArenas = [
     {
         key: 'a1',
         label: 'Como cadastro minha arena na plataforma?',
-        children: <Paragraph>No rodapé ou no menu principal, clique em "Seja um parceiro" ou "Cadastre sua Arena". Você será guiado por um formulário para registrar as informações da sua arena, quadras, horários e preços.</Paragraph>,
+        children: <Paragraph>Na pagina de login do sistema, clique em "Cadastre-se", vá para a aba de "Arenas" na qual você será guiado por um formulário para registrar as informações da sua arena.</Paragraph>,
     },
     {
         key: 'a2',
         label: 'Como gerencio os agendamentos recebidos?',
-        children: <Paragraph>No menu principal, acesse "Agendamentos". Lá você terá uma visão completa de todos os agendamentos pendentes, confirmados e o histórico completo, podendo gerenciar cada um deles.</Paragraph>,
+        children: <Paragraph>No computador (parte superior), no Celular (parte inferior), acesse "Agendamentos". Lá você terá uma visão completa de todos os agendamentos pendentes, confirmados e o histórico completo, podendo gerenciar cada um deles.</Paragraph>,
     },
     {
         key: 'a3',
         label: 'Como defino os preços e horários de funcionamento das minhas quadras?',
-        children: <Paragraph>No seu painel, na seção "Minhas Quadras", você pode editar cada quadra individualmente para configurar os horários disponíveis e definir preços fixos ou variáveis para diferentes dias e horários.</Paragraph>,
-    },
+        children: (
+            <Typography>
+                <ol>
+                    <li>
+                        Após fazer login, acesse a área "Quadras" no menu principal. Lá, você poderá editar cada quadra individualmente para configurar os horários disponíveis e definir preços fixos ou variáveis para diferentes dias e horários.
+                    </li>
+                    <li>
+                        No seu painel inicial tem uma seção de "Acesso Rápido", clique em "Gerenciar Quadras", você pode editar cada quadra individualmente para configurar os horários disponíveis e definir preços fixos ou variáveis para diferentes dias e horários.
+                    </li>
+                </ol>
+            </Typography>
+        ),
+    }
 ];
 
 
 export default function AjudaSuporte() {
-    const { message } = App.useApp();
-    const [form] = Form.useForm();
     const { isDarkMode } = useTheme();
 
-    const onFinish = (values: any) => {
-        console.log('Formulário de suporte enviado:', values);
-        message.success('Sua mensagem foi enviada com sucesso! Responderemos em breve.');
-        form.resetFields();
-    };
-
-
     return (
-        <Content className={`"!px-4 sm:!px-10 lg:!px-20 !py-8 !flex-1 bg-light-mode" ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
-            <div className="max-w-4xl mx-auto">
-                <header className="text-center mb-12">
-                    <QuestionCircleOutlined style={{ fontSize: '48px', color: '#06d6a0' }} />
-                    <Title level={1} className="!mt-4">Central de Ajuda e Suporte</Title>
-                    <Paragraph type="secondary" className="text-lg">
-                        Tire suas dúvidas, resolva problemas e encontre tudo que precisa para aproveitar nossa plataforma ao máximo.
-                    </Paragraph>
-                </header>
+        <Layout className={`!px-4 sm:!px-10 lg:!px-20 !py-8 !flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
+            <Content >
+                <div className="max-w-4xl mx-auto">
+                    <header className="text-center mb-12">
+                        <QuestionCircleOutlined style={{ fontSize: '48px', color: '#06d6a0' }} />
+                        <Title level={1} className="!mt-4">Central de Ajuda e Suporte</Title>
+                        <Paragraph type="secondary" className="text-lg">
+                            Tire suas dúvidas, resolva problemas e encontre tudo que precisa para aproveitar nossa plataforma ao máximo.
+                        </Paragraph>
+                    </header>
 
-                <section id="faq" className="mb-12">
-                    <Title level={2} className="text-center mb-8">Perguntas Frequentes (FAQ)</Title>
-                    <Space direction="vertical" size="large" className="w-full">
-                        <Collapse accordion items={faqGeral} size="large" bordered={false} className="bg-white rounded-lg shadow-sm" />
+                    <section id="faq" className="mb-12">
+                        <Title level={2} className="text-center mb-8">Perguntas Frequentes (FAQ)</Title>
+                        <Space direction="vertical" size="large" className="w-full">
+                            <Collapse accordion items={faqGeral} size="large" bordered={false} className="bg-white rounded-lg shadow-sm" />
 
-                        <Title level={4} className="!mt-6"><UserOutlined className="mr-2" />Para Jogadores</Title>
-                        <Collapse accordion items={faqJogadores} size="large" bordered={false} className="bg-white rounded-lg shadow-sm" />
+                            <Title level={4} className="!mt-6"><UserOutlined className="mr-2" />Para Jogadores</Title>
+                            <Collapse accordion items={faqJogadores} size="large" bordered={false} className="bg-white rounded-lg shadow-sm" />
 
-                        <Title level={4} className="!mt-6"><ShopOutlined className="mr-2" />Para Donos de Arena</Title>
-                        <Collapse accordion items={faqArenas} size="large" bordered={false} className="bg-white rounded-lg shadow-sm" />
-                    </Space>
-                </section>
+                            <Title level={4} className="!mt-6"><ShopOutlined className="mr-2" />Para Donos de Arena</Title>
+                            <Collapse accordion items={faqArenas} size="large" bordered={false} className="bg-white rounded-lg shadow-sm" />
+                        </Space>
+                    </section>
 
-                <Divider />
+                    <Divider />
 
-                <section id="contact" className="text-center">
-                    <Title level={2} className="mb-4">Ainda precisa de ajuda?</Title>
-                    <Paragraph type="secondary" className="text-lg mb-8">
-                        Se não encontrou a resposta que procurava, entre em contato conosco. Nossa equipe está pronta para ajudar!
-                    </Paragraph>
+                    <section id="contact" className="text-center">
+                        <Title level={2} className="mb-4">Ainda precisa de ajuda?</Title>
+                        <Paragraph type="secondary" className="text-lg mb-8">
+                            Se não encontrou a resposta que procurava, entre em contato conosco. Nossa equipe está pronta para ajudar!
+                        </Paragraph>
 
-                    <Row gutter={[16, 16]} justify="center" className="mb-10">
-                        <Col xs={24} sm={12}>
-                            <Card hoverable className="text-center">
-                                <a href="mailto:engstrategy25@gmail.com" className="!text-current hover:!text-green-primary">
-                                    <MailOutlined className="text-3xl mb-2" />
-                                    <Text strong className='!block'>Email</Text>
-                                    <Text type="secondary">engstrategy25@gmail.com</Text>
-                                </a>
-                            </Card>
-                        </Col>
-                        <Col xs={24} sm={12}>
-                            <Card hoverable className="text-center">
-                                <a href="https://wa.me/5589994673969" target="_blank" rel="noopener noreferrer" className="!text-current hover:!text-green-primary">
-                                    <WhatsAppOutlined className="text-3xl mb-2" />
-                                    <Text strong className='!block'>WhatsApp</Text>
-                                    <Text type="secondary">(89) 99467-3969</Text>
-                                </a>
-                            </Card>
-                        </Col>
-                    </Row>
+                        <Row gutter={[16, 16]} justify="center" className="mb-10">
+                            <Col xs={24} sm={12}>
+                                <Card hoverable className="text-center">
+                                    <a href="mailto:engstrategy25@gmail.com" className="!text-current hover:!text-green-primary">
+                                        <MailOutlined className="text-3xl mb-2" />
+                                        <Text strong className='!block'>Email</Text>
+                                        <Text type="secondary">engstrategy25@gmail.com</Text>
+                                    </a>
+                                </Card>
+                            </Col>
+                            <Col xs={24} sm={12}>
+                                <Card hoverable className="text-center">
+                                    <a href="https://wa.me/5589994673969" target="_blank" rel="noopener noreferrer" className="!text-current hover:!text-green-primary">
+                                        <WhatsAppOutlined className="text-3xl mb-2" />
+                                        <Text strong className='!block'>WhatsApp</Text>
+                                        <Text type="secondary">(89) 99467-3969</Text>
+                                    </a>
+                                </Card>
+                            </Col>
+                        </Row>
 
-                    {/* <Title level={3} className="mb-6">Ou nos envie uma mensagem</Title>
+                        {/* <Title level={3} className="mb-6">Ou nos envie uma mensagem</Title>
                     <Form
                         form={form}
                         layout="vertical"
@@ -170,8 +173,9 @@ export default function AjudaSuporte() {
                             </Button>
                         </Form.Item>
                     </Form> */}
-                </section>
-            </div>
-        </Content>
+                    </section>
+                </div>
+            </Content>
+        </Layout>
     );
 }

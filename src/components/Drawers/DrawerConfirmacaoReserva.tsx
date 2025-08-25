@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Tag } from 'antd';
+import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Tag, Flex } from 'antd';
 import { IoCloseOutline } from "react-icons/io5";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
-import { format, addMonths, addDays, getDay, isBefore, parseISO } from 'date-fns';
+import { format, addMonths, addDays, getDay, isBefore, parseISO, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import type {
     MaterialFornecido,
@@ -15,11 +15,12 @@ import type { Arena as ArenaOficial } from '@/app/api/entities/arena';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { createAgendamento, type AgendamentoCreate, type PeriodoAgendamentoFixo } from '@/app/api/entities/agendamento';
 import { ButtonPrimary } from '../Buttons/ButtonPrimary';
-import { Router } from 'next/router';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeProvider';
 import { SyncOutlined } from '@ant-design/icons';
-
+import { Alert } from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
+import { formatarMaterial } from '@/context/functions/formatarMaterial';
 
 const { Title, Text } = Typography;
 
@@ -27,10 +28,6 @@ type Horario = HorariosDisponiveis;
 
 export interface QuadraComHorarios extends Quadra {
     horariosDisponiveis: Horario[];
-}
-
-const formatarMaterial = (material: MaterialFornecido): string => {
-    return material.charAt(0).toUpperCase() + material.slice(1).toLowerCase();
 }
 
 interface DrawerProps {
@@ -53,6 +50,14 @@ const getDuracaoEmMinutos = (duracao?: DuracaoReserva): number => {
         default:
             return 30;
     }
+};
+
+const calcularPrazoCancelamento = (dataAgendamento: string, horarioInicio: string, horasParaCancelar: number): string => {
+    const dataHoraJogo = parseISO(`${dataAgendamento}T${horarioInicio}`);
+
+    const prazoFinal = subHours(dataHoraJogo, horasParaCancelar);
+
+    return format(prazoFinal, "'até às' HH:mm 'de' dd/MM/yyyy", { locale: ptBR });
 };
 
 export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
@@ -276,27 +281,41 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
         );
     };
 
+    const primeiroHorario = selectedHorarios.length > 0 ? selectedHorarios.map(h => h.split('|')[1]).sort((a, b) => a.localeCompare(b))[0] : "00:00";
+
     return (
-        <Drawer placement="right" onClose={onClose} open={open} closable={false}>
-            <div className='flex flex-col h-full overflow-y-auto'>
-                <div className='py-2 flex justify-start'>
+        <Drawer
+            placement="right"
+            onClose={onClose}
+            open={open}
+            closable={false}
+            styles={{ body: { padding: 0 } }}
+            width={440}
+        >
+            <div className='flex flex-col h-full'>
+                <Flex
+                    align="center"
+                    justify="space-between"
+                    className="!pt-4 !pb-2 !px-6 !flex-shrink-0"
+                >
+                    <Title level={4} className="!m-0">{arena.nome}</Title>
+
                     <Button
                         onClick={onClose}
                         type="text"
                         shape="circle"
-                        icon={<IoCloseOutline className="text-black w-6 h-6" />}
+                        icon={<IoCloseOutline className="text-xl text-gray-500" />}
                     />
-                </div>
+                </Flex>
+
                 <Form
                     form={form}
                     layout="vertical"
                     onFinish={handleFormSubmit}
-                    className="flex flex-col justify-between px-6 pb-6 w-full h-full"
+                    className="!flex !flex-col !justify-between !flex-grow !px-6 !pb-6 !overflow-y-auto"
                 >
-                    {/* O restante do JSX do formulário permanece o mesmo */}
                     <div className="flex flex-col">
                         <div className="flex flex-col mb-4">
-                            <Title level={4} className="mb-1">{arena.nome}</Title>
                             <Text className='font-semibold'>{quadraSelecionada?.nomeQuadra}</Text>
                             {quadraSelecionada?.materiaisFornecidos && quadraSelecionada.materiaisFornecidos.length > 0 && (
                                 <Text className="mt-2">
@@ -313,11 +332,13 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                 </Text>
                             )}
                         </div>
+
                         {selectedHorarios.length > 0 && (
                             <div className="flex flex-row items-center gap-4 rounded-lg py-2 px-3 mb-4 border-2 border-gray-200">
                                 {renderResumoHorario()}
                             </div>
                         )}
+
                         <div className="flex flex-col gap-2 mb-4">
                             {quadraSelecionada && quadraSelecionada.tipoQuadra.length > 1 && (
                                 <Form.Item name="esporte" label={<Text className='font-semibold text-lg'>Selecione um esporte</Text>} rules={[{ required: true, message: 'Por favor, selecione um esporte!' }]}>
@@ -328,12 +349,13 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     </Select>
                                 </Form.Item>
                             )}
-                            <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
+
+                            {/* <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
                                 <span>Quer reservar este horário como fixo?</span>
                                 <Tag icon={<SyncOutlined spin />} color="processing">
                                     BETA
                                 </Tag>
-                                {/* <Switch disabled size="small" checked={isFixo} onChange={(c) => {
+                                <Switch disabled size="small" checked={isFixo} onChange={(c) => {
                                     setIsFixo(c);
                                     if (c) {
                                         setIsIncomplete(false);
@@ -341,8 +363,9 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     } else {
                                         setFixedDurationMonths(0);
                                     }
-                                }} /> */}
-                            </div>
+                                }} />
+                            </div> */}
+
                             {isFixo && (
                                 <Radio.Group value={fixedDurationMonths} onChange={(e) => setFixedDurationMonths(e.target.value)} className='!flex !justify-between'>
                                     <Radio value={1}>1 mês</Radio>
@@ -350,6 +373,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     <Radio value={6}>6 meses</Radio>
                                 </Radio.Group>
                             )}
+
                             <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
                                 <span>Tá faltando gente?</span>
                                 <Switch size="small" checked={isIncomplete} onChange={(c) => {
@@ -363,6 +387,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     }
                                 }} />
                             </div>
+
                             {isIncomplete && (
                                 <div className='flex justify-between items-center mt-2'>
                                     <span className='text-sm'>Quantos jogadores você precisa?</span>
@@ -383,13 +408,27 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     </div>
                                 </div>
                             )}
+
                         </div>
                     </div>
+
                     <div className="flex flex-col flex-1 justify-end">
+                        {selectedHorarios.length > 0 && arena.horasCancelarAgendamento > 0 && (
+                            <Alert
+                                message="Política de Cancelamento"
+                                description={`Você pode cancelar ${calcularPrazoCancelamento(selectedDate, primeiroHorario, arena.horasCancelarAgendamento)}.`}
+                                type="info"
+                                showIcon
+                                icon={<InfoCircleOutlined />}
+                                className="!mb-4"
+                            />
+                        )}
+
                         <div className='flex justify-between items-center mb-4'>
                             <span className='text-lg'>Total</span>
                             <span className='font-bold text-lg text-green-600'>{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                         </div>
+                        
                         <ButtonPrimary
                             text={submitting ? 'Agendando...' : 'Confirmar agendamento'}
                             htmlType="submit"

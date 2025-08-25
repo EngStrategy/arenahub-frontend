@@ -20,6 +20,7 @@ import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { formatarDiaSemanaAbreviado } from '@/context/functions/mapeamentoDiaSemana';
 import { MdOutlineSports } from "react-icons/md";
 import { useRouter } from 'next/navigation';
+import { formatarMaterial } from '@/context/functions/formatarMaterial';
 
 interface CourtCardProps {
     court: Quadra;
@@ -94,7 +95,7 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onDelete }) => {
                     <TagSection
                         title="Materiais Inclusos"
                         icon={<TagOutlined />}
-                        tags={court.materiaisFornecidos}
+                        tags={court.materiaisFornecidos?.map(formatarMaterial)}
                         color="default"
                     />
                     <TagSection

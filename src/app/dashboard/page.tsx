@@ -210,20 +210,32 @@ export default function Dashboard() {
 
         {pendentesResolucao.length > 0 && (
           <Alert
-            message={`${pendentesResolucao.length} Agendamento(s) Pendente(s)`}
-            // description="Existem agendamentos que já ocorreram e precisam que você defina o status (Pago, Ausente, etc.) para manter seus relatórios atualizados."
             type="warning"
             showIcon
-            action={
-              <Button
-                type="primary"
-                onClick={() => router.push('/perfil/arena/agendamentos')}
-              >
-                Resolver Agora
-              </Button>
-            }
             closable
             onClose={() => setPendentesResolucao([])}
+            message={
+              <Flex
+                className="flex-col sm:flex-row sm:items-center sm:justify-between w-full"
+              >
+                <div className="flex-grow sm:mr-4">
+                  <Typography.Text strong>
+                    {`${pendentesResolucao.length} Agendamento(s) Pendente(s)`}
+                  </Typography.Text>
+                  <Typography.Paragraph type="secondary" className="!mb-0">
+                    Existem agendamentos que já ocorreram e precisam que você defina o status (Pago, Ausente, etc.) para manter seus relatórios atualizados.
+                  </Typography.Paragraph>
+                </div>
+
+                <Button
+                  type="primary"
+                  onClick={() => router.push('/perfil/arena/agendamentos')}
+                  className="mt-3 sm:mt-0"
+                >
+                  Resolver Agora
+                </Button>
+              </Flex>
+            }
           />
         )}
 
@@ -301,7 +313,7 @@ export default function Dashboard() {
                       disabled={link.inProgress}
                     >
                       {link.label}
-                      {link.inProgress && <Tag color="blue" style={{ marginLeft: 'auto' }}>Em progresso</Tag>}
+                      {/* {link.inProgress && <Tag color="blue" style={{ marginLeft: 'auto' }}>Em progresso</Tag>} */}
                     </Button>
                   </Link>
                 ))}

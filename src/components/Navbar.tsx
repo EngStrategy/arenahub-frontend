@@ -9,12 +9,10 @@ import type { MenuProps } from 'antd';
 import {
   UserOutlined,
   TeamOutlined,
-  PhoneOutlined,
   QuestionCircleOutlined,
   LogoutOutlined,
   MenuOutlined,
   CloseOutlined,
-  BarChartOutlined,
 } from "@ant-design/icons";
 import { FaAngleDown } from "react-icons/fa6";
 import { ThemeSwitcher } from "./Switchs/ThemeSwitcher";
@@ -23,6 +21,7 @@ import { FaRegCalendarAlt } from "react-icons/fa";
 import { TbLockPassword, TbSoccerField } from "react-icons/tb";
 import { BiWorld } from "react-icons/bi";
 import { useAuth } from "@/context/hooks/use-auth";
+import { MdOutlineFeedback } from "react-icons/md";
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -76,14 +75,14 @@ const Navbar = () => {
   const atletaMenuItems: AppMenuItem[] = [
     {
       key: "info",
-      icon: <UserOutlined />,
+      icon: <UserOutlined className="size-4" />,
       label: "Meus dados",
       onClick: () => navigateTo("/perfil/atleta/informacoes"),
       className: "!my-1",
     },
     {
       key: "alterar-senha",
-      icon: <TbLockPassword />,
+      icon: <TbLockPassword className="size-4" />,
       label: "Alterar senha",
       onClick: () => navigateTo("/perfil/atleta/alterar-senha"),
       className: "!my-1"
@@ -93,21 +92,21 @@ const Navbar = () => {
   const arenaMenuItems: AppMenuItem[] = [
     {
       key: "info-arena",
-      icon: <UserOutlined />,
+      icon: <UserOutlined className="size-4" />,
       label: "Meus dados",
       onClick: () => navigateTo("/perfil/arena/informacoes"),
       className: "!my-1"
     },
     {
       key: "quadras-arena",
-      icon: <TbSoccerField />,
+      icon: <TbSoccerField className="size-4" />,
       label: "Quadras",
       onClick: () => navigateTo("/perfil/arena/quadras"),
       className: "!my-1"
     },
     {
       key: "alterar-senha-arena",
-      icon: <TbLockPassword />,
+      icon: <TbLockPassword className="size-4" />,
       label: "Alterar senha",
       onClick: () => navigateTo("/perfil/arena/alterar-senha"),
       className: "!my-1"
@@ -116,24 +115,24 @@ const Navbar = () => {
 
   const commonMenuItems: AppMenuItem[] = [
     {
+      key: "/ajuda",
+      icon: <QuestionCircleOutlined className="size-4" />,
+      label: "Ajuda e suporte",
+      onClick: () => navigateTo("/ajuda-suporte"),
+      className: "!my-1"
+    },
+    {
       key: "/quem-somos",
-      icon: <TeamOutlined />,
+      icon: <TeamOutlined className="size-4" />,
       label: "Quem somos",
       onClick: () => navigateTo("/quem-somos"),
       className: "!my-1"
     },
     {
-      key: "/contato",
-      icon: <PhoneOutlined />,
-      label: "Contato",
-      onClick: () => navigateTo("/contato"),
-      className: "!my-1"
-    },
-    {
-      key: "/ajuda",
-      icon: <QuestionCircleOutlined />,
-      label: "Ajuda e suporte",
-      onClick: () => navigateTo("/ajuda-suporte"),
+      key: "/feedback",
+      icon: <MdOutlineFeedback className="size-4" />,
+      label: "Feedback",
+      onClick: () => navigateTo("/feedback"),
       className: "!my-1"
     },
   ];
@@ -147,7 +146,7 @@ const Navbar = () => {
     { type: 'divider' },
     {
       key: "logout",
-      icon: <LogoutOutlined />,
+      icon: <LogoutOutlined className="size-4" />,
       label: "Sair da conta",
       onClick: handleSignOut,
       danger: true,
@@ -291,8 +290,15 @@ const Navbar = () => {
       >
         <Flex justify="space-between" align="center" style={{ height: '100%' }} className="!w-full">
           {/* Logo */}
-          <Link href={homeHref} aria-label="Página Inicial Alugaí">
-            <Image src="/icons/arenahub.svg" alt="ArenaHub Logo" width={100} height={50} style={{ height: '2.75rem', width: 'auto' }} priority />
+          <Link href={homeHref} aria-label="Página Inicial ArenaHub">
+            <Image
+              src={`${isDarkMode ? '/icons/logo_arenahub_dark.svg' : '/icons/logo_arenahub_light.svg'}`}
+              alt="ArenaHub Logo"
+              width={100}
+              height={80}
+              style={{ height: '3.5rem', width: 'auto' }}
+              priority
+            />
           </Link>
 
           {/* Exibir o menu central (logado) ou o menu comum (deslogado) */}
@@ -357,7 +363,13 @@ const Navbar = () => {
         <Drawer
           title={
             <Flex justify="space-between" align="center">
-              <Image src="/icons/arenahub.svg" alt="ArenaHub Logo Drawer" width={100} height={40} style={{ height: '2rem', width: 'auto' }} />
+              <Image
+                src={`${isDarkMode ? '/icons/logo_arenahub_dark.svg' : '/icons/logo_arenahub_light.svg'}`}
+                alt="ArenaHub Logo Drawer"
+                width={100}
+                height={80}
+                style={{ height: '3.5rem', width: 'auto' }}
+              />
               <Button type="text" icon={<CloseOutlined />} onClick={() => setMobileMenuOpen(false)} aria-label="Fechar menu" />
             </Flex>
           }

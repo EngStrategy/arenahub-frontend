@@ -177,7 +177,7 @@ export default function QuemSomosPage() {
                         <Col xs={24} md={12}>
                             <Title level={2}>Nossa Missão</Title>
                             <Paragraph className="text-lg">
-                                Nossa missão é simples: **facilitar o acesso ao esporte para todos.** Queremos que encontrar e reservar um espaço para praticar sua atividade física preferida seja tão fácil quanto chamar um amigo para jogar. Quebramos as barreiras para que você se preocupe apenas com uma coisa: a diversão.
+                                Nossa missão é simples: <Text strong>facilitar o acesso ao esporte para todos.</Text> Queremos que encontrar e reservar um espaço para praticar sua atividade física preferida seja tão fácil quanto chamar um amigo para jogar. Quebramos as barreiras para que você se preocupe apenas com uma coisa: a diversão.
                             </Paragraph>
                         </Col>
                         <Col xs={24} md={12}>
@@ -227,7 +227,7 @@ export default function QuemSomosPage() {
                         <Row gutter={[24, 32]} justify="center">
                             {teamMembers.map((member, index) => (
                                 <Col key={index} xs={24} sm={12} md={8}>
-                                    <Card bordered={false} className="bg-transparent">
+                                    <Card className="bg-transparent" variant='borderless'>
                                         <div className="text-center">
                                             <Avatar size={128} src={member.avatar} />
                                             <Title level={4} className="!mt-4 !mb-1">{member.name}</Title>

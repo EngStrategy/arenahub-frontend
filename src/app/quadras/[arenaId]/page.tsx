@@ -24,6 +24,7 @@ import { getArenaById } from '@/app/api/entities/arena';
 import { ModalRedirecionamentoLogin } from '@/components/Modais/ModalRedirecionamentoLogin';
 import { useTheme } from '@/context/ThemeProvider';
 import { useAuth } from '@/context/hooks/use-auth';
+import { formatarMaterial } from '@/context/functions/formatarMaterial';
 
 const { Title, Text } = Typography;
 
@@ -78,20 +79,6 @@ const QuadraPageSkeleton = () => (
         </div>
     </div>
 );
-
-const formatarMaterial = (material: MaterialFornecido): string => {
-    const materialMap: Record<MaterialFornecido, string> = {
-        BOLA: 'bola',
-        COLETE: 'colete',
-        LUVA: 'luva',
-        CONE: 'cone',
-        APITO: 'apito',
-        BOMBA: 'bomba',
-        MARCADOR_PLACAR: 'marcador de placar',
-        BOTAO_GOL: 'botão do gol'
-    };
-    return materialMap[material] || material.toLowerCase();
-}
 
 const addDuration = (time: string, durationMinutes: number): string => {
     const [h, m] = time.split(':').map(Number);
