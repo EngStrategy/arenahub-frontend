@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+:root {
+  --cor-fundo-light: #ffffff;
+  --cor-fundo-dark: #1A1A1A;
+}
+
+.bg-dark-mode {
+  background-color: var(--cor-fundo-dark);
+}
+
+.bg-light-mode {
+  background-color: var(--cor-fundo-light);
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.custom-green-checkbox .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #15a01a !important;
+  border-color: #15a01a !important;
+}
+.custom-green-checkbox .ant-checkbox-inner {
+  border-radius: 4px;
+}
+
+.bg-green-primary {
+  background-color: #15a01a;
+}
+
+.bg-green-secondary {
+  background-color: #39e75f;
+}
+
+.bg-green-light {
+  background-color:rgb(237, 250, 238);
+}
+
+.bg-green-dark {
+  background-color: #012d04;
+}
+
+.text-green-primary {
+  color: #15a01a;
+}
+
+.text-green-secondary {
+  color: #39e75f;
+}
+
+.text-green-light {
+  color: #abf7b1;
+}
+
+.text-green-dark {
+  color: #012d04;
+}
+
+.border-green-primary {
+  border-color: #15a01a;
+}
+
+.border-green-secondary {
+  border-color: #39e75f;
+}
+
+.border-green-light {
+  border-color: #abf7b1;
+}
+
+.sem-asterisco .ant-form-item-label > label.ant-form-item-required::before {
+  display: none;
+  content: '';
+  margin: 0;
+}
+
+.bg-blue-light {
+  background-color: #d7f4ff;
+}
+
+/* Estilização da Barra de Rolagem (Webkit - Chrome, Safari, Edge) */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Cor do trilho */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #15a01a; /* Cor principal da barra */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #117a15; /* Cor da barra ao passar o mouse */
+}
+
+/* Estilização da Barra de Rolagem (Firefox) */
+.custom-scrollbar {
+  scrollbar-width: thin; /* 'auto', 'thin', ou 'none' */
+  scrollbar-color: #15a01a #f1f1f1; /* Cor da barra e cor do trilho */
+}
+
+/* SPINNER */
+.soccer-ball {
+  background-image: url("/icons/ball_green.svg");
+  animation: spin-bounce 1.2s infinite ease-in-out;
+}
+
+@keyframes spin-bounce {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-40px) rotate(180deg);
+  }
+}
+
+/* Atraso para cada bola, criando o efeito de onda */
+.soccer-ball:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.soccer-ball:nth-child(3) {
+  animation-delay: 0.4s;
+}
