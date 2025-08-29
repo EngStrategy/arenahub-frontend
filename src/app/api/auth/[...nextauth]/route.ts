@@ -1,11 +1,12 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
+import { UUID } from "crypto";
 
 declare module "next-auth" {
   interface User {
     accessToken: string;
-    userId: number;
+    userId: UUID;
     name: string;
     role: string;
     expiresIn: number;

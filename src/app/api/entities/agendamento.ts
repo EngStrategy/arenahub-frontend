@@ -1,3 +1,4 @@
+import { UUID } from "crypto";
 import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 import { TipoQuadra } from "./quadra";
@@ -169,14 +170,14 @@ export type AgendamentoArena = {
     esporte: TipoQuadra;
     quadraId: number;
     nomeQuadra: string;
-    atletaId: number;
+    atletaId: UUID;
     nomeAtleta: string;
     emailAtleta: string;
     telefoneAtleta: string;
     urlFotoAtleta: string;
     totalParticipantes: number;
     participantes: Array<{
-        id: number;
+        id: UUID;
         nome: string;
         email: string;
         telefone: string;
@@ -198,7 +199,7 @@ export type AgendamentoExterno = {
     dataAgendamento: string;
     slotHorarioIds: number[];
     esporte: TipoQuadra;
-    atletaExistenteId?: number;
+    atletaExistenteId?: UUID;
     novoAtleta?: {
         nome: string;
         telefone: string;

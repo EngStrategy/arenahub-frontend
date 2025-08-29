@@ -49,6 +49,7 @@ import {
     AtletaSimple
 } from '@/app/api/entities/atleta';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/hooks/use-auth';
 
 dayjs.locale('pt-br');
 
@@ -70,6 +71,7 @@ export default function CriarAgendamentoExterno() {
     const [form] = Form.useForm();
     const { isDarkMode } = useTheme();
     const router = useRouter();
+    const { user } = useAuth();
 
     const [quadras, setQuadras] = useState<(QuadraType)[]>([]);
     const [horariosDisponiveis, setHorariosDisponiveis] = useState<Record<number, HorariosDisponiveis[]>>({});
@@ -99,7 +101,7 @@ export default function CriarAgendamentoExterno() {
         const fetchQuadras = async () => {
             setLoadingQuadras(true);
             try {
-                const response = await getAllQuadras({ arenaId: 1, size: 50 });
+                const response = await getAllQuadras({ arenaId: user?.userId, size: 50 });
                 setQuadras(response.content);
             } catch (error) {
                 console.error("Falha ao buscar quadras:", error);

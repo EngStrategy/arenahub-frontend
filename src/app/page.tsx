@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Col, Flex, Pagination, Row } from 'antd';
+import { Col, Flex, Pagination, Row, Alert, App, Typography } from 'antd';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
 import { sportIcons } from '@/data/sportIcons';
 import { type Arena, getAllArenas, type ArenaQueryParams } from '@/app/api/entities/arena';
@@ -9,6 +9,52 @@ import Link from 'next/link';
 import CitySports from '@/components/CitySports';
 import { useTheme } from '@/context/ThemeProvider';
 import { useAuth } from '@/context/hooks/use-auth';
+import { GlobalOutlined } from '@ant-design/icons';
+import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
+
+const { Text } = Typography;
+
+type UserLocation = {
+  latitude: number;
+  longitude: number;
+};
+
+type CachedLocation = {
+  coords: UserLocation;
+  timestamp: number;
+};
+
+const CACHE_KEY = 'user_location';
+const CACHE_EXPIRATION_MS = 60 * 60 * 12000; // Cache de 12 horas
+
+const saveLocationToCache = (coords: UserLocation) => {
+  const data: CachedLocation = { coords, timestamp: new Date().getTime() };
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error("Erro ao salvar localização no cache:", error);
+  }
+};
+
+const getLocationFromCache = (): UserLocation | null => {
+  try {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (!cachedData) return null;
+
+    const data: CachedLocation = JSON.parse(cachedData);
+    const isExpired = new Date().getTime() - data.timestamp > CACHE_EXPIRATION_MS;
+
+    if (isExpired) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    return data.coords;
+  } catch (error) {
+    console.error("Erro ao ler localização do cache:", error);
+    return null;
+  }
+};
+
 
 const ArenaCardSkeleton = () => (
   <div className="bg-white rounded-lg overflow-hidden shadow-lg border border-gray-200 flex flex-col animate-pulse">
@@ -35,18 +81,20 @@ const sportNameToBackendEnum: { [key: string]: ArenaQueryParams['esporte'] } = {
 export default function HomePage() {
   const { isLoadingSession } = useAuth();
   const { isDarkMode } = useTheme();
-
+  const { message } = App.useApp();
 
   const [selectedSport, setSelectedSport] = useState('');
   const [committedSearchTerm, setCommittedSearchTerm] = useState('');
   const [inputValue, setInputValue] = useState('');
-
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 16;
-
   const [arenas, setArenas] = useState<Arena[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalArenas, setTotalArenas] = useState(0);
+
+  const [location, setLocation] = useState<UserLocation | null>(null);
+  const [isLocationBannerVisible, setIsLocationBannerVisible] = useState(false);
+  const [isAskingPermission, setIsAskingPermission] = useState(false);
 
   useEffect(() => {
     const fetchArenas = async () => {
@@ -54,13 +102,17 @@ export default function HomePage() {
       try {
         const backendSport = selectedSport === 'Todos' ? undefined : sportNameToBackendEnum[selectedSport];
 
-        const response = await getAllArenas({
+        const params: ArenaQueryParams = {
           page: currentPage - 1,
           size: pageSize,
           esporte: backendSport,
-          cidade: committedSearchTerm === '' ? undefined : committedSearchTerm,
-        });
+          cidade: committedSearchTerm || undefined,
+          latitude: location?.latitude,
+          longitude: location?.longitude,
+          raioKm: location ? 50 : undefined,
+        };
 
+        const response = await getAllArenas(params);
         setArenas(response?.content || []);
         setTotalArenas(response?.totalElements ?? 0);
       } catch (error) {
@@ -75,16 +127,60 @@ export default function HomePage() {
     if (!isLoadingSession) {
       fetchArenas();
     }
+  }, [currentPage, selectedSport, committedSearchTerm, isLoadingSession, location]);
 
-  }, [currentPage, selectedSport, committedSearchTerm, isLoadingSession]);
+  // Efeito para verificar o cache e decidir se mostra o banner de localização
+  useEffect(() => {
+    const cachedLocation = getLocationFromCache();
+    if (cachedLocation) {
+      setLocation(cachedLocation);
+      setIsLocationBannerVisible(false);
+    } else {
+      // Mostra o banner após um pequeno delay para não ser intrusivo
+      const timer = setTimeout(() => {
+        setIsLocationBannerVisible(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleRequestLocation = () => {
+    setIsAskingPermission(true);
+    if (!navigator.geolocation) {
+      message.error("Geolocalização não é suportada pelo seu navegador.");
+      setIsAskingPermission(false);
+      setIsLocationBannerVisible(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const newLocation = { latitude, longitude };
+        saveLocationToCache(newLocation);
+        setLocation(newLocation);
+        setIsLocationBannerVisible(false);
+        setIsAskingPermission(false);
+        // Limpa a busca por cidade para priorizar a localização
+        setCommittedSearchTerm('');
+        setInputValue('');
+      },
+      (err) => {
+        console.warn(`Erro de geolocalização: ${err.message}`);
+        setIsLocationBannerVisible(false);
+        setIsAskingPermission(false);
+      }
+    );
+  };
 
   const handleSearchCommit = (term: string) => {
+    setLocation(null);
+    localStorage.removeItem(CACHE_KEY);
     setCommittedSearchTerm(term);
     setCurrentPage(1);
   };
 
   const allSports = Object.keys(sportIcons);
-
   const isPageLoading = loading || isLoadingSession;
 
   let content: React.ReactNode;
@@ -111,7 +207,7 @@ export default function HomePage() {
             </Col>
           ))}
         </Row>
-        {arenas.length > pageSize && (
+        {totalArenas > pageSize && (
           <Flex justify='center'>
             <Pagination
               current={currentPage}
@@ -138,6 +234,38 @@ export default function HomePage() {
       className={`!px-4 sm:!px-10 lg:!px-40 !py-8 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}
     >
       <div className="w-full">
+        {isLocationBannerVisible && (
+          <Alert
+            type="info"
+            showIcon
+            icon={<GlobalOutlined />}
+            closable
+            onClose={() => setIsLocationBannerVisible(false)}
+            className="!mb-6"
+            message={
+              <Flex
+                className="flex-col sm:flex-row sm:items-center sm:justify-between w-full"
+              >
+                <div className="flex-grow sm:mr-4">
+                  <Typography.Text strong className='!text-lg'>
+                    Encontre arenas perto de você
+                  </Typography.Text>
+                  <Typography.Paragraph type="secondary" className="!mb-1">
+                    Permita o acesso à sua localização para descobrirmos as melhores opções na sua área.
+                  </Typography.Paragraph>
+                </div>
+
+                <ButtonPrimary
+                  text='Usar minha localização'
+                  onClick={handleRequestLocation}
+                  loading={isAskingPermission}
+                  className="mt-3 sm:mt-0"
+                />
+              </Flex>
+            }
+          />
+        )}
+
         <CitySports
           loading={isPageLoading}
           selectedSport={selectedSport}
@@ -153,4 +281,4 @@ export default function HomePage() {
       </div>
     </Flex>
   );
-};
+}

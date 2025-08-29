@@ -234,7 +234,7 @@ export default function MeusAgendamentosArena() {
                 </>
             );
         }
-        return <Empty description="Nenhum agendamento encontrado com os filtros aplicados." className="mt-10 p-8" />;
+        return <Empty description="Nenhum agendamento encontrado." className="mt-10 p-8" />;
     };
 
     return (

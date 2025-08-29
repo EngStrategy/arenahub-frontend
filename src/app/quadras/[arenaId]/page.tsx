@@ -25,6 +25,7 @@ import { ModalRedirecionamentoLogin } from '@/components/Modais/ModalRedireciona
 import { useTheme } from '@/context/ThemeProvider';
 import { useAuth } from '@/context/hooks/use-auth';
 import { formatarMaterial } from '@/context/functions/formatarMaterial';
+import { UUID } from 'crypto';
 
 const { Title, Text } = Typography;
 
@@ -100,7 +101,7 @@ const subDuration = (time: string, durationMinutes: number): string => {
 export default function QuadraPage() {
     const { isLoadingSession, signOut, isUserAtleta } = useAuth();
     const params = useParams();
-    const arenaId = Number(params?.arenaId as string);
+    const arenaId = (params?.arenaId as string) as UUID;
     const router = useRouter();
     const { isDarkMode } = useTheme();
 

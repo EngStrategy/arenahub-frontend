@@ -1,3 +1,4 @@
+import { UUID } from "crypto";
 import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 import { AvaliacaoQueryParams, AvaliacaoResponse } from "./agendamento";
@@ -54,7 +55,7 @@ export interface Quadra {
     cobertura: boolean;
     iluminacaoNoturna: boolean;
     materiaisFornecidos: Array<MaterialFornecido>;
-    arenaId: number;
+    arenaId: UUID;
     nomeArena: string;
     horariosFuncionamento: Array<HorarioFuncionamento>;
     notaMedia: number;
@@ -70,7 +71,7 @@ export interface QuadraCreate {
     cobertura: boolean;
     iluminacaoNoturna: boolean;
     materiaisFornecidos: Array<MaterialFornecido>;
-    arenaId: number;
+    arenaId: UUID;
     horariosFuncionamento: Array<HorarioFuncionamentoCreate>;
 }
 
@@ -78,7 +79,7 @@ export interface QuadraQueryParams {
     page?: number;
     size?: number;
     sort?: string;
-    arenaId?: number;
+    arenaId?: UUID;
     esporte?: Array<TipoQuadra>;
 }
 
@@ -142,7 +143,7 @@ export const getHorariosDisponiveisPorQuadra = async (quadraId: number, data: st
     return httpRequests.getMethod<Array<HorariosDisponiveis>>(`${URLS.QUADRAS}/${quadraId}/horarios-disponiveis`, { data });
 }
 
-export const getQuadraByIdArena = async (arenaId: number): Promise<Quadra | undefined> => {
+export const getQuadraByIdArena = async (arenaId: UUID): Promise<Quadra | undefined> => {
     if (!arenaId) {
         console.warn("ID da arena não fornecido.");
         return undefined;

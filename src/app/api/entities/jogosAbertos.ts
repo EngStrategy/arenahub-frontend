@@ -1,3 +1,4 @@
+import { UUID } from "crypto";
 import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 import { TipoQuadra } from "./quadra";
@@ -50,7 +51,7 @@ export const aceitarOuRecusarEntrada = async (solicitacaoId: number, aceitar: bo
 export type SolicitacaoJogoAberto = {
     id: number;
     agendamentoId: number;
-    solicitanteId: number;
+    solicitanteId: UUID;
     nomeSolicitante: string;
     telefoneSolicitante: string;
     fotoSolicitante: string;

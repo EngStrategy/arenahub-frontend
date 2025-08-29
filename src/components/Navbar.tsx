@@ -63,7 +63,7 @@ const Navbar = () => {
     if (mobileMenuOpen) setMobileMenuOpen(false);
   };
   const handleSignOut = () => {
-    signOut();
+    signOut({ redirect: '/' });
     if (mobileMenuOpen) setMobileMenuOpen(false);
   };
 

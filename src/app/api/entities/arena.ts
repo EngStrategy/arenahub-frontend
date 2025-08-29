@@ -1,8 +1,9 @@
+import { UUID } from "crypto";
 import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 
 export interface Arena {
-    id: number;
+    id: UUID;
     nome: string;
     email: string;
     telefone: string;
@@ -14,6 +15,8 @@ export interface Arena {
         rua: string;
         numero: string;
         complemento: string;
+        latitude: number | null;
+        longitude: number | null;
     };
     horasCancelarAgendamento: number;
     descricao: string;
@@ -41,6 +44,8 @@ export interface ArenaCreate {
         rua: string;
         numero: string;
         complemento: string | null;
+        latitude: number | null;
+        longitude: number | null;
     };
     descricao: string | null;
     urlFoto: string | null;
@@ -54,6 +59,9 @@ export interface ArenaQueryParams {
     direction?: 'asc' | 'desc';
     cidade?: string;
     esporte?: "FUTEBOL_SOCIETY" | "FUTEBOL_SETE" | "FUTEBOL_ONZE" | "FUTSAL" | "BEACHTENNIS" | "VOLEI" | "FUTEVOLEI" | "BASQUETE" | "HANDEBOL";
+    latitude?: number;
+    longitude?: number;
+    raioKm?: number;
 }
 
 export const getAllArenas = async (
@@ -66,7 +74,7 @@ export const getAllArenas = async (
     );
 };
 
-export const getArenaById = async (id: number): Promise<Arena | undefined> => {
+export const getArenaById = async (id: UUID): Promise<Arena | undefined> => {
     if (!id) {
         console.warn("ID da arena não fornecido.");
         return undefined;
@@ -79,7 +87,7 @@ export const createArena = async (newArena: ArenaCreate) => {
 };
 
 export const updateArena = async (
-    id: number,
+    id: UUID,
     updatedArena: Partial<Arena>
 ): Promise<Arena | undefined> => {
     if (!id) {
@@ -92,7 +100,7 @@ export const updateArena = async (
     );
 };
 
-export const deleteArena = async (id: number): Promise<void> => {
+export const deleteArena = async (id: UUID): Promise<void> => {
     if (!id) {
         console.warn("ID da arena não fornecido.");
         return;
