@@ -15,8 +15,8 @@ export interface Arena {
         rua: string;
         numero: string;
         complemento: string;
-        latitude: number | null;
-        longitude: number | null;
+        latitude?: number | null;
+        longitude?: number | null;
     };
     horasCancelarAgendamento: number;
     descricao: string;
