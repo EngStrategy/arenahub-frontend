@@ -48,7 +48,7 @@ api.interceptors.request.use(async (config) => {
 
   return config;
 }, (error) => {
-  return Promise.reject(new Error(error?.message ?? String(error)));
+  return Promise.reject(error);
 });
 
 api.interceptors.response.use(
@@ -57,8 +57,9 @@ api.interceptors.response.use(
     if (axios.isAxiosError(error) && error.response) {
       if (error.response.status === 401) {
         console.warn("Interceptor: Recebido 401. Deslogando...");
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-          await signOut({ callbackUrl: '/login', redirect: true });
+        if (typeof window !== 'undefined') {
+          const callbackUrl = `${window.location.origin}/login`;
+          await signOut({ callbackUrl, redirect: true });
         }
         return Promise.reject(error);
       }
@@ -97,7 +98,6 @@ export const request = async <T = any>(
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       if (error.response) {
-        console.error("Erro na requisição:", error.response.data);
         throw error.response.data;
       }
       if (error.request) {

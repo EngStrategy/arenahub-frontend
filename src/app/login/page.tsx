@@ -49,7 +49,7 @@ export default function Login() {
     const [options, setOptions] = React.useState<AutoCompleteProps['options']>([]);
 
     const capsLockEstaAtivado = useCapsLock();
-    const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/confirm-email", "redefinir-senha"];
+    const authRoutes = ["/login", "/registro", "/forgot-password", "/reset-password", "/confirmar-email", "redefinir-senha", "/"];
     const callbackUrl = searchParams.get("callbackUrl");
 
     const handleSearch = (value: string) => {
@@ -88,7 +88,7 @@ export default function Login() {
 
             if (responseNextAuth?.ok) {
                 const session = await getSession();
-                let destination = "/";
+                let destination = "/arenas";
 
                 if (session?.user?.role === "ARENA") {
                     destination = "/dashboard";
@@ -210,7 +210,7 @@ export default function Login() {
                             <Typography.Text>
                                 Não tem uma conta?{" "}
                                 <Link
-                                    href="/register"
+                                    href="/registro"
                                     className="!underline !underline-offset-4 !text-green-500 hover:!text-green-500 ">
                                     Cadastre-se
                                 </Link>

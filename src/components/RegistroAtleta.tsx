@@ -81,7 +81,6 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
 
   const onFinishFailed = (errorInfo: any) => {
     message.error("Por favor, corrija os erros no formulário.", 5);
-    console.log("Failed:", errorInfo);
   };
 
   const handleSubmit = async (values: any) => {
@@ -98,7 +97,7 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
 
       if (response) {
         message.success("Conta criada com sucesso!", 5);
-        router.push(`/confirm-email?email=${values.email}`);
+        router.push(`/confirmar-email?email=${values.email}`);
       } else {
         message.error("Erro ao criar conta. Tente novamente.", 5);
       }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Pagination, Layout, Typography, Row, Col, Flex, Empty, App } from 'antd';
+import { Pagination, Layout, Typography, Row, Col, Flex, Empty, App, Alert } from 'antd';
 import { JogoAbertoCard } from '@/components/Cards/JogoAbertoCard';
 import CitySports from '@/components/CitySports';
 import { sportIcons } from '@/data/sportIcons';
@@ -10,9 +10,51 @@ import { getAllJogosAbertos, JogosAbertosQueryParams, type JogosAbertos as JogoA
 import { mapeamentoEsportes } from '@/context/functions/mapeamentoEsportes';
 import { TipoQuadra } from '../api/entities/quadra';
 import { useAuth } from '@/context/hooks/use-auth';
+import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
+import { GlobalOutlined } from '@ant-design/icons';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Content } = Layout;
+
+type UserLocation = {
+    latitude: number;
+    longitude: number;
+};
+
+type CachedLocation = {
+    coords: UserLocation;
+    timestamp: number;
+};
+
+const CACHE_KEY = 'user_location';
+const CACHE_EXPIRATION_MS = 60 * 60 * 12000; // Cache de 12 horas
+
+const saveLocationToCache = (coords: UserLocation) => {
+    const data: CachedLocation = { coords, timestamp: new Date().getTime() };
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    } catch (error) {
+        console.error("Erro ao salvar localização no cache:", error);
+    }
+};
+
+const getLocationFromCache = (): UserLocation | null => {
+    try {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (!cachedData) return null;
+        const data: CachedLocation = JSON.parse(cachedData);
+        const isExpired = new Date().getTime() - data.timestamp > CACHE_EXPIRATION_MS;
+        if (isExpired) {
+            localStorage.removeItem(CACHE_KEY);
+            return null;
+        }
+        return data.coords;
+    } catch (error) {
+        console.error("Erro ao ler localização do cache:", error);
+        return null;
+    }
+};
 
 const JogoAbertoCardSkeleton = () => (
     <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 animate-pulse">
@@ -53,18 +95,27 @@ export default function JogosAbertos() {
     const { isDarkMode } = useTheme();
     const { message } = App.useApp();
 
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
     const [jogos, setJogos] = useState<JogoAbertoAPI[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedSport, setSelectedSport] = useState('');
-    const [committedSearchTerm, setCommittedSearchTerm] = useState('');
-    const [inputValue, setInputValue] = useState('');
+
+    const [selectedSport, setSelectedSport] = useState(searchParams.get('esporte') || '');
+    const [committedSearchTerm, setCommittedSearchTerm] = useState(searchParams.get('cidade') || '');
+    const [inputValue, setInputValue] = useState(searchParams.get('cidade') || '');
     const [pagination, setPagination] = useState({
-        currentPage: 1,
+        currentPage: Number(searchParams.get('pagina')) || 1,
         pageSize: 16,
         totalElements: 0,
     });
 
-    const fetchJogosAbertos = useCallback(async (page: number, sport: string, cidade: string) => {
+    const [location, setLocation] = useState<UserLocation | null>(null);
+    const [isLocationBannerVisible, setIsLocationBannerVisible] = useState(false);
+    const [isAskingPermission, setIsAskingPermission] = useState(false);
+
+    const fetchJogosAbertos = useCallback(async (page: number, sport: string, cidade: string, loc: UserLocation | null) => {
         setLoading(true);
         try {
             const backendSport = sport === 'Todos' ? undefined : friendlyNameToBackendEnum[sport];
@@ -76,6 +127,9 @@ export default function JogosAbertos() {
                 direction: 'asc',
                 cidade: cidade === '' ? undefined : cidade,
                 esporte: backendSport,
+                latitude: loc?.latitude,
+                longitude: loc?.longitude,
+                raioKm: loc ? 50 : undefined,
             };
             const response = await getAllJogosAbertos(params as JogosAbertosQueryParams);
 
@@ -102,8 +156,60 @@ export default function JogosAbertos() {
     }, [pagination.pageSize, message]);
 
     useEffect(() => {
-        fetchJogosAbertos(pagination.currentPage, selectedSport, committedSearchTerm);
-    }, [pagination.currentPage, selectedSport, committedSearchTerm, fetchJogosAbertos]);
+        const params = new URLSearchParams();
+
+        if (committedSearchTerm) params.set('cidade', committedSearchTerm);
+        if (selectedSport && selectedSport !== 'Todos') params.set('esporte', selectedSport);
+        if (pagination.currentPage > 1) params.set('pagina', String(pagination.currentPage));
+
+        const queryString = params.toString();
+        router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+
+    }, [selectedSport, committedSearchTerm, pagination.currentPage, pathname, router]);
+
+    useEffect(() => {
+        fetchJogosAbertos(pagination.currentPage, selectedSport, committedSearchTerm, location);
+    }, [pagination.currentPage, selectedSport, committedSearchTerm, fetchJogosAbertos, location]);
+
+    useEffect(() => {
+        const cachedLocation = getLocationFromCache();
+        if (cachedLocation) {
+            setLocation(cachedLocation);
+            setIsLocationBannerVisible(false);
+        } else {
+            const timer = setTimeout(() => {
+                setIsLocationBannerVisible(true);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
+    const handleRequestLocation = () => {
+        setIsAskingPermission(true);
+        if (!navigator.geolocation) {
+            message.error("Geolocalização não é suportada pelo seu navegador.");
+            setIsAskingPermission(false);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const newLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+                saveLocationToCache(newLocation);
+                setLocation(newLocation);
+                setIsLocationBannerVisible(false);
+                setIsAskingPermission(false);
+                setCommittedSearchTerm('');
+                setInputValue('');
+            },
+            (err) => {
+                console.warn(`Erro de geolocalização: ${err.message}`);
+                setIsLocationBannerVisible(false);
+                setIsAskingPermission(false);
+                message.warning("Não foi possível obter sua localização. Tente buscar por cidade.");
+            }
+        );
+    };
 
     const handleSportChange = (sport: string) => {
         setSelectedSport(sport);
@@ -111,6 +217,8 @@ export default function JogosAbertos() {
     };
 
     const handleSearchCommit = (term: string) => {
+        setLocation(null);
+        localStorage.removeItem(CACHE_KEY);
         setCommittedSearchTerm(term);
         setPagination(prev => ({ ...prev, currentPage: 1 }));
     };
@@ -170,6 +278,38 @@ export default function JogosAbertos() {
         >
             <Title level={3} className="!text-center !mb-8">Jogos abertos</Title>
 
+            {isLocationBannerVisible && (
+                <Alert
+                    type="info"
+                    showIcon
+                    icon={<GlobalOutlined />}
+                    closable
+                    onClose={() => setIsLocationBannerVisible(false)}
+                    className="!mb-6"
+                    message={
+                        <Flex
+                            className="flex-col sm:flex-row sm:items-center sm:justify-between w-full"
+                        >
+                            <div className="flex-grow sm:mr-4">
+                                <Typography.Text strong className='!text-lg'>
+                                    Encontre arenas perto de você
+                                </Typography.Text>
+                                <Typography.Paragraph type="secondary" className="!mb-1">
+                                    Permita o acesso à sua localização para descobrirmos as melhores opções na sua área.
+                                </Typography.Paragraph>
+                            </div>
+
+                            <ButtonPrimary
+                                text='Usar minha localização'
+                                onClick={handleRequestLocation}
+                                loading={isAskingPermission}
+                                className="mt-3 sm:mt-0"
+                            />
+                        </Flex>
+                    }
+                />
+            )}
+
             <CitySports
                 loading={loading}
                 selectedSport={selectedSport}
@@ -181,6 +321,15 @@ export default function JogosAbertos() {
                 allSports={allSports}
                 sportIcons={sportIcons}
             />
+
+            {location && !committedSearchTerm && (
+                <div className="my-4 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-center">
+                    <Text type="secondary">
+                        Jogos abertos próximos a você.
+                    </Text>
+                </div>
+            )}
+
             {contentToRender}
         </Content>
     );

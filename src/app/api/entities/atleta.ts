@@ -1,9 +1,8 @@
-import { UUID } from "crypto";
 import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 
 export interface Atleta {
-    id: UUID;
+    id: string;
     nome: string;
     email: string;
     telefone: string;
@@ -50,7 +49,7 @@ export const getAllAtletas = async (
 };
 
 export const getAtletaById = async (
-    id: UUID
+    id: string
 ): Promise<Atleta | undefined> => {
     if (!id) {
         console.warn("ID do atleta é obrigatório para buscar por ID.");
@@ -66,7 +65,7 @@ export const createAtleta = async (
 };
 
 export const updateAtleta = async (
-    id: UUID,
+    id: string,
     updatedAtleta: Partial<Atleta>
 ): Promise<Atleta | undefined> => {
     if (!id) {
@@ -79,7 +78,7 @@ export const updateAtleta = async (
     );
 };
 
-export const deleteAtleta = async (id: UUID): Promise<boolean> => {
+export const deleteAtleta = async (id: string): Promise<boolean> => {
     if (!id) {
         console.warn("ID do atleta é obrigatório para deletar.");
         return false;
@@ -94,16 +93,16 @@ export const updatePassword = async (
 ): Promise<void> => {
     return httpRequests.patchMethod<void>(
         `${URLS.ATLETAS}/me/alterar-senha`,
-        { 
-            senhaAtual: currentPassword, 
-            novaSenha: newPassword, 
+        {
+            senhaAtual: currentPassword,
+            novaSenha: newPassword,
             confirmacaoNovaSenha: confirmNewPassword
         },
     );
 }
 
 export type AtletaSimple = {
-    id: UUID;
+    id: string;
     nome: string;
     telefone: string;
     urlFoto: string;

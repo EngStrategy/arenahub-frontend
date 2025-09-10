@@ -6,6 +6,7 @@ import {
     Avatar, App, UploadProps, UploadFile, Switch, MenuProps, Dropdown,
     Layout, Card, Row, Col, Flex, List, Tag, Space,
     Tooltip,
+    notification,
 } from 'antd';
 import {
     PictureOutlined, UploadOutlined, EditOutlined, DeleteOutlined,
@@ -293,9 +294,6 @@ export default function CadastrarQuadra() {
                     .filter(dia => dia.intervalosDeHorario.length > 0),
             };
 
-            console.log("Quadra a ser cadastrada:", quadra);
-
-
             await createQuadra(quadra);
 
             message.success("Quadra cadastrada com sucesso!");
@@ -303,8 +301,7 @@ export default function CadastrarQuadra() {
             router.push('/perfil/arena/quadras');
         } catch (error: unknown) {
             const apiError = error as { code?: string; message?: string };
-            console.error("Erro ao criar quadra:", apiError);
-            message.error(apiError.message || 'Erro ao cadastrar quadra.', 5);
+            notification.error({ message: apiError.message || 'Erro ao cadastrar quadra.', duration: 8 });
             setLoading(false);
         }
     };

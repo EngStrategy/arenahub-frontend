@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { RegistroAtleta } from "@/components/RegistroAtleta";
 import { RegistroArena } from "@/components/RegistroArena";
 import Image from "next/image";
-import { Flex, Typography } from "antd";
+import { Flex, Segmented, Typography } from "antd";
 import { useTheme } from "@/context/ThemeProvider";
 import { useAuth } from "@/context/hooks/use-auth";
 
@@ -52,28 +52,22 @@ const RegisterPageSkeleton = () => (
 const RegisterPage = () => {
   const { user, isAuthenticated, isLoadingSession, isUserAtleta } = useAuth();
   const [accountType, setAccountType] = useState<"atleta" | "arena">("atleta");
-  const [isFading, setIsFading] = useState(false);
   const router = useRouter();
   const { isDarkMode } = useTheme();
 
-  const handleAccountTypeChange = (type: "atleta" | "arena") => {
-    if (accountType === type) return;
-    setIsFading(true);
-    setTimeout(() => {
-      setAccountType(type);
-      setIsFading(false);
-    }, 300);
-  };
-
   useEffect(() => {
     if (isAuthenticated && isUserAtleta) {
-      router.push("/");
+      router.push("/arenas");
     }
   }, [isAuthenticated, router, user?.role]);
 
   if (isLoadingSession) {
     return <RegisterPageSkeleton />;
   }
+
+  const imageSrc = accountType === 'atleta'
+    ? "/icons/vector_futebol.svg"
+    : "/icons/arena_estadio.svg";
 
   return (
     <Flex
@@ -84,7 +78,7 @@ const RegisterPage = () => {
     >
       <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
         <Image
-          src="/icons/vector_futebol.svg"
+          src={imageSrc}
           alt="Futebol"
           width={400}
           height={400}
@@ -96,39 +90,29 @@ const RegisterPage = () => {
         <div className="p-6 sm:p-8 w-full">
           <Flex justify="center" vertical>
             <Typography.Title level={4} className="text-center !mb-4">
-              Cadastre-se abaixo
+              Crie sua Conta no ArenaHub
             </Typography.Title>
-            <div className="flex justify-center mb-6 w-full">
-              <button
-                className={`cursor-pointer px-4 py-2 border-b-2 font-semibold w-1/2 transition-colors duration-200 ${accountType === "atleta"
-                  ? "border-green-primary text-green-primary"
-                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  }`}
-                onClick={() => handleAccountTypeChange("atleta")}
-                disabled={isFading}
-              >
-                Atleta
-              </button>
-              <button
-                className={`cursor-pointer px-4 py-2 border-b-2 font-semibold w-1/2 transition-colors duration-200 ${accountType === "arena"
-                  ? "border-green-primary text-green-primary"
-                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  }`}
-                onClick={() => handleAccountTypeChange("arena")}
-                disabled={isFading}
-              >
-                Arena
-              </button>
-            </div>
+
+            <Segmented
+              options={[
+                { label: 'Atleta', value: 'atleta' },
+                { label: 'Arena', value: 'arena' },
+              ]}
+              value={accountType}
+              onChange={(value) => setAccountType(value as 'atleta' | 'arena')}
+              block
+              size="large"
+              className="!mb-6"
+            />
 
             {accountType === "atleta" && (
               <RegistroAtleta
-                className={`w-full transition-opacity duration-300 ${isFading ? "opacity-0" : "opacity-100"}`}
+                className="w-full transition-opacity duration-300"
               />
             )}
             {accountType === "arena" && (
               <RegistroArena
-                className={`w-full transition-opacity duration-300 ${isFading ? "opacity-0" : "opacity-100"}`}
+                className="w-full transition-opacity duration-300"
               />
             )}
           </Flex>

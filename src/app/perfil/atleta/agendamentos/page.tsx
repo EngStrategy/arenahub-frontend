@@ -33,14 +33,15 @@ import {
     atualizarAvaliacao,
     type AgendamentoNormal,
     type StatusAgendamento,
-    type AvaliacaoResponse,
 } from '@/app/api/entities/agendamento';
 import { useTheme } from '@/context/ThemeProvider';
 import { JogoAbertoCard } from '@/components/Cards/JogoAbertoCard';
 import { listarJogosAbertosSolicitadosMe, type JogoAbertoMeSolicitado } from '@/app/api/entities/jogosAbertos';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 import { ClearOutlined, CloseOutlined, LeftOutlined, PictureOutlined, RightOutlined } from '@ant-design/icons';
 import { useAuth } from '@/context/hooks/use-auth';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import type { CarouselRef } from 'antd/es/carousel';
 
 const { Content } = Layout;
 const { RangePicker } = DatePicker;
@@ -81,7 +82,9 @@ const statusForView: Record<AgendamentoView, StatusAgendamento | undefined> = {
     participacoes: undefined,
 };
 
-import type { CarouselRef } from 'antd/es/carousel';
+const isValidView = (view: string | null): view is AgendamentoView => {
+    return view === 'pendentes' || view === 'historico' || view === 'participacoes';
+}
 
 export default function Agendamentos() {
     const carouselRef = useRef<CarouselRef>(null);
@@ -89,15 +92,26 @@ export default function Agendamentos() {
     const { message, notification } = App.useApp();
     const { isDarkMode } = useTheme();
 
-    const [view, setView] = useState<AgendamentoView>('pendentes');
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const [view, setView] = useState<AgendamentoView>(isValidView(searchParams.get('aba')) ? searchParams.get('aba') as AgendamentoView : 'pendentes');
     const [agendamentos, setAgendamentos] = useState<AgendamentoNormal[]>([]);
     const [loadingAgendamentos, setLoadingAgendamentos] = useState(true);
-    const [loadingAvaliacoes, setLoadingAvaliacoes] = useState(true);
-    const [pagination, setPagination] = useState({ currentPage: 1, pageSize: 12, totalElements: 0 });
+    const [pagination, setPagination] = useState({
+        currentPage: Number(searchParams.get('pagina')) || 1,
+        pageSize: 18,
+        totalElements: 0
+    });
 
+    const [filters, setFilters] = useState({
+        dateRange: null as [Dayjs | null, Dayjs | null] | null,
+        tipo: (searchParams.get('tipo') as TipoAgendamento) || 'AMBOS',
+    });
+    
     const [solicitacoes, setSolicitacoes] = useState<JogoAbertoMeSolicitado[]>([]);
     const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(true);
-
     const [agendamentosParaAvaliar, setAgendamentosParaAvaliar] = useState<AgendamentoCardData[]>([]);
 
     const onFinishCarouselItem = async (agendamentoId: number, values: { nota: number, comentario?: string }) => {
@@ -105,10 +119,6 @@ export default function Agendamentos() {
         if (carouselRef.current) carouselRef.current.next();
     };
 
-    const [filters, setFilters] = useState({
-        dateRange: null as [Dayjs | null, Dayjs | null] | null,
-        tipo: 'AMBOS' as TipoAgendamento,
-    });
 
     const fetchAgendamentos = useCallback(async (page: number, status?: StatusAgendamento, currentFilters?: typeof filters) => {
         setLoadingAgendamentos(true);
@@ -162,6 +172,46 @@ export default function Agendamentos() {
         }
     }, [message]);
 
+    useEffect(() => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        // Sincroniza a aba ativa
+        params.set('aba', view);
+
+        // Sincroniza os filtros apenas se a aba for 'historico'
+        if (view === 'historico') {
+            if (filters.dateRange?.[0] && filters.dateRange?.[1]) {
+                params.set('dataInicio', filters.dateRange[0].format('YYYY-MM-DD'));
+                params.set('dataFim', filters.dateRange[1].format('YYYY-MM-DD'));
+            } else {
+                params.delete('dataInicio');
+                params.delete('dataFim');
+            }
+            if (filters.tipo !== 'AMBOS') {
+                params.set('tipo', filters.tipo);
+            } else {
+                params.delete('tipo');
+            }
+        } else {
+            // Garante que os filtros de histórico sejam limpos da URL se a aba mudar
+            params.delete('dataInicio');
+            params.delete('dataFim');
+            params.delete('tipo');
+        }
+
+        // Sincroniza a paginação (se não for a primeira página)
+        if (pagination.currentPage > 1) {
+            params.set('pagina', String(pagination.currentPage));
+        } else {
+            params.delete('pagina');
+        }
+
+        // Atualiza a URL sem recarregar a página
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
+    }, [view, filters, pagination.currentPage, pathname, router, searchParams]);
+
+
     const handleLimparFiltros = useCallback(() => {
         setFilters({
             dateRange: null,
@@ -209,10 +259,9 @@ export default function Agendamentos() {
     useEffect(() => {
         if (isAuthenticated && !isLoadingSession && view === 'historico') {
             const fetchAvaliacoesPendentes = async () => {
-                setLoadingAvaliacoes(true);
+                setLoadingAgendamentos(true);
                 try {
                     const response = await getAgendamentosAvaliacoesPendentes();
-                    console.log('Avaliações pendentes:', response);
                     const pendentesTransformados = response
                         ? response.map(ag => ({
                             id: ag.id,
@@ -238,7 +287,7 @@ export default function Agendamentos() {
                     console.error("Erro ao buscar avaliações pendentes:", error);
                     notification.error({ message: errorMsg, duration: 8 });
                 } finally {
-                    setLoadingAvaliacoes(false);
+                    setLoadingAgendamentos(false);
                 }
             };
             fetchAvaliacoesPendentes();

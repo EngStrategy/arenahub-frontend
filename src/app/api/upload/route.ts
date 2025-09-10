@@ -34,7 +34,6 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: data?.data?.error || 'Falha ao fazer upload para o Imgur.' }, { status: data.status || 500 });
         }
 
-        console.log("Sucesso no upload pelo servidor. Link:", data.data.link);
         return NextResponse.json({ link: data.data.link });
 
     } catch (error) {

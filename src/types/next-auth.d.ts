@@ -4,11 +4,12 @@ declare module "next-auth" {
   interface Session {
     user: {
       accessToken: string;
-      userId: UUID;
+      userId: string;
       name: string;
       role: string;
       expiresIn: number;
       imageUrl: string;
+      statusAssinatura?: 'ATIVA' | 'INATIVA' | 'CANCELADA' | 'ATRASADA';
     };
   }
 }

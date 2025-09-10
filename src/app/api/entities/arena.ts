@@ -1,9 +1,9 @@
-import { UUID } from "crypto";
 import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 
+export type StatusAssinatura = 'ATIVA' | 'INATIVA' | 'CANCELADA' | 'ATRASADA';
 export interface Arena {
-    id: UUID;
+    id: string;
     nome: string;
     email: string;
     telefone: string;
@@ -26,6 +26,8 @@ export interface Arena {
     esportes?: string[];
     notaMedia?: number;
     quantidadeAvaliacoes?: number;
+    stripeCustomerId?: string | null;
+    statusAssinatura?: StatusAssinatura;
 }
 
 export interface ArenaCreate {
@@ -51,7 +53,6 @@ export interface ArenaCreate {
     urlFoto: string | null;
 }
 
-
 export interface ArenaQueryParams {
     page?: number;
     size?: number;
@@ -74,7 +75,7 @@ export const getAllArenas = async (
     );
 };
 
-export const getArenaById = async (id: UUID): Promise<Arena | undefined> => {
+export const getArenaById = async (id: string): Promise<Arena | undefined> => {
     if (!id) {
         console.warn("ID da arena não fornecido.");
         return undefined;
@@ -87,7 +88,7 @@ export const createArena = async (newArena: ArenaCreate) => {
 };
 
 export const updateArena = async (
-    id: UUID,
+    id: string,
     updatedArena: Partial<Arena>
 ): Promise<Arena | undefined> => {
     if (!id) {
@@ -100,7 +101,7 @@ export const updateArena = async (
     );
 };
 
-export const deleteArena = async (id: UUID): Promise<void> => {
+export const deleteArena = async (id: string): Promise<void> => {
     if (!id) {
         console.warn("ID da arena não fornecido.");
         return;

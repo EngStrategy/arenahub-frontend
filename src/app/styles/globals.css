@@ -3,6 +3,8 @@
 :root {
   --cor-fundo-light: #ffffff;
   --cor-fundo-dark: #1A1A1A;
+  --cor-fundo-light-secondary: #f9f9f9;
+  --cor-fundo-dark-secondary: #2a2a2a;
 }
 
 .bg-dark-mode {
@@ -15,6 +17,7 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0 !important;
 }
 
 .custom-green-checkbox .ant-checkbox-checked .ant-checkbox-inner {
@@ -128,4 +131,13 @@ body {
 
 .soccer-ball:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 2s ease-out forwards;
 }

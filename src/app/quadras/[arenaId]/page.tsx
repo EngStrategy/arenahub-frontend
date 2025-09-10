@@ -1,10 +1,10 @@
 "use client";
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { format, addDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
-import { Button, Card, Typography, Spin, Alert, Avatar } from 'antd';
+import { Button, Card, Typography, Spin, Alert, Avatar, App } from 'antd';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
 import { TbSoccerField } from "react-icons/tb";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
@@ -12,8 +12,6 @@ import { DrawerConfirmacaoReserva } from '@/components/Drawers/DrawerConfirmacao
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     type Quadra as QuadraOficial,
-    type DuracaoReserva,
-    type MaterialFornecido,
     getAllQuadras,
     getHorariosDisponiveisPorQuadra,
     type HorariosDisponiveis
@@ -25,7 +23,6 @@ import { ModalRedirecionamentoLogin } from '@/components/Modais/ModalRedireciona
 import { useTheme } from '@/context/ThemeProvider';
 import { useAuth } from '@/context/hooks/use-auth';
 import { formatarMaterial } from '@/context/functions/formatarMaterial';
-import { UUID } from 'crypto';
 
 const { Title, Text } = Typography;
 
@@ -100,9 +97,9 @@ const subDuration = (time: string, durationMinutes: number): string => {
 
 export default function QuadraPage() {
     const { isLoadingSession, signOut, isUserAtleta } = useAuth();
+    const { message } = App.useApp();
     const params = useParams();
-    const arenaId = (params?.arenaId as string) as UUID;
-    const router = useRouter();
+    const arenaId = (params?.arenaId as string);
     const { isDarkMode } = useTheme();
 
     const [arena, setArena] = useState<ArenaOficial | null>(null);
@@ -227,7 +224,7 @@ export default function QuadraPage() {
                 if (timeToChange === nextAdjacent || timeToChange === prevAdjacent) {
                     setSelectedHorarios((prev) => [...prev, value].sort((a, b) => a.localeCompare(b)));
                 } else {
-                    console.log("Por favor, selecione um horário consecutivo.");
+                    message.error("Por favor, selecione um horário consecutivo.");
                 }
             }
         }
@@ -435,7 +432,6 @@ export default function QuadraPage() {
                                         return;
                                     }
                                     !isDisabled && handleHorarioClick(quadra, horario)
-                                    console.log(`ID horário: ${horario.id}`);
                                 }}
                             >
                                 <Text className="!font-semibold !leading-tight" style={{ color: 'inherit' }}>

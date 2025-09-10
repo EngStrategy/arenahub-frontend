@@ -269,12 +269,12 @@ export default function QuemSomosPage() {
                             Seja você um atleta procurando o lugar perfeito para jogar ou uma arena querendo otimizar seus agendamentos, nós temos a solução.
                         </Paragraph>
                         <Space direction="horizontal" size="large" wrap className="justify-center">
-                            <Link href="/" passHref>
+                            <Link href="/arenas" passHref>
                                 <Button type="primary" size="large" className="!bg-green-primary hover:!bg-green-500">
                                     Encontre sua Quadra
                                 </Button>
                             </Link>
-                            <Link href="/register" passHref>
+                            <Link href="/registro" passHref>
                                 <Button size="large">
                                     Cadastre sua Arena
                                 </Button>

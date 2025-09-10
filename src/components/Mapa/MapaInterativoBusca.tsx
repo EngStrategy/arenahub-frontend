@@ -41,8 +41,6 @@ export const MapaInterativoBusca: React.FC<MapaProps> = ({ apiKey, addressToSear
             const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}&language=pt-BR`);
             const data = await response.json();
 
-            console.log("Resposta da geocodificação:", data);
-
             if (data.status === 'OK' && data.results.length > 0) {
                 const location = data.results[0].geometry.location; // { lat, lng }
                 setMapCenter(location);
@@ -55,7 +53,7 @@ export const MapaInterativoBusca: React.FC<MapaProps> = ({ apiKey, addressToSear
             console.error("Erro na geocodificação:", error);
             setGeocodingError('Não foi possível buscar as coordenadas.');
         }
-    }, 2000), [apiKey, isLoaded, onCoordinatesChange]); // Debounce de 1.5s
+    }, 2000), [apiKey, isLoaded, onCoordinatesChange]); // Debounce de 2s
 
     useEffect(() => {
         // Aciona a busca sempre que o endereço completo mudar

@@ -54,7 +54,7 @@ export default function ConfirmEmailPage() {
             setEmail(emailFromUrl);
         } else {
             message.error("Email não fornecido.", 5);
-            router.push("/register");
+            router.push("/registro");
         }
         setPageLoading(false);
     }, [searchParams, router, message]);
