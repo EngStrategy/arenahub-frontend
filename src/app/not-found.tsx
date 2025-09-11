@@ -27,7 +27,7 @@ export default function NotFound() {
         <div>
           <Link
             href={
-              isUserArena ? '/dashboard' : '/'
+              isUserArena ? '/dashboard' : "/arenas"
             }
             className='text-blue-500 hover:underline'>
             <ButtonPrimary

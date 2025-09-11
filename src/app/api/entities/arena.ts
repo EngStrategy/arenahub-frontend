@@ -1,8 +1,9 @@
 import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 
+export type StatusAssinatura = 'ATIVA' | 'INATIVA' | 'CANCELADA' | 'ATRASADA';
 export interface Arena {
-    id: number;
+    id: string;
     nome: string;
     email: string;
     telefone: string;
@@ -14,6 +15,8 @@ export interface Arena {
         rua: string;
         numero: string;
         complemento: string;
+        latitude?: number | null;
+        longitude?: number | null;
     };
     horasCancelarAgendamento: number;
     descricao: string;
@@ -23,6 +26,8 @@ export interface Arena {
     esportes?: string[];
     notaMedia?: number;
     quantidadeAvaliacoes?: number;
+    stripeCustomerId?: string | null;
+    statusAssinatura?: StatusAssinatura;
 }
 
 export interface ArenaCreate {
@@ -41,11 +46,12 @@ export interface ArenaCreate {
         rua: string;
         numero: string;
         complemento: string | null;
+        latitude: number | null;
+        longitude: number | null;
     };
     descricao: string | null;
     urlFoto: string | null;
 }
-
 
 export interface ArenaQueryParams {
     page?: number;
@@ -54,6 +60,9 @@ export interface ArenaQueryParams {
     direction?: 'asc' | 'desc';
     cidade?: string;
     esporte?: "FUTEBOL_SOCIETY" | "FUTEBOL_SETE" | "FUTEBOL_ONZE" | "FUTSAL" | "BEACHTENNIS" | "VOLEI" | "FUTEVOLEI" | "BASQUETE" | "HANDEBOL";
+    latitude?: number;
+    longitude?: number;
+    raioKm?: number;
 }
 
 export const getAllArenas = async (
@@ -66,7 +75,7 @@ export const getAllArenas = async (
     );
 };
 
-export const getArenaById = async (id: number): Promise<Arena | undefined> => {
+export const getArenaById = async (id: string): Promise<Arena | undefined> => {
     if (!id) {
         console.warn("ID da arena não fornecido.");
         return undefined;
@@ -79,7 +88,7 @@ export const createArena = async (newArena: ArenaCreate) => {
 };
 
 export const updateArena = async (
-    id: number,
+    id: string,
     updatedArena: Partial<Arena>
 ): Promise<Arena | undefined> => {
     if (!id) {
@@ -92,7 +101,7 @@ export const updateArena = async (
     );
 };
 
-export const deleteArena = async (id: number): Promise<void> => {
+export const deleteArena = async (id: string): Promise<void> => {
     if (!id) {
         console.warn("ID da arena não fornecido.");
         return;

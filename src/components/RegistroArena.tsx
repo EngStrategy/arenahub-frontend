@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     Form, Input, Select, App, Switch, Avatar,
     Upload, UploadProps, Button, UploadFile,
@@ -10,7 +10,8 @@ import {
     Typography,
     AutoComplete,
     AutoCompleteProps,
-    InputNumber
+    InputNumber,
+    Alert
 } from "antd";
 import { Estados } from "@/data/Estados";
 import Link from "next/link";
@@ -28,9 +29,10 @@ import { FileType, getBase64, uploadToImgur } from '@/context/functions/imgur';
 import { useCapsLock } from "@/context/hooks/use-caps-look";
 import CapsLock from "./Alerts/CapsLock";
 import { useTheme } from "@/context/ThemeProvider";
+import { MapaInterativoBusca } from "./Mapa/MapaInterativoBusca";
 
 const { Option } = Select;
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 type CITYResponse = {
     id: number;
@@ -96,7 +98,26 @@ export const RegistroArena = ({ className }: { className?: string }) => {
     const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
     const capsLockEstaAtivado = useCapsLock();
     const [options, setOptions] = useState<AutoCompleteProps['options']>([]);
+    const [fullAddress, setFullAddress] = useState("");
 
+    const numero = Form.useWatch('numero', form);
+    const rua = Form.useWatch('rua', form);
+    const bairro = Form.useWatch('bairro', form);
+    const cidade = Form.useWatch('cidade', form);
+    const estado = Form.useWatch('estado', form);
+
+    useEffect(() => {
+        if (rua && cidade && estado) {
+            setFullAddress(`${rua}, ${numero || ''}, ${bairro}, ${cidade}, ${estado}`);
+        }
+    }, [rua, numero, bairro, cidade, estado]);
+
+    const handleCoordinatesChange = useCallback((lat: number, lng: number) => {
+        form.setFieldsValue({
+            latitude: parseFloat(lat.toFixed(6)),
+            longitude: parseFloat(lng.toFixed(6))
+        });
+    }, [form]);
 
     const handleSearch = (value: string) => {
         setOptions(() => {
@@ -138,18 +159,16 @@ export const RegistroArena = ({ className }: { className?: string }) => {
 
 
     useEffect(() => {
-        const estadoSelecionado = form.getFieldValue("estado")
-        if (estadoSelecionado === "0") {
+        if (!estado || estado === "0") {
+            setCities([]);
             return;
         }
         axios
-            .get(
-                `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoSelecionado}/municipios`
-            )
+            .get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado}/municipios`)
             .then((response) => {
                 setCities(response.data);
             });
-    });
+    }, [estado]);
 
     async function consultarCnpj(cnpj: string) {
         if (!cnpj || cnpj.length < 14) {
@@ -224,11 +243,9 @@ export const RegistroArena = ({ className }: { className?: string }) => {
 
     const onFinishFailed = (errorInfo: any) => {
         message.error("Por favor, corrija os erros no formulário.", 5);
-        console.log("Failed:", errorInfo);
     };
 
     const handleSubmit = async (values: any) => {
-        console.log("Valores brutos do formulário:", values);
 
         let urlParaSalvar = imageUrl;
         if (selectedFile) {
@@ -240,7 +257,8 @@ export const RegistroArena = ({ className }: { className?: string }) => {
 
         const {
             nome, email, telefone, senha, cpfProprietario, cnpj, descricao,
-            cep, estado, cidade, bairro, rua, numero, complemento, horasCancelarAgendamento
+            cep, estado, cidade, bairro, rua, numero, complemento, horasCancelarAgendamento,
+            latitude, longitude
         } = values;
 
         const payload: ArenaCreate = {
@@ -261,10 +279,10 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 rua,
                 numero,
                 complemento: complemento ?? null,
+                latitude: latitude ? parseFloat(latitude) : null,
+                longitude: longitude ? parseFloat(longitude) : null,
             },
         };
-
-        console.log("Dados formatados para envio:", payload);
 
         try {
             setLoading(true);
@@ -280,7 +298,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
 
             if (response) {
                 message.success("Conta criada com sucesso!", 5);
-                router.push(`/confirm-email?email=${values.email}`);
+                router.push(`/confirmar-email?email=${values.email}`);
             } else {
                 message.error("Erro ao criar conta. Tente novamente.", 5);
             }
@@ -613,6 +631,54 @@ export const RegistroArena = ({ className }: { className?: string }) => {
                 </Form.Item>
             </Flex>
 
+            <div className="my-6">
+                <Title level={5}>Localização no Mapa</Title>
+                <Text type="secondary">Após preencher o endereço, o mapa buscará a localização. Você pode arrastar o marcador para ajustar a posição exata.</Text>
+                <div className="mt-4">
+                    {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
+                        <MapaInterativoBusca
+                            apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+                            addressToSearch={fullAddress}
+                            onCoordinatesChange={handleCoordinatesChange}
+                        />
+                    ) : (
+                        <div style={{ margin: '16px 0' }}>
+                            <Alert
+                                message="Erro: Chave da API do Google Maps não encontrada."
+                                description="Por favor, contate o administrador do sistema para configurar a chave da API do Google Maps."
+                                type="error"
+                                showIcon
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <Flex
+                vertical
+                className="md:!flex-row"
+                gap="middle">
+                <Form.Item label="Latitude"
+                    name="latitude"
+                    rules={[{ required: true, message: "As coordenadas são obrigatórias." }]}
+                >
+                    <Input
+                        placeholder="Selecione no mapa"
+                        disabled
+                    />
+                </Form.Item>
+                <Form.Item
+                    label="Longitude"
+                    name="longitude"
+                    rules={[{ required: true, message: "As coordenadas são obrigatórias." }]}
+                >
+                    <Input
+                        placeholder="Selecione no mapa"
+                        disabled
+                    />
+                </Form.Item>
+            </Flex>
+
             <Form.Item label="Foto ou logomarca da arena" className="!mb-2">
                 <Flex align="center" className="gap-4">
                     <div className="relative group">
@@ -706,4 +772,3 @@ export const RegistroArena = ({ className }: { className?: string }) => {
         </Form>
     );
 };
-

@@ -11,12 +11,12 @@ type SportIconMap = {
 
 export const sportIcons: SportIconMap = {
   'Todos': <FaFutbol className="mr-2" />,
-  'Futebol society': <FaFutbol className="mr-2" />,
-  'Vôlei': <FaVolleyballBall className="mr-2" />,
-  'Futebol Sete': <FaFutbol className="mr-2" />,
+  'Futebol Society': <FaFutbol className="mr-2" />,
+  'Futebol 7': <FaFutbol className="mr-2" />,
   'Futebol 11': <FaFutbol className="mr-2" />,
-  'Beach Tennis': <GiBeachBall className="mr-2" />,
   'Futsal': <FaFutbol className="mr-2" />,
+  'Vôlei': <FaVolleyballBall className="mr-2" />,
+  'Beach Tennis': <GiBeachBall className="mr-2" />,
   // 'Futebol de areia': <FaFutbol className="mr-2" />,
   'Futevôlei': <FaVolleyballBall className="mr-2" />,
   'Basquete': <FaBasketballBall className="mr-2" />,

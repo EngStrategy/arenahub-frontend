@@ -169,14 +169,14 @@ export type AgendamentoArena = {
     esporte: TipoQuadra;
     quadraId: number;
     nomeQuadra: string;
-    atletaId: number;
+    atletaId: string;
     nomeAtleta: string;
     emailAtleta: string;
     telefoneAtleta: string;
     urlFotoAtleta: string;
     totalParticipantes: number;
     participantes: Array<{
-        id: number;
+        id: string;
         nome: string;
         email: string;
         telefone: string;
@@ -198,7 +198,7 @@ export type AgendamentoExterno = {
     dataAgendamento: string;
     slotHorarioIds: number[];
     esporte: TipoQuadra;
-    atletaExistenteId?: number;
+    atletaExistenteId?: string;
     novoAtleta?: {
         nome: string;
         telefone: string;

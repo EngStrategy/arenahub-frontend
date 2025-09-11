@@ -9,6 +9,7 @@ import {
     InputNumber,
     Select,
     Typography,
+    App
 } from 'antd';
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -38,6 +39,7 @@ const formatarDiaSemana = (dia: DiaDaSemana) => {
 
 const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel, onOk, day }) => {
     const [form] = Form.useForm();
+    const { message } = App.useApp();
 
     useEffect(() => {
         if (open && day) {
@@ -93,7 +95,7 @@ const ModalCriarHorarios: React.FC<ModalCriarHorariosProps> = ({ open, onCancel,
                 onOk({ horarios: horariosParaSalvar });
             })
             .catch(info => {
-                console.log('Falha na validação:', info.errorFields);
+                message.error('Falha na validação:', info.errorFields);
             });
     };
 

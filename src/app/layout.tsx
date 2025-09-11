@@ -4,15 +4,21 @@ import SessionAuthProvider from "@/context/SessionAuthProvider";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { App as AntdApp } from 'antd';
 
 const inter = Inter({
-    variable: "--font-inter",
-    subsets: ["latin"],
+  variable: "--font-inter",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-    title: "Alugai",
-    description: "",
+  title: "ArenaHub",
+  description: "",
+  icons: {
+    icon: "/icons/logo_arenahub_icone.svg",
+  },
+  keywords: ["ArenaHub", "Aluguel de quadras", "alugar jogo", "jogar futebol"],
+  authors: [{ name: "Sávio Soares", url: "https://github.com/saviosoaresUFC" }],
 };
 
 const ThemeScript = () => {
@@ -35,26 +41,28 @@ const ThemeScript = () => {
 };
 
 export default function RootLayout({
-    children,
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
 
-    return (
-        <html lang="en" suppressHydrationWarning>
-            <head>
-                <ThemeScript />
-            </head>
-            <body className={`${inter.variable} antialiased h-full`}>
-                <SessionAuthProvider>
-                    <ThemeProvider>
-                        <main className="flex flex-col min-h-screen">
-                            <Navbar />
-                            {children}
-                        </main>
-                    </ThemeProvider>
-                </SessionAuthProvider>
-            </body>
-        </html>
-    );
+  return (
+    <html lang="pt-br" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
+      <body className={`${inter.variable} antialiased h-full`}>
+        <SessionAuthProvider>
+          <ThemeProvider>
+            <AntdApp>
+              <div className="relative flex flex-col min-h-screen">
+                <Navbar />
+                {children}
+              </div>
+            </AntdApp>
+          </ThemeProvider>
+        </SessionAuthProvider>
+      </body>
+    </html>
+  );
 }

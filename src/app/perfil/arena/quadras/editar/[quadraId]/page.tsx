@@ -129,7 +129,7 @@ export default function EditarQuadra() {
     const { isDarkMode } = useTheme();
 
     const [form] = Form.useForm();
-    const { message } = App.useApp();
+    const { message, notification } = App.useApp();
     const { session, isLoadingSession, isAuthenticated } = useAuth();
     const router = useRouter();
 
@@ -208,7 +208,6 @@ export default function EditarQuadra() {
                 const key = 'uploading-image';
                 message.loading({ content: 'Carregando...', key, duration: 0 });
                 urlParaSalvar = await uploadToImgur(selectedFile);
-                console.log("URL da imagem carregada:", urlParaSalvar);
                 message.destroy(key);
             }
 
@@ -235,9 +234,9 @@ export default function EditarQuadra() {
             } else {
                 throw new Error("A atualização não retornou dados.");
             }
-        } catch (error: any) {
-            console.error("Erro ao atualizar quadra:", error.message || error);
-            message.error(error.message ?? "Ocorreu um erro ao salvar as alterações.", 7);
+        } catch (error: unknown) {
+            const apiError = error as { code?: string; message?: string };
+            notification.error({ message: apiError.message || 'Erro ao cadastrar quadra.', duration: 8 });
         } finally {
             setIsSubmitting(false);
         }

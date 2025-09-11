@@ -8,7 +8,7 @@ import { useTheme } from '@/context/ThemeProvider'
 import { useAuth } from '@/context/hooks/use-auth'
 
 const minhaFonteCustomizada = localFont({
-  src: '../../public/fonts/jsMath-cmr10.ttf',
+  src: "../../public/fonts/jsMath-cmr10.ttf",
 })
 
 export default function ErrorPage() {
@@ -27,9 +27,9 @@ export default function ErrorPage() {
         <div>
           <Link
             href={
-              isUserArena ? '/dashboard' : '/'
+              isUserArena ? "/dashboard" : "/arenas"
             }
-            className='text-blue-500 hover:underline'
+            className="text-blue-500 hover:underline"
           >
             <ButtonPrimary
               text="Voltar para a Página Inicial"

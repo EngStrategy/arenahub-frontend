@@ -168,7 +168,7 @@ export default function InformacoesPessoaisAtleta() {
             setIsFormAltered(false);
             fetchAndSetUserData();
             await new Promise(resolve => setTimeout(() => {
-                router.push('/');
+                router.push("/arenas");
                 resolve(null);
             }, 2000));
         } catch (error: any) {

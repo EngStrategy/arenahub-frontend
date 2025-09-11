@@ -71,7 +71,7 @@ export function JogoAbertoCard({ jogoAberto, onSaidaSucesso }: JogoAbertoCardPro
                 duration: 5,
             });
 
-            router.push('/perfil/atleta/agendamentos');
+            router.push('/perfil/atleta/agendamentos?aba=participacoes');
         } catch (error) {
             console.error("Erro ao solicitar entrada:", error);
             notification.error({

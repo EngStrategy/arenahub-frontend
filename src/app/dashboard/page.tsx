@@ -109,9 +109,10 @@ export default function Dashboard() {
           setError(null);
           const data = await getDashboardData();
           setDashboardData(data);
-        } catch (err) {
-          console.error("Erro ao buscar dados do dashboard:", err);
-          setError("Não foi possível carregar os dados do dashboard. Faça login novamente.");
+        } catch (err: unknown) {
+          const apiError = err as { code?: string; message?: string };
+          console.error("Erro ao buscar dados do dashboard:", apiError);
+          setError(apiError.message || "Não foi possível carregar os dados do dashboard.");
         } finally {
           setLoading(false);
         }
@@ -120,7 +121,6 @@ export default function Dashboard() {
       const fetchPendentesResolucao = async () => {
         try {
           const data = await getAgendamentosPendentesResolucao();
-          console.log("Agendamentos pendentes para resolução:", data);
           setPendentesResolucao(data);
         } catch (err) {
           console.error("Erro ao buscar agendamentos pendentes para resolução:", err);

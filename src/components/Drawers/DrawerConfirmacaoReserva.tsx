@@ -190,11 +190,10 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
         };
 
         try {
-            console.log("Enviando para a API:", payload);
             await createAgendamento(payload);
             message.success('Agendamento criado com sucesso!');
             onClose();
-            router.push('/perfil/atleta/agendamentos');
+            router.push('/perfil/atleta/agendamentos?aba=pendentes');
         } catch (error) {
             console.error("Falha ao criar agendamento:", error);
             message.error(

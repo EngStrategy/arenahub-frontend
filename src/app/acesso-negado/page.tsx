@@ -23,7 +23,7 @@ export default function AcessoNegado() {
         <p className='text-gray-500'>Você não tem permissão para acessar esta página.</p>
 
         <div>
-          <Link href="/" className='text-blue-500 hover:underline'>
+          <Link href="/arenas" className='text-blue-500 hover:underline'>
             <ButtonPrimary
               text="Voltar para a Página Inicial"
               className='!px-6'

@@ -1,5 +1,5 @@
 export const URLS = {
-    AUTENTICACAO: `/usuarios/auth`,
+    AUTENTICACAO: `/usuarios`,
     VERIFY_EMAIL: `/verify`,
     VERIFY_RESET_CODE: `/verify-reset-code`,
     RESET_PASSWORD: `/reset-password`,
@@ -15,5 +15,7 @@ export const URLS = {
     JOGOS_ABERTOS: `/jogos-abertos`,
     ARENAAGENDAMENTOS: `/arena/agendamentos`,
 
-    FEEDBACK: `/feedback`
+    FEEDBACK: `/feedback`,
+
+    SUBSCRIPTION: `/subscriptions`,
 };

@@ -22,6 +22,9 @@ export type JogosAbertosQueryParams = {
     direction?: "asc" | "desc";
     cidade?: string;
     esporte?: TipoQuadra;
+    latitude?: number;
+    longitude?: number;
+    raioKm?: number;
 };
 
 // Busca todos os jogos abertos
@@ -50,7 +53,7 @@ export const aceitarOuRecusarEntrada = async (solicitacaoId: number, aceitar: bo
 export type SolicitacaoJogoAberto = {
     id: number;
     agendamentoId: number;
-    solicitanteId: number;
+    solicitanteId: string;
     nomeSolicitante: string;
     telefoneSolicitante: string;
     fotoSolicitante: string;

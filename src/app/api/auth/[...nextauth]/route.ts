@@ -2,14 +2,17 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
 
+type StatusAssinatura = 'ATIVA' | 'INATIVA' | 'CANCELADA' | 'ATRASADA';
+
 declare module "next-auth" {
   interface User {
     accessToken: string;
-    userId: number;
+    userId: string;
     name: string;
     role: string;
     expiresIn: number;
     imageUrl: string;
+    statusAssinatura?: StatusAssinatura;
   }
 }
 
@@ -31,26 +34,13 @@ const handler = NextAuth({
           });
 
           const user = res.data;
-          console.log("API Success Response:", user);
 
           if (user) {
             return user;
           } else {
-            console.log("API returned success, but no user object.");
             return null;
           }
         } catch (error: any) {
-          console.error("AXIOS ERROR:", error);
-
-          if (error.response) {
-            console.error("API Response Status:", error.response.status);
-            console.error("API Response Data:", error.response.data);
-          } else if (error.request) {
-            console.error("No response received from API:", error.request);
-          } else {
-            console.error("Error setting up request:", error.message);
-          }
-
           const errorMessage = error.response?.data?.message ?? error.message ?? "An unexpected error occurred.";
           throw new Error(errorMessage);
         }
@@ -65,6 +55,7 @@ const handler = NextAuth({
         token.name = user.name;
         token.role = user.role;
         token.picture = user.imageUrl;
+        token.statusAssinatura = user.statusAssinatura;
 
         const nowInSeconds = Math.floor(Date.now() / 1000);
         token.exp = nowInSeconds + user.expiresIn;
@@ -72,27 +63,29 @@ const handler = NextAuth({
         return token;
       }
 
+      // Token expirado, limpando sessão.
       if (Date.now() / 1000 > (token.exp as number)) {
-        console.log("Token expirado, limpando sessão.");
         return {};
       }
 
+      // Atualiza o token com os dados mais recentes da sessão
       if (trigger === "update" && session) {
-        console.log("Atualizando token com dados da sessão:", session);
         token.name = session.name;
         token.picture = session.picture;
+        token.statusAssinatura = session.statusAssinatura;
       }
 
       return token;
     },
     async session({ session, token }) {
-      if (token) {
+      if (token?.userId) {
         session.user.accessToken = token.accessToken as string;
-        session.user.userId = token.userId as number;
+        session.user.userId = token.userId as string; 
         session.user.name = token.name as string;
         session.user.role = token.role as string;
         session.user.expiresIn = token.exp as number;
         session.user.imageUrl = token.picture as string;
+        session.user.statusAssinatura = token.statusAssinatura as StatusAssinatura;
       }
       return session;
     },

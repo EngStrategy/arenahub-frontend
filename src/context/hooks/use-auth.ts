@@ -21,8 +21,8 @@ export const useAuth = () => {
     const isAuthenticated = status === 'authenticated';
     const isLoadingSession = status === 'loading';
 
-    const signOut = () => {
-        const callbackUrl = `${process.env.NEXTAUTH_URL || window.location.origin}/`;
+    const signOut = ({ redirect }: { redirect?: string }) => {
+        const callbackUrl = redirect || `${process.env.NEXTAUTH_URL || window.location.origin}/`;
         nextAuthSignOut({ callbackUrl });
     };
 

@@ -54,7 +54,7 @@ export interface Quadra {
     cobertura: boolean;
     iluminacaoNoturna: boolean;
     materiaisFornecidos: Array<MaterialFornecido>;
-    arenaId: number;
+    arenaId: string;
     nomeArena: string;
     horariosFuncionamento: Array<HorarioFuncionamento>;
     notaMedia: number;
@@ -70,7 +70,7 @@ export interface QuadraCreate {
     cobertura: boolean;
     iluminacaoNoturna: boolean;
     materiaisFornecidos: Array<MaterialFornecido>;
-    arenaId: number;
+    arenaId: string;
     horariosFuncionamento: Array<HorarioFuncionamentoCreate>;
 }
 
@@ -78,7 +78,7 @@ export interface QuadraQueryParams {
     page?: number;
     size?: number;
     sort?: string;
-    arenaId?: number;
+    arenaId?: string;
     esporte?: Array<TipoQuadra>;
 }
 
@@ -92,15 +92,7 @@ export const getAllQuadras = async (
 };
 
 export const createQuadra = async (newQuadra: QuadraCreate): Promise<Quadra> => {
-    try {
-        console.log("Tentando criar quadra com os dados:", newQuadra);
-        const response = await httpRequests.postMethod(URLS.QUADRAS, newQuadra);
-        console.log("Quadra criada com sucesso:", response);
-        return response;
-    } catch (error) {
-        console.error("ERRO DETALHADO AO CRIAR QUADRA:", error);
-        throw new Error("Falha ao criar a quadra. Verifique os logs do servidor.");
-    }
+    return httpRequests.postMethod(URLS.QUADRAS, newQuadra);
 };
 
 export const updateQuadra = async (
@@ -111,7 +103,6 @@ export const updateQuadra = async (
         console.warn("ID da quadra não fornecido.");
         return undefined;
     }
-    console.log("Tentando atualizar quadra com os dados:", updateQuadra);
     return httpRequests.putMethod<QuadraCreate, Partial<QuadraCreate>>(
         `${URLS.QUADRAS}/${id}`,
         updateQuadra,
@@ -142,7 +133,7 @@ export const getHorariosDisponiveisPorQuadra = async (quadraId: number, data: st
     return httpRequests.getMethod<Array<HorariosDisponiveis>>(`${URLS.QUADRAS}/${quadraId}/horarios-disponiveis`, { data });
 }
 
-export const getQuadraByIdArena = async (arenaId: number): Promise<Quadra | undefined> => {
+export const getQuadraByIdArena = async (arenaId: string): Promise<Quadra | undefined> => {
     if (!arenaId) {
         console.warn("ID da arena não fornecido.");
         return undefined;

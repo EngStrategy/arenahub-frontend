@@ -22,6 +22,7 @@ import { TbLockPassword, TbSoccerField } from "react-icons/tb";
 import { BiWorld } from "react-icons/bi";
 import { useAuth } from "@/context/hooks/use-auth";
 import { MdOutlineFeedback } from "react-icons/md";
+import { BsBookmarkCheck } from "react-icons/bs";
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -63,7 +64,7 @@ const Navbar = () => {
     if (mobileMenuOpen) setMobileMenuOpen(false);
   };
   const handleSignOut = () => {
-    signOut();
+    signOut({ redirect: "/arenas" });
     if (mobileMenuOpen) setMobileMenuOpen(false);
   };
 
@@ -79,6 +80,13 @@ const Navbar = () => {
       label: "Meus dados",
       onClick: () => navigateTo("/perfil/atleta/informacoes"),
       className: "!my-1",
+    },
+    {
+      key: "/sorteio",
+      icon: <TeamOutlined />,
+      label: "Sorteio de times",
+      onClick: () => navigateTo("/sorteio"),
+      className: "!my-1"
     },
     {
       key: "alterar-senha",
@@ -111,6 +119,13 @@ const Navbar = () => {
       onClick: () => navigateTo("/perfil/arena/alterar-senha"),
       className: "!my-1"
     },
+    {
+      key: "assinatura-arena",
+      icon: <BsBookmarkCheck className="size-4" />,
+      label: "Assinatura",
+      onClick: () => navigateTo("/perfil/arena/assinatura"),
+      className: "!my-1"
+    }
   ];
 
   const commonMenuItems: AppMenuItem[] = [
@@ -271,7 +286,10 @@ const Navbar = () => {
     );
   }
 
-  const homeHref = isUserArena ? "/dashboard" : "/";
+  let homeHref = "/";
+  if (session?.user) {
+    homeHref = isUserArena ? "/dashboard" : "/arenas";
+  }
 
   return (
     <>
@@ -280,9 +298,10 @@ const Navbar = () => {
           position: 'sticky',
           top: 0,
           zIndex: 50,
-          backgroundColor: isDarkMode ? '#2c2c2c' : '#ffffff',
-          boxShadow: isDarkMode ? '0 1px 4px rgba(0, 0, 0, 0.5)' : '0 2px 10px rgba(0, 0, 0, 0.1)',
+          backgroundColor: isDarkMode ? '#2c2c2c' : 'rgba(255, 255, 255, 0.25)',
           backdropFilter: 'blur(10px)',
+          boxShadow: 'none',
+          borderBottom: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.08)',
           lineHeight: 'inherit',
           height: '56px'
         }}
@@ -320,6 +339,13 @@ const Navbar = () => {
                     label: "Jogos abertos",
                     onClick: () => navigateTo("/jogos-abertos"),
                     icon: <BiWorld />,
+                    className: "!my-1"
+                  },
+                  {
+                    key: "/sorteio",
+                    label: "Sorteio de times",
+                    onClick: () => navigateTo("/sorteio"),
+                    icon: <TeamOutlined />,
                     className: "!my-1"
                   },
                   ...commonMenuItems

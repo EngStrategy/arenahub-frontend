@@ -2,7 +2,7 @@ import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 
 export interface Atleta {
-    id: number;
+    id: string;
     nome: string;
     email: string;
     telefone: string;
@@ -49,7 +49,7 @@ export const getAllAtletas = async (
 };
 
 export const getAtletaById = async (
-    id: number
+    id: string
 ): Promise<Atleta | undefined> => {
     if (!id) {
         console.warn("ID do atleta é obrigatório para buscar por ID.");
@@ -65,7 +65,7 @@ export const createAtleta = async (
 };
 
 export const updateAtleta = async (
-    id: number,
+    id: string,
     updatedAtleta: Partial<Atleta>
 ): Promise<Atleta | undefined> => {
     if (!id) {
@@ -78,7 +78,7 @@ export const updateAtleta = async (
     );
 };
 
-export const deleteAtleta = async (id: number): Promise<boolean> => {
+export const deleteAtleta = async (id: string): Promise<boolean> => {
     if (!id) {
         console.warn("ID do atleta é obrigatório para deletar.");
         return false;
@@ -93,16 +93,16 @@ export const updatePassword = async (
 ): Promise<void> => {
     return httpRequests.patchMethod<void>(
         `${URLS.ATLETAS}/me/alterar-senha`,
-        { 
-            senhaAtual: currentPassword, 
-            novaSenha: newPassword, 
+        {
+            senhaAtual: currentPassword,
+            novaSenha: newPassword,
             confirmacaoNovaSenha: confirmNewPassword
         },
     );
 }
 
 export type AtletaSimple = {
-    id: number;
+    id: string;
     nome: string;
     telefone: string;
     urlFoto: string;

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Layout, Row, Col, Flex, Empty, App, Select, Tooltip, Button, DatePicker, Pagination, Typography, Segmented } from 'antd';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { CardAgendamentoArena, type AgendamentoArenaCardData } from '@/components/Cards/CardAgendamentoArena';
 import { useTheme } from '@/context/ThemeProvider';
 import { ClearOutlined } from '@ant-design/icons';
@@ -18,6 +18,7 @@ import {
     type Quadra
 } from '@/app/api/entities/quadra';
 import { useAuth } from '@/context/hooks/use-auth';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 const { Content } = Layout;
 const { RangePicker } = DatePicker;
@@ -85,23 +86,44 @@ const statusForView: Record<ArenaView, StatusAgendamentoArena> = {
     historico: 'FINALIZADO',
 };
 
+const isValidView = (view: string | null): view is ArenaView => {
+    return view === 'pendentes' || view === 'historico';
+}
+
 export default function MeusAgendamentosArena() {
     const { session, user, isAuthenticated, isLoadingSession } = useAuth();
     const { message } = App.useApp();
     const { isDarkMode } = useTheme();
 
-    const [view, setView] = useState<ArenaView>('pendentes');
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const [view, setView] = useState<ArenaView>(() => {
+        const aba = searchParams.get('aba');
+        return isValidView(aba) ? aba : 'pendentes';
+    });
     const [agendamentos, setAgendamentos] = useState<AgendamentoArena[]>([]);
     const [quadras, setQuadras] = useState<Quadra[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    const [filters, setFilters] = useState({
-        dateRange: null as [Dayjs | null, Dayjs | null] | null,
-        quadraId: 'TODAS' as 'TODAS' | number,
+    const [loadingAgendamentos, setLoadingAgendamentos] = useState(true);
+    const [pagination, setPagination] = useState({
+        currentPage: Number(searchParams.get('pagina')) || 1,
+        pageSize: 18,
+        totalElements: 0
     });
 
-    const [pagination, setPagination] = useState({ currentPage: 1, pageSize: 18, totalElements: 0 });
+    const [filters, setFilters] = useState(() => {
+        const quadraIdParam = searchParams.get('quadra');
+        const dataInicioParam = searchParams.get('dataInicio');
+        const dataFimParam = searchParams.get('dataFim');
 
+        return {
+            dateRange: (dataInicioParam && dataFimParam)
+                ? [dayjs(dataInicioParam), dayjs(dataFimParam)] as [Dayjs, Dayjs]
+                : null,
+            quadraId: quadraIdParam ? Number(quadraIdParam) : 'TODAS' as 'TODAS' | number
+        };
+    });
 
     const fetchQuadras = useCallback(async () => {
         const arenaId = (user as any)?.userId;
@@ -112,7 +134,6 @@ export default function MeusAgendamentosArena() {
 
         try {
             const response = await getAllQuadras({ arenaId, size: 50 });
-            console.log("Quadras fetched successfully:", response.content);
             setQuadras(response.content);
         } catch (error) {
             console.error("Erro ao buscar as quadras da arena:", error);
@@ -122,7 +143,7 @@ export default function MeusAgendamentosArena() {
 
     const fetchAgendamentos = useCallback(async (page: number, currentFilters: typeof filters, currentView: ArenaView) => {
         if (!isAuthenticated) return;
-        setLoading(true);
+        setLoadingAgendamentos(true);
         try {
             const params: AgendamentoArenaQueryParams = {
                 page: page - 1,
@@ -142,9 +163,38 @@ export default function MeusAgendamentosArena() {
             console.error("Erro ao buscar agendamentos:", error);
             message.error("Não foi possível carregar os agendamentos.");
         } finally {
-            setLoading(false);
+            setLoadingAgendamentos(false);
         }
     }, [session, isAuthenticated, pagination.pageSize, message, statusForView]);
+
+    useEffect(() => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        params.set('aba', view);
+
+        if (filters.quadraId !== 'TODAS') {
+            params.set('quadra', String(filters.quadraId));
+        } else {
+            params.delete('quadra');
+        }
+
+        if (filters.dateRange?.[0] && filters.dateRange?.[1]) {
+            params.set('dataInicio', filters.dateRange[0].format('YYYY-MM-DD'));
+            params.set('dataFim', filters.dateRange[1].format('YYYY-MM-DD'));
+        } else {
+            params.delete('dataInicio');
+            params.delete('dataFim');
+        }
+
+        if (pagination.currentPage > 1) {
+            params.set('pagina', String(pagination.currentPage));
+        } else {
+            params.delete('pagina');
+        }
+
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
+    }, [view, filters, pagination.currentPage, pathname, router, searchParams]);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -234,12 +284,12 @@ export default function MeusAgendamentosArena() {
                 </>
             );
         }
-        return <Empty description="Nenhum agendamento encontrado com os filtros aplicados." className="mt-10 p-8" />;
+        return <Empty description="Nenhum agendamento encontrado." className="mt-10 p-8" />;
     };
 
     return (
         <Content className={`!px-4 sm:!px-10 lg:!px-40 !pt-8 !pb-18 !flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
-            {loading || isLoadingSession ? (
+            {loadingAgendamentos || isLoadingSession ? (
                 <AgendamentosArenaSkeleton />
             ) : (
                 <>
