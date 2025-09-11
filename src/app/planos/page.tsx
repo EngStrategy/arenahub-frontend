@@ -63,6 +63,9 @@ export default function PlanosPage() {
                     Escolha o período de assinatura que faz mais sentido para sua Arena.
                     O cadastro é feito em seguida, e a escolha do plano é confirmada apenas após o registro.
                 </Paragraph>
+                <Paragraph className="!font-bold !text-md !max-w-2xl !mx-auto !text-gray-500">
+                    Todos os planos incluem um período de teste gratuito de 30 dias. Cancele quando quiser.
+                </Paragraph>
             </div>
 
             <Flex justify="center" align="center" gap={32} className="flex-wrap items-stretch">
@@ -91,7 +94,10 @@ export default function PlanosPage() {
                                     <Title level={1} className="!m-0">{plano.preco}</Title>
                                     <Text type="secondary">{plano.periodo}</Text>
                                 </Flex>
-                                {plano.economia && <Text className="!text-green-600 !font-semibold !mb-6">{plano.economia}</Text>}
+
+                                <Text className="!text-green-600 !font-semibold !mb-6">
+                                    {plano.economia ? `${plano.economia} + 30 dias grátis` : 'Comece com 30 dias grátis'}
+                                </Text>
 
                                 <Divider />
 

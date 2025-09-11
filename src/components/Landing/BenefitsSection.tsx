@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { ArrowRightOutlined, CalendarOutlined, DollarCircleOutlined, TeamOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 export function Benefits({ isDarkMode }: { readonly isDarkMode: boolean }) {
     const cardVariants = {
@@ -93,17 +93,20 @@ export function Benefits({ isDarkMode }: { readonly isDarkMode: boolean }) {
                                         <span><strong>Controlo Total:</strong> Gira horários, preços e pagamentos num só lugar.</span>
                                     </li>
                                 </ul>
-                                <div className="mt-6 w-full">
+                                <div className="mt-6 w-full text-center">
                                     <Link href="/planos">
                                         <Button
-                                            type="default"
+                                            type="primary"
                                             size="large"
                                             block
                                             className='!bg-green-600 !text-white hover:!bg-green-700 focus:!bg-green-700'
                                         >
-                                            Conheça os nossos planos <ArrowRightOutlined />
+                                            Comece com 30 Dias Grátis
                                         </Button>
                                     </Link>
+                                    <Text type="secondary" className="!text-xs mt-2 block">
+                                        Sem compromisso. Cancele quando quiser.
+                                    </Text>
                                 </div>
                             </Flex>
                         </Card>

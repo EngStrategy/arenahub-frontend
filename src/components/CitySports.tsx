@@ -1,4 +1,4 @@
-"useClient"
+"use client";
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { AutoComplete, Col, Input, Row, Select } from 'antd';
@@ -23,7 +23,6 @@ const LoadingSkeleton = () => (
     </div>
 );
 
-
 export default function CitySports({
     loading,
     selectedSport,
@@ -35,7 +34,6 @@ export default function CitySports({
     allSports,
     sportIcons,
 }: CitySportsProps) {
-
     const [cities, setCities] = useState<CidadeDTO[]>([]);
 
     useEffect(() => {
@@ -50,22 +48,27 @@ export default function CitySports({
         fetchCities();
     }, []);
 
-    const cityOptions = useMemo(() =>
-        cities.map((city) => ({
-            value: city.nome,
-            label: `${city.nome} - ${city.estado}`,
-        })),
-        [cities]);
+    const cityOptions = useMemo(
+        () =>
+            cities.map((city) => ({
+                value: city.nome,
+                label: `${city.nome} - ${city.estado}`,
+            })),
+        [cities]
+    );
 
-
-    const sportSelectOptions = useMemo(() => allSports.map((sport) => (
-        <Select.Option key={sport} value={sport}>
-            <div className="flex items-center gap-x-2">
-                {sportIcons[sport]}
-                <span>{sport}</span>
-            </div>
-        </Select.Option>
-    )), [allSports, sportIcons]);
+    const sportSelectOptions = useMemo(
+        () =>
+            allSports.map((sport) => (
+                <Select.Option key={sport} value={sport}>
+                    <div className="flex items-center gap-x-2">
+                        {sportIcons[sport]}
+                        <span>{sport}</span>
+                    </div>
+                </Select.Option>
+            )),
+        [allSports, sportIcons]
+    );
 
     if (loading) {
         return <LoadingSkeleton />;
@@ -80,13 +83,7 @@ export default function CitySports({
                     onChange={setInputValue}
                     onSelect={(value) => {
                         setInputValue(value);
-                        if (onSearchCommit) onSearchCommit(value);
-                    }}
-                    onSearch={() => {
-                        if (onSearchCommit) onSearchCommit(inputValue);
-                    }}
-                    onBlur={() => {
-                        if (onSearchCommit) onSearchCommit(inputValue);
+                        if (onSearchCommit) onSearchCommit(value); // confirma busca só ao selecionar
                     }}
                     options={cityOptions}
                     filterOption={(inputValue, option) =>
@@ -99,6 +96,9 @@ export default function CitySports({
                         placeholder="Nome da cidade"
                         allowClear
                         style={{ borderRadius: '9999px' }}
+                        onSearch={(value) => {
+                            if (onSearchCommit) onSearchCommit(value);
+                        }}
                     />
                 </AutoComplete>
             </Col>
@@ -124,5 +124,5 @@ export default function CitySports({
                 </Select>
             </Col>
         </Row>
-    )
+    );
 }

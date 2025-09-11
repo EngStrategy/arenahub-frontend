@@ -99,7 +99,10 @@ export default function PlanosPage() {
             <div className="text-center mb-12">
                 <Title level={1}>Planos flexíveis para sua Arena</Title>
                 <Paragraph className="!text-lg !max-w-2xl !mx-auto !text-gray-500">
-                    Escolha o plano que melhor se adapta ao tamanho e às necessidades do seu negócio. Cancele quando quiser.
+                    Escolha o plano que melhor se adapta ao tamanho e às necessidades do seu negócio.
+                </Paragraph>
+                <Paragraph className="!font-bold !text-md !max-w-2xl !mx-auto !text-gray-500">
+                    Todos os planos incluem um período de teste gratuito de 30 dias. Cancele quando quiser.
                 </Paragraph>
             </div>
 
@@ -129,7 +132,10 @@ export default function PlanosPage() {
                                     <Title level={1} className="!m-0">{plano.preco}</Title>
                                     <Text type="secondary">{plano.periodo}</Text>
                                 </Flex>
-                                {plano.economia && <Text className="!text-green-600 !font-semibold !mb-6">{plano.economia}</Text>}
+
+                                <Text className="!text-green-600 !font-semibold !mb-6">
+                                    {plano.economia ? `${plano.economia} + 30 dias grátis` : 'Comece com 30 dias grátis'}
+                                </Text>
 
                                 <Divider />
 
@@ -147,7 +153,7 @@ export default function PlanosPage() {
                                 />
 
                                 <ButtonPrimary
-                                    text="Assinar Agora"
+                                    text="Começar Teste Grátis"
                                     onClick={() => plano.priceId && handleSubscribe(plano.priceId)}
                                     loading={loadingPriceId === plano.priceId}
                                     size="large"

@@ -92,7 +92,12 @@ export const RegistroAtleta = ({ className }: { className?: string }) => {
         return;
       }
 
-      const response = await createAtleta(values);
+      const response = await createAtleta({
+        nome: values.nome,
+        email: values.email,
+        telefone: values.telefone,
+        senha: values.senha,
+      });
       setLoading(false);
 
       if (response) {

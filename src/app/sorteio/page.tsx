@@ -24,6 +24,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/context/ThemeProvider';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { useRef, useState } from 'react';
+import { SorteadorPageSkeleton } from './skeleton';
+import { useAuth } from '@/context/hooks/use-auth';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -67,14 +69,13 @@ const playerItemVariants = {
     hidden: { x: -20, opacity: 0 },
     visible: { x: 0, opacity: 1 },
 };
-// --- Fim das Variantes de Animação ---
-
 
 export default function SorteadorDeTimesPage() {
     const { message } = App.useApp();
     const [form] = Form.useForm();
     const { isDarkMode } = useTheme();
-    const resultsRef = useRef<HTMLDivElement>(null); // Ref para a seção de resultados
+    const resultsRef = useRef<HTMLDivElement>(null);
+    const { isLoadingSession } = useAuth();
 
     const [jogadores, setJogadores] = useState<Jogador[]>([]);
     const [numeroDeTimes, setNumeroDeTimes] = useState<number>(2);
@@ -105,7 +106,7 @@ export default function SorteadorDeTimesPage() {
         }
 
         setIsSubmitting(true);
-        setTimesSorteados([]); // Limpa os resultados antigos para reativar a animação
+        setTimesSorteados([]);
 
         setTimeout(() => {
             const jogadoresOrdenados = [...jogadores].sort((a, b) => b.nivel - a.nivel);
@@ -122,16 +123,23 @@ export default function SorteadorDeTimesPage() {
             setIsSubmitting(false);
             message.success('Times balanceados com sucesso!');
 
-            // Rola suavemente para a seção de resultados após o sorteio
             setTimeout(() => {
                 resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
 
-        }, 1000); // Aumentado para 1s para dar mais "suspense"
+        }, 1000);
     };
 
+    if (isLoadingSession) {
+        return (
+            <Content className={`!px-4 sm:!px-10 lg:!px-40 !pb-20 !py-8 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
+                <SorteadorPageSkeleton />
+            </Content>
+        );
+    }
+
     return (
-        <Content className={`!px-4 sm:!px-10 lg:!px-40 !py-8 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
+        <Content className={`!px-4 sm:!px-10 lg:!px-40 !pb-20 !py-8 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
             <div className="max-w-4xl mx-auto">
                 <Title level={2} className="!text-center">Sorteador de Times</Title>
                 <Text type="secondary" className="block text-center mb-8">
@@ -159,7 +167,7 @@ export default function SorteadorDeTimesPage() {
                                 dataSource={jogadores}
                                 renderItem={(jogador) => (
                                     <List.Item
-                                        actions={[<Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleRemoverJogador(jogador.id)} />]}
+                                        actions={[<Button key={jogador.id} type="text" danger icon={<DeleteOutlined />} onClick={() => handleRemoverJogador(jogador.id)} />]}
                                     >
                                         <List.Item.Meta
                                             avatar={<Avatar src={jogador.urlFoto} icon={<UserOutlined />} />}
@@ -203,7 +211,6 @@ export default function SorteadorDeTimesPage() {
                     </Col>
                 </Row>
 
-                {/* --- SEÇÃO DE RESULTADOS COM ANIMAÇÃO --- */}
                 <div ref={resultsRef}>
                     <AnimatePresence>
                         {timesSorteados.length > 0 && (

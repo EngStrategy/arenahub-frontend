@@ -714,7 +714,7 @@ export const RegistroArena = ({ className }: { className?: string }) => {
             <Form.Item
                 label="Política de Cancelamento"
                 name="horasCancelarAgendamento"
-                tooltip="Defina o prazo mínimo, em horas, que um atleta pode cancelar um agendamento sem custos."
+                tooltip="Defina o prazo mínimo, em horas, que um atleta pode cancelar um agendamento sem custos. (Máximo 168 horas = 7 dias)"
                 rules={[{ required: true, message: 'Este campo é obrigatório.' }]}
                 initialValue={2}
                 className="!mt-5"

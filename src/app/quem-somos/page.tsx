@@ -149,7 +149,7 @@ export default function QuemSomosPage() {
     }
 
     return (
-        <Layout className={isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}>
+        <Layout className={`${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
             <Content>
                 <div className="relative h-[50vh] w-full">
                     <Image
@@ -263,7 +263,7 @@ export default function QuemSomosPage() {
                 </div>
 
                 <div className={isDarkMode ? 'bg-neutral-800' : 'bg-gray-100'}>
-                    <div className="px-4 sm:px-10 lg:px-40 py-16 text-center">
+                    <div className="px-4 sm:px-10 lg:px-40 py-16 pb-20 text-center">
                         <Title level={2}>Pronto para entrar em quadra?</Title>
                         <Paragraph className="text-lg max-w-3xl mx-auto mb-8">
                             Seja você um atleta procurando o lugar perfeito para jogar ou uma arena querendo otimizar seus agendamentos, nós temos a solução.

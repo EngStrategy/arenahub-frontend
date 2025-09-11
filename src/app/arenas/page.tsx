@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Col, Flex, Pagination, Row, Alert, App, Typography } from 'antd';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
 import { sportIcons } from '@/data/sportIcons';
@@ -12,6 +12,7 @@ import { useAuth } from '@/context/hooks/use-auth';
 import { GlobalOutlined } from '@ant-design/icons';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useDebounce } from '@/context/hooks/use-debounce';
 
 const { Text } = Typography;
 
@@ -26,7 +27,7 @@ type CachedLocation = {
 };
 
 const CACHE_KEY = 'user_location';
-const CACHE_EXPIRATION_MS = 60 * 60 * 12000; // Cache de 12 horas
+const CACHE_EXPIRATION_MS = 60 * 60 * 24000; // Cache de 24 horas
 
 const saveLocationToCache = (coords: UserLocation) => {
   const data: CachedLocation = { coords, timestamp: new Date().getTime() };
@@ -83,7 +84,6 @@ export default function HomePage() {
   const { isLoadingSession } = useAuth();
   const { isDarkMode } = useTheme();
   const { message } = App.useApp();
-
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -93,6 +93,7 @@ export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get('pagina')) || 1);
 
   const [inputValue, setInputValue] = useState(searchParams.get('cidade') || '');
+
   const pageSize = 16;
   const [arenas, setArenas] = useState<Arena[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,14 +103,31 @@ export default function HomePage() {
   const [isLocationBannerVisible, setIsLocationBannerVisible] = useState(false);
   const [isAskingPermission, setIsAskingPermission] = useState(false);
 
+  const debouncedSearch = useDebounce(inputValue, 2000);
 
   useEffect(() => {
-    const fetchArenas = async () => {
+    if (debouncedSearch !== committedSearchTerm) {
+      setCommittedSearchTerm(debouncedSearch);
+      setCurrentPage(1);
+    }
+  }, [debouncedSearch, committedSearchTerm]);
+
+  useEffect(() => {
+    if (isLoadingSession) return;
+
+    const fetchAndSync = async () => {
       setLoading(true);
+
+      const params = new URLSearchParams();
+      if (committedSearchTerm) params.set('cidade', committedSearchTerm);
+      if (selectedSport && selectedSport !== 'Todos') params.set('esporte', selectedSport);
+      if (currentPage > 1) params.set('pagina', String(currentPage));
+      const queryString = params.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+
       try {
         const backendSport = selectedSport === 'Todos' ? undefined : sportNameToBackendEnum[selectedSport];
-
-        const params: ArenaQueryParams = {
+        const apiParams: ArenaQueryParams = {
           page: currentPage - 1,
           size: pageSize,
           esporte: backendSport,
@@ -118,48 +136,26 @@ export default function HomePage() {
           longitude: location?.longitude,
           raioKm: location ? 50 : undefined,
         };
-
-        const response = await getAllArenas(params);
+        const response = await getAllArenas(apiParams);
         setArenas(response?.content || []);
         setTotalArenas(response?.totalElements ?? 0);
       } catch (error) {
         console.error("Erro ao buscar arenas:", error);
-        setArenas([]);
-        setTotalArenas(0);
+        message.error("Não foi possível carregar as arenas.");
       } finally {
         setLoading(false);
       }
     };
 
-    if (!isLoadingSession) {
-      fetchArenas();
-    }
-  }, [currentPage, selectedSport, committedSearchTerm, isLoadingSession, location]);
+    fetchAndSync();
+  }, [currentPage, selectedSport, committedSearchTerm, location, isLoadingSession, pageSize, pathname, router, message]);
 
-  useEffect(() => {
-    const params = new URLSearchParams();
-
-    if (committedSearchTerm) params.set('cidade', committedSearchTerm);
-    if (selectedSport && selectedSport !== 'Todos') params.set('esporte', selectedSport);
-    if (currentPage > 1) params.set('pagina', String(currentPage));
-
-    const queryString = params.toString();
-    // O `replace` evita adicionar entradas duplicadas no histórico do navegador
-    router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
-
-  }, [selectedSport, committedSearchTerm, currentPage, pathname, router]);
-
-  // Efeito para verificar o cache e decidir se mostra o banner de localização
   useEffect(() => {
     const cachedLocation = getLocationFromCache();
     if (cachedLocation) {
       setLocation(cachedLocation);
-      setIsLocationBannerVisible(false);
     } else {
-      // Mostra o banner após um pequeno delay para não ser intrusivo
-      const timer = setTimeout(() => {
-        setIsLocationBannerVisible(true);
-      }, 3000);
+      const timer = setTimeout(() => setIsLocationBannerVisible(true), 3000);
       return () => clearTimeout(timer);
     }
   }, []);

@@ -13,6 +13,7 @@ import {
   LogoutOutlined,
   MenuOutlined,
   CloseOutlined,
+  TrophyOutlined,
 } from "@ant-design/icons";
 import { FaAngleDown } from "react-icons/fa6";
 import { ThemeSwitcher } from "./Switchs/ThemeSwitcher";
@@ -83,7 +84,7 @@ const Navbar = () => {
     },
     {
       key: "/sorteio",
-      icon: <TeamOutlined />,
+      icon: <TrophyOutlined />,
       label: "Sorteio de times",
       onClick: () => navigateTo("/sorteio"),
       className: "!my-1"
@@ -235,7 +236,22 @@ const Navbar = () => {
               Entre para ter acesso a todos os recursos presentes na plataforma.
             </Text>
             <Button type="primary" size="large" block onClick={handleLogin}>Entrar</Button>
-            <Menu className="!bg-transparent" mode="inline" selectable={false} items={commonMenuItems} style={{ width: '100%', borderRight: 0 }} />
+            <Menu
+              className="!bg-transparent"
+              mode="inline"
+              selectable={false}
+              items={[
+                {
+                  key: "/sorteio",
+                  icon: <TrophyOutlined className="size-4" />,
+                  label: "Sorteio",
+                  onClick: () => navigateTo("/sorteio"),
+                  className: "!my-1"
+                },
+                ...commonMenuItems,
+              ]}
+              style={{ width: '100%', borderRight: 0 }}
+            />
           </Flex>
         )}
       </Flex>
@@ -345,7 +361,7 @@ const Navbar = () => {
                     key: "/sorteio",
                     label: "Sorteio de times",
                     onClick: () => navigateTo("/sorteio"),
-                    icon: <TeamOutlined />,
+                    icon: <TrophyOutlined />,
                     className: "!my-1"
                   },
                   ...commonMenuItems

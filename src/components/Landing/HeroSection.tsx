@@ -17,8 +17,8 @@ export function Hero({ isDarkMode }: { readonly isDarkMode: boolean }) {
             >
 
                 <div aria-hidden="true" className="absolute inset-0 -z-10">
-                    <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-green-100 blur-3xl"></div>
-                    <div className="absolute top-48 -left-16 h-56 w-56 rounded-full bg-emerald-100 blur-2xl"></div>
+                    <div className={`absolute -right-24 h-72 w-72 rounded-full bg-green-200 blur-3xl`}></div>
+                    <div className="hidden md:block absolute top-48 -left-16 h-56 w-56 rounded-full bg-green-200 blur-2xl"></div>
                 </div>
 
                 {/* Container principal com layout de grelha */}
@@ -32,7 +32,7 @@ export function Hero({ isDarkMode }: { readonly isDarkMode: boolean }) {
                         >
                             Agende quadras esportivas <span className="text-green-600">rápido</span> e <span className="text-green-600">fácil</span>.
                         </h1>
-                        <p className={`mt-5 text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <p className={`mt-5 text-lg`}>
                             Com o ArenaHub, você encontra quadras, faz reservas, encontra jogos abertos e organiza partidas em segundos — tudo direto do navegador, sem precisar baixar nada.
                         </p>
 
@@ -85,10 +85,10 @@ export function Hero({ isDarkMode }: { readonly isDarkMode: boolean }) {
                             alt="Jogo de futebol society ao pôr do sol"
                             className="rounded-2xl shadow-2xl border-4 border-white w-full"
                         />
-                        <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
+                        {/* <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
                             <div className="font-semibold text-gray-800">+3.200 partidas marcadas</div>
                             <div className="text-sm text-gray-500">nos últimos 30 dias</div>
-                        </div>
+                        </div> */}
                     </div>
 
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { RegistroAtleta } from "@/components/RegistroAtleta";
 import { RegistroArena } from "@/components/RegistroArena";
@@ -49,17 +49,33 @@ const RegisterPageSkeleton = () => (
   </div>
 );
 
+const isValidAccountType = (type: string | null): type is "atleta" | "arena" => {
+  return type === "atleta" || type === "arena";
+};
+
 const RegisterPage = () => {
   const { user, isAuthenticated, isLoadingSession, isUserAtleta } = useAuth();
-  const [accountType, setAccountType] = useState<"atleta" | "arena">("atleta");
+
   const router = useRouter();
   const { isDarkMode } = useTheme();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [accountType, setAccountType] = useState<"atleta" | "arena">(() => {
+    const aba = searchParams.get("aba");
+    return isValidAccountType(aba) ? aba : "atleta";
+  });
 
   useEffect(() => {
     if (isAuthenticated && isUserAtleta) {
       router.push("/arenas");
     }
   }, [isAuthenticated, router, user?.role]);
+
+  useEffect(() => {
+    const newUrl = `${pathname}?aba=${accountType}`;
+    router.replace(newUrl, { scroll: false });
+  }, [accountType, pathname, router]);
 
   if (isLoadingSession) {
     return <RegisterPageSkeleton />;
@@ -71,9 +87,9 @@ const RegisterPage = () => {
 
   return (
     <Flex
-      align="flex-center"
+      align="flex-start"
       justify="center"
-      className="!flex-1 sm:!px-10 sm:!pb-16 lg:!px-40"
+      className="!flex-1 sm:!px-10 !pb-20 sm:!py-16 lg:!px-40"
       style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
     >
       <Flex align="flex-start" justify="center" className="!hidden md:!flex md:!w-2/3">
@@ -82,7 +98,7 @@ const RegisterPage = () => {
           alt="Futebol"
           width={400}
           height={400}
-          className="!sticky !top-20 !w-full !object-cover"
+          className="!sticky !w-full !object-cover"
         />
       </Flex>
 
