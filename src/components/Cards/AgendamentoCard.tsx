@@ -10,7 +10,6 @@ import {
     InfoCircleOutlined,
     CheckCircleOutlined,
     CloseCircleOutlined,
-    StarOutlined,
     EditOutlined
 } from '@ant-design/icons';
 import {
@@ -32,7 +31,6 @@ import { type SolicitacaoJogoAberto, listarSolicitacoesJogoAbertoMe, aceitarOuRe
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { TipoQuadra } from '@/app/api/entities/quadra';
 import TextArea from 'antd/es/input/TextArea';
-import { RiStarOffFill } from "react-icons/ri";
 
 const { Text, Title } = Typography;
 
@@ -53,6 +51,7 @@ export type AgendamentoCardData = {
     possuiSolicitacoes?: boolean;
     avaliacao: { idAvaliacao: number; nota: number; comentario?: string } | null;
     avaliacaoDispensada: boolean;
+    showSolicitationButton?: boolean;
 };
 
 type CardProps = {
@@ -78,10 +77,15 @@ const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number
     try {
         const [horaInicio, minutoInicio] = horarioInicio.split(':').map(Number);
         const [horaFim, minutoFim] = horarioFim.split(':').map(Number);
-
-        const totalMinutosInicio = horaInicio * 60 + minutoInicio;
-        const totalMinutosFim = horaFim * 60 + minutoFim;
-
+ 
+        let totalMinutosInicio = horaInicio * 60 + minutoInicio;
+        let totalMinutosFim = horaFim * 60 + minutoFim;
+ 
+        // Se o horário final for menor que o inicial, assume que o agendamento atravessa a meia-noite.
+        if (totalMinutosFim < totalMinutosInicio) {
+            totalMinutosFim += 24 * 60; // Adiciona 24 horas em minutos
+        }
+ 
         const diferencaEmMinutos = totalMinutosFim - totalMinutosInicio;
 
         // Retorna a diferença em horas. Ex: 90 min = 1.5h
@@ -91,7 +95,6 @@ const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number
         return 0;
     }
 };
-
 
 export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: CardProps) {
     const { message } = App.useApp();
@@ -194,31 +197,23 @@ export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: Ca
             );
         }
 
-        // Se pode ser avaliado, mas ainda não foi
-        if (agendamento.status === 'pago' && agendamento.avaliacaoDispensada === null) {
-            return (
-                <Flex justify="end" style={{ padding: '12px 16px' }}>
-                    <Button icon={<StarOutlined />} onClick={() => setIsAvaliando(true)}>
-                        Deixar uma avaliação
-                    </Button>
-                </Flex>
+        const isActionable = ['pendente', 'aceito', 'pago'].includes(agendamento.status);
+
+        const showButton = agendamento.showSolicitationButton; 
+
+        let jogoTipo: React.ReactNode = null;
+        if (!showButton) {
+            jogoTipo = agendamento.publico ? (
+                <Text type="secondary" strong>Jogo Aberto</Text>
+            ) : (
+                <Text type="secondary" strong>Jogo Privado</Text>
             );
         }
 
-        if (agendamento.avaliacaoDispensada === true) {
-            return (
-                <Flex justify="center" align='center' gap={8} style={{ padding: '12px 16px' }}>
-                    <RiStarOffFill color='gold' />
-                    Avaliação dispensada
-                </Flex>
-            );
-        }
-
-        // Se for pendente, mostra as ações normais
-        if (agendamento.status === 'pendente' || agendamento.status === 'aceito') {
+        if (isActionable) {
             return (
                 <Flex justify="space-between" align="center" style={{ padding: '12px 16px' }}>
-                    {agendamento.publico ? (
+                    {showButton ? (
                         <Badge dot={agendamento.possuiSolicitacoes}>
                             <Button
                                 type='primary'
@@ -230,23 +225,29 @@ export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: Ca
                             </Button>
                         </Badge>
                     ) : (
-                        <Text type="secondary" strong>Jogo Privado</Text>
+                        // Se não é para mostrar o botão, mostra o Jogo Aberto/Privado
+                        jogoTipo
                     )}
-                    <Popconfirm
-                        title="Cancelar Agendamento"
-                        description="Você tem certeza que quer cancelar?"
-                        onConfirm={handleConfirmCancel}
-                        okText="Sim, cancelar" cancelText="Não"
-                        okButtonProps={{ danger: true }}
-                    >
-                        <Button danger icon={<DeleteOutlined />}>
-                            Cancelar
-                        </Button>
-                    </Popconfirm>
+
+                    {/* Botão de Cancelar visível para PENDENTE/ACEITO/PAGO (se o prazo permitir) */}
+                    {agendamento.status !== 'pago' && ( // Exemplo: Permitir cancelar se não foi pago
+                        <Popconfirm
+                            title="Cancelar Agendamento"
+                            description="Você tem certeza que quer cancelar?"
+                            onConfirm={handleConfirmCancel}
+                            okText="Sim, cancelar" cancelText="Não"
+                            okButtonProps={{ danger: true }}
+                        >
+                            <Button danger icon={<DeleteOutlined />}>
+                                Cancelar
+                            </Button>
+                        </Popconfirm>
+                    )}
                 </Flex>
             );
         }
 
+        // Retorna null para o restante (cancelado, ausente, etc.)
         return null;
     };
 

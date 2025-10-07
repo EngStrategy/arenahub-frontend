@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button, Flex, Layout, Result, Spin, Typography } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeProvider';
 import { useAuth } from '@/context/hooks/use-auth';
 import { getMe } from '@/app/api/entities/user';
+import { useSession } from 'next-auth/react';
 
 const { Content } = Layout;
 const { Title, Paragraph } = Typography;
@@ -13,37 +14,40 @@ const { Title, Paragraph } = Typography;
 export default function PagamentoSucessoPage() {
     const router = useRouter();
     const { isDarkMode } = useTheme();
-    const { updateSession } = useAuth();
+    const { status, update } = useSession();
+    const hasRefreshed = useRef(false);
 
     const [verifying, setVerifying] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (status !== "authenticated" || hasRefreshed.current) return;
+
         const verifyAndRefreshSession = async () => {
             try {
                 const freshUserData = await getMe();
 
                 if (freshUserData) {
-                    await updateSession({
+                    await update({
                         name: freshUserData.name,
                         picture: freshUserData.imageUrl,
                         statusAssinatura: freshUserData.statusAssinatura,
+                        cpfCnpj: freshUserData.cpfCnpj,
                     });
+                    hasRefreshed.current = true;
                 } else {
                     throw new Error("Não foi possível obter os dados atualizados do usuário.");
                 }
-
             } catch (err) {
                 console.error("Falha ao verificar sessão ou atualizar dados:", err);
-                setError("Houve um problema ao verificar sua assinatura. Por favor, tente fazer login novamente para atualizar seu status.");
+                setError("Houve um problema ao verificar sua assinatura. Por favor, tente fazer login novamente.");
             } finally {
                 setVerifying(false);
             }
         };
 
         verifyAndRefreshSession();
-
-    }, []);
+    }, [status, update]);
 
     if (verifying) {
         return (
@@ -56,7 +60,8 @@ export default function PagamentoSucessoPage() {
                     align="center"
                     className="h-screen"
                 >
-                    <Spin tip="Finalizando e ativando sua assinatura..." size="large" />
+                    <Spin size="large" />
+                    <Typography.Text className="ml-4">Finalizando e ativando sua assinatura...</Typography.Text>
                 </Flex>
             </Content>
         );

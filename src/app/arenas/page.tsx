@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Col, Flex, Pagination, Row, Alert, App, Typography } from 'antd';
+import { Col, Flex, Pagination, Row, Alert, App, Typography, Button } from 'antd';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
 import { sportIcons } from '@/data/sportIcons';
 import { type Arena, getAllArenas, type ArenaQueryParams } from '@/app/api/entities/arena';
@@ -13,6 +13,7 @@ import { GlobalOutlined } from '@ant-design/icons';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useDebounce } from '@/context/hooks/use-debounce';
+import { IoCloseOutline } from 'react-icons/io5';
 
 const { Text } = Typography;
 
@@ -105,12 +106,6 @@ export default function HomePage() {
 
   const debouncedSearch = useDebounce(inputValue, 2000);
 
-  useEffect(() => {
-    if (debouncedSearch !== committedSearchTerm) {
-      setCommittedSearchTerm(debouncedSearch);
-      setCurrentPage(1);
-    }
-  }, [debouncedSearch, committedSearchTerm]);
 
   useEffect(() => {
     if (isLoadingSession) return;
@@ -123,6 +118,12 @@ export default function HomePage() {
       if (selectedSport && selectedSport !== 'Todos') params.set('esporte', selectedSport);
       if (currentPage > 1) params.set('pagina', String(currentPage));
       const queryString = params.toString();
+
+      // Evita requisições duplicadas se a URL já estiver correta
+      if (queryString === searchParams.toString()) {
+        setLoading(false); // Descomente se notar piscadas de loading desnecessárias
+      }
+
       router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
 
       try {
@@ -148,7 +149,15 @@ export default function HomePage() {
     };
 
     fetchAndSync();
-  }, [currentPage, selectedSport, committedSearchTerm, location, isLoadingSession, pageSize, pathname, router, message]);
+  }, [currentPage, selectedSport, committedSearchTerm, location, isLoadingSession]);
+
+  // Efeito para resetar a página quando a busca por texto muda
+  useEffect(() => {
+    if (debouncedSearch !== committedSearchTerm) {
+      setCommittedSearchTerm(debouncedSearch);
+      setCurrentPage(1);
+    }
+  }, [debouncedSearch]);
 
   useEffect(() => {
     const cachedLocation = getLocationFromCache();
@@ -198,6 +207,12 @@ export default function HomePage() {
 
   const handleSportChange = (sport: string) => {
     setSelectedSport(sport);
+    setCurrentPage(1);
+  };
+
+  const handleClearLocation = () => {
+    setLocation(null);
+    localStorage.removeItem(CACHE_KEY);
     setCurrentPage(1);
   };
 
@@ -300,11 +315,22 @@ export default function HomePage() {
         />
 
         {location && !committedSearchTerm && (
-          <div className="my-4 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-center">
-            <Text type="secondary">
+          <Flex
+            align="center"
+            justify="space-between"
+            className="my-4 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+          >
+            <Text type="secondary" className='flex-grow text-center'>
               Arenas próximas a você.
             </Text>
-          </div>
+            <Button
+              type="text"
+              shape="circle"
+              onClick={handleClearLocation}
+              icon={<IoCloseOutline className='text-base text-gray-500' />}
+              title="Limpar filtro de localização"
+            />
+          </Flex>
         )}
 
         {content}

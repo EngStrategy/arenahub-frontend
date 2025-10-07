@@ -63,7 +63,13 @@ const MinhasQuadrasPage: React.FC = () => {
         setLoading(true);
         try {
           const arenaData = await getQuadraByIdArena(user.userId);
-          setCourts(Array.isArray(arenaData) ? arenaData : arenaData ? [arenaData] : []);
+          let courtsData: Quadra[] = [];
+          if (Array.isArray(arenaData)) {
+            courtsData = arenaData;
+          } else if (arenaData) {
+            courtsData = [arenaData];
+          }
+          setCourts(courtsData);
         } catch (error) {
           console.error('Erro ao buscar quadras:', error);
           message.error('Erro ao carregar quadras.');
@@ -83,7 +89,7 @@ const MinhasQuadrasPage: React.FC = () => {
       await deleteQuadra(id);
 
       setCourts(prev => prev.filter(court => court.id !== id));
-      message.success('Quadra excluída com sucesso.');
+      message.warning('Quadra excluída com sucesso.');
     } catch (error) {
       console.error("Erro ao excluir quadra:", error);
       message.error('Não foi possível excluir a quadra. Tente novamente.');

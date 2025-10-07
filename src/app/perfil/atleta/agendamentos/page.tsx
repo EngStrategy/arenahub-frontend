@@ -73,17 +73,17 @@ const MeusAgendamentosSkeleton = () => (
     </main>
 );
 
-type AgendamentoView = 'pendentes' | 'historico' | 'participacoes';
+type AgendamentoView = 'ativos' | 'historico' | 'participacoes';
 type TipoAgendamento = 'AMBOS' | 'NORMAL' | 'FIXO';
 
 const statusForView: Record<AgendamentoView, StatusAgendamento | undefined> = {
-    pendentes: 'PENDENTE',
+    ativos: undefined,
     historico: 'FINALIZADO',
     participacoes: undefined,
 };
 
 const isValidView = (view: string | null): view is AgendamentoView => {
-    return view === 'pendentes' || view === 'historico' || view === 'participacoes';
+    return view === 'ativos' || view === 'historico' || view === 'participacoes';
 }
 
 export default function Agendamentos() {
@@ -96,7 +96,7 @@ export default function Agendamentos() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const [view, setView] = useState<AgendamentoView>(isValidView(searchParams.get('aba')) ? searchParams.get('aba') as AgendamentoView : 'pendentes');
+    const [view, setView] = useState<AgendamentoView>(isValidView(searchParams.get('aba')) ? searchParams.get('aba') as AgendamentoView : 'ativos');
     const [agendamentos, setAgendamentos] = useState<AgendamentoNormal[]>([]);
     const [loadingAgendamentos, setLoadingAgendamentos] = useState(true);
     const [pagination, setPagination] = useState({
@@ -109,7 +109,7 @@ export default function Agendamentos() {
         dateRange: null as [Dayjs | null, Dayjs | null] | null,
         tipo: (searchParams.get('tipo') as TipoAgendamento) || 'AMBOS',
     });
-    
+
     const [solicitacoes, setSolicitacoes] = useState<JogoAbertoMeSolicitado[]>([]);
     const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(true);
     const [agendamentosParaAvaliar, setAgendamentosParaAvaliar] = useState<AgendamentoCardData[]>([]);
@@ -127,7 +127,7 @@ export default function Agendamentos() {
                 page: page - 1,
                 size: pagination.pageSize,
                 sort: 'dataAgendamento',
-                direction: view === 'pendentes' ? "asc" : "desc",
+                direction: "desc",
                 tipoAgendamento: currentFilters?.tipo || 'AMBOS',
                 status: status,
             };
@@ -220,30 +220,38 @@ export default function Agendamentos() {
     }, []);
 
     const agendamentosTransformados = useMemo((): AgendamentoCardData[] => {
-        return agendamentos.map(agendamento => ({
-            id: agendamento.id,
-            date: agendamento.dataAgendamento,
-            startTime: agendamento.horarioInicio,
-            endTime: agendamento.horarioFim,
-            valor: agendamento.valorTotal,
-            esporte: agendamento.esporte,
-            status: agendamento.status.toLowerCase() as AgendamentoCardData['status'],
-            numeroJogadoresNecessarios: agendamento.numeroJogadoresNecessarios,
-            quadraName: agendamento.nomeQuadra,
-            arenaName: agendamento.nomeArena,
-            urlFotoArena: agendamento.urlFotoArena,
-            urlFotoQuadra: agendamento.urlFotoQuadra,
-            fixo: agendamento.fixo,
-            publico: agendamento.publico,
-            possuiSolicitacoes: agendamento.possuiSolicitacoes,
-            avaliacao: agendamento.avaliacao ? {
-                idAvaliacao: agendamento.avaliacao.idAvaliacao,
-                nota: agendamento.avaliacao.nota,
-                comentario: agendamento.avaliacao.comentario
-            } : null,
-            avaliacaoDispensada: agendamento.avaliacaoDispensada,
-        }));
-    }, [agendamentos]);
+        const isPendingView = view === 'ativos';
+
+        return agendamentos.map(agendamento => {
+            const showSolicitationButton = agendamento.publico &&
+                (isPendingView || agendamento.status === 'PAGO');
+
+            return {
+                id: agendamento.id,
+                date: agendamento.dataAgendamento,
+                startTime: agendamento.horarioInicio,
+                endTime: agendamento.horarioFim,
+                valor: agendamento.valorTotal,
+                esporte: agendamento.esporte,
+                status: agendamento.status.toLowerCase() as AgendamentoCardData['status'],
+                numeroJogadoresNecessarios: agendamento.numeroJogadoresNecessarios,
+                quadraName: agendamento.nomeQuadra,
+                arenaName: agendamento.nomeArena,
+                urlFotoArena: agendamento.urlFotoArena,
+                urlFotoQuadra: agendamento.urlFotoQuadra,
+                fixo: agendamento.fixo,
+                publico: agendamento.publico,
+                possuiSolicitacoes: agendamento.possuiSolicitacoes,
+                avaliacao: agendamento.avaliacao ? {
+                    idAvaliacao: agendamento.avaliacao.idAvaliacao,
+                    nota: agendamento.avaliacao.nota,
+                    comentario: agendamento.avaliacao.comentario
+                } : null,
+                avaliacaoDispensada: agendamento.avaliacaoDispensada,
+                showSolicitationButton: showSolicitationButton,
+            }
+        });
+    }, [agendamentos, view]);
 
     useEffect(() => {
         if (isAuthenticated && !isLoadingSession) {
@@ -283,8 +291,8 @@ export default function Agendamentos() {
                         : [];
                     setAgendamentosParaAvaliar(pendentesTransformados);
                 } catch (error) {
-                    const errorMsg = (error as Error)?.message ?? "Não foi possível buscar avaliações pendentes.";
-                    console.error("Erro ao buscar avaliações pendentes:", error);
+                    const errorMsg = (error as Error)?.message ?? "Não foi possível buscar avaliações ativas.";
+                    console.error("Erro ao buscar avaliações ativas:", error);
                     notification.error({ message: errorMsg, duration: 8 });
                 } finally {
                     setLoadingAgendamentos(false);
@@ -370,10 +378,8 @@ export default function Agendamentos() {
         try {
             await cancelarAgendamentoNormal(id);
             message.success("Agendamento cancelado com sucesso!");
-            const currentStatus = statusForView[view];
-            if (currentStatus) {
-                fetchAgendamentos(pagination.currentPage, currentStatus);
-            }
+            // Atualiza a lista de agendamentos da página atual
+            fetchAgendamentos(pagination.currentPage, statusForView[view], filters);
         } catch (error) {
             const errorMsg = (error as Error)?.message ?? "Não foi possível cancelar o agendamento.";
             notification.error({ message: errorMsg, duration: 8 });
@@ -523,13 +529,13 @@ export default function Agendamentos() {
                     <Button
                         shape="circle"
                         icon={<LeftOutlined />}
-                        onClick={() => carouselRef.current && carouselRef.current.prev()}
+                        onClick={() => carouselRef.current?.prev()}
                         className="!absolute left-0 top-1/2 -translate-y-1/2 z-10"
                     />
                     <Button
                         shape="circle"
                         icon={<RightOutlined />}
-                        onClick={() => carouselRef.current && carouselRef.current.next()}
+                        onClick={() => carouselRef.current?.next()}
                         className="!absolute right-0 top-1/2 -translate-y-1/2 z-10"
                     />
                 </div>
@@ -539,7 +545,7 @@ export default function Agendamentos() {
                 <Flex justify="center">
                     <Segmented<AgendamentoView>
                         options={[
-                            { label: 'Pendentes', value: 'pendentes' },
+                            { label: 'Ativos', value: 'ativos' },
                             { label: 'Histórico', value: 'historico' },
                             { label: 'Participações', value: 'participacoes' }
                         ]}

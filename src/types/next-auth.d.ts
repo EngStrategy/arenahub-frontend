@@ -10,6 +10,7 @@ declare module "next-auth" {
       expiresIn: number;
       imageUrl: string;
       statusAssinatura?: 'ATIVA' | 'INATIVA' | 'CANCELADA' | 'ATRASADA';
+      cpfCnpj?: string;
     };
   }
 }

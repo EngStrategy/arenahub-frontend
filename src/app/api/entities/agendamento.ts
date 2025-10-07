@@ -2,7 +2,7 @@ import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 import { TipoQuadra } from "./quadra";
 
-export type StatusAgendamento = "PENDENTE" | "AUSENTE" | "CANCELADO" | "PAGO" | "ACEITO" | "RECUSADO" | "FINALIZADO";
+export type StatusAgendamento = "PENDENTE" | "AUSENTE" | "CANCELADO" | "PAGO" | "ACEITO" | "RECUSADO" | "FINALIZADO" | "AGUARDANDO_PAGAMENTO";
 
 export type PeriodoAgendamentoFixo = "UM_MES" | "TRES_MESES" | "SEIS_MESES";
 
@@ -14,6 +14,14 @@ export type SlotsHoraio = {
     horarioFim: string;
     valor: number;
     statusDisponibilidade: StatusDisponibilidade;
+};
+
+export type PixPagamentoResponse = {
+    agendamentoId: number;
+    statusAgendamento: string;
+    qrCodeData: string;
+    copiaECola: string;
+    expiraEm: string;
 };
 
 export type AgendamentoNormal = {
@@ -47,6 +55,7 @@ export type AgendamentoCreate = {
     numeroJogadoresNecessarios: number;
     isFixo?: boolean;
     isPublico?: boolean;
+    cpfCnpjPagamento?: string;
 };
 
 
@@ -143,6 +152,23 @@ export const atualizarAvaliacao = async (
     return httpRequests.putMethod(`${URLS.AGENDAMENTOS}/avaliacoes/${avaliacaoId}`, avaliacao);
 }
 
+export const criarPagamentoPix = async (
+    agendamentoData: AgendamentoCreate
+): Promise<PixPagamentoResponse> => {
+    return httpRequests.postMethod<PixPagamentoResponse>(
+        `${URLS.AGENDAMENTOS}/criar-pagamento-pix`,
+        agendamentoData
+    );
+};
+
+export const getAgendamentoStatus = async (
+    agendamentoId: number
+): Promise<{ status: StatusAgendamento }> => {
+    return httpRequests.getMethod<{ status: StatusAgendamento }>(
+        `${URLS.AGENDAMENTOS}/${agendamentoId}/status`
+    );
+};
+
 // ================================== Agendamentos Arena ==================================
 
 export type StatusAgendamentoArena = "PENDENTE" | "PAGO" | "CANCELADO" | "AUSENTE" | "FINALIZADO";
@@ -236,6 +262,6 @@ export const updateStatusAgendamentoArena = async (
 
 export const getAgendamentosPendentesResolucao = async (): Promise<AgendamentoArena[]> => {
     return httpRequests.getMethod<AgendamentoArena[]>(
-        `${URLS.ARENAAGENDAMENTOS}/pendentes-resolucao` 
+        `${URLS.ARENAAGENDAMENTOS}/pendentes-resolucao`
     );
 }

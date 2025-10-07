@@ -33,7 +33,7 @@ export const getAllJogosAbertos = async (
 ): Promise<httpRequests.PaginatedResponse<JogosAbertos>> => {
     return httpRequests.getMethod<httpRequests.PaginatedResponse<JogosAbertos>>(
         `${URLS.JOGOS_ABERTOS}`, 
-        params
+        // params
     );
 };
 
