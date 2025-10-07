@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Tag, Flex } from 'antd';
+import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Alert, Flex, Input } from 'antd';
 import { IoCloseOutline } from "react-icons/io5";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { format, addMonths, addDays, getDay, isBefore, parseISO, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import type {
-    MaterialFornecido,
     DuracaoReserva,
     Quadra,
     HorariosDisponiveis,
@@ -13,14 +12,16 @@ import type {
 } from '@/app/api/entities/quadra';
 import type { Arena as ArenaOficial } from '@/app/api/entities/arena';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
-import { createAgendamento, type AgendamentoCreate, type PeriodoAgendamentoFixo } from '@/app/api/entities/agendamento';
+import { createAgendamento, criarPagamentoPix, PixPagamentoResponse, type AgendamentoCreate, type PeriodoAgendamentoFixo } from '@/app/api/entities/agendamento';
 import { ButtonPrimary } from '../Buttons/ButtonPrimary';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeProvider';
-import { SyncOutlined } from '@ant-design/icons';
-import { Alert } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { formatarMaterial } from '@/context/functions/formatarMaterial';
+import { ModalPix } from '../Modais/ModalPix';
+import { useAuth } from '@/context/hooks/use-auth';
+import { validarCPF } from '@/context/functions/validarCPF';
+import { formatarCPF } from '@/context/functions/formatarCPF';
 
 const { Title, Text } = Typography;
 
@@ -69,6 +70,9 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     selectedHorarios,
     quadras
 }) => {
+    const { user } = useAuth();
+    const atletaCpfCadastrado = user?.cpfCnpj;
+
     const [form] = Form.useForm();
     const router = useRouter();
     const { message } = App.useApp();
@@ -79,6 +83,56 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     const [total, setTotal] = useState<number>(0);
     const [submitting, setSubmitting] = useState(false);
     const { isDarkMode } = useTheme();
+
+    const [isPixModalOpen, setIsPixModalOpen] = useState(false);
+    const [pixData, setPixData] = useState<PixPagamentoResponse | null>(null);
+    const [pixLoading, setPixLoading] = useState(false);
+
+    const buildPayload = (values: any): AgendamentoCreate | null => {
+        if (!quadraSelecionada) {
+            message.error("Nenhuma quadra selecionada.");
+            return null;
+        }
+
+        let periodoFixoValue: PeriodoAgendamentoFixo | undefined = undefined;
+        if (isFixo) {
+            if (fixedDurationMonths === 1) periodoFixoValue = 'UM_MES';
+            else if (fixedDurationMonths === 3) periodoFixoValue = 'TRES_MESES';
+            else if (fixedDurationMonths === 6) periodoFixoValue = 'SEIS_MESES';
+        }
+
+        const slotHorarioIds = selectedHorarios.map(h => {
+            const [, horarioInicio] = h.split('|');
+            const horario = quadraSelecionada?.horariosDisponiveis.find(slot => slot.horarioInicio === horarioInicio);
+            return horario?.id;
+        }).filter((id): id is number => id !== undefined);
+
+        const esporteSelecionado: TipoQuadra = values.esporte || (quadraSelecionada.tipoQuadra.length === 1 ? quadraSelecionada.tipoQuadra[0] : null);
+
+        if (!esporteSelecionado) {
+            message.error("Por favor, selecione um esporte.");
+            return null;
+        }
+
+        const cpfParaPagamento = values.cpfPagamento || atletaCpfCadastrado;
+
+        if (!cpfParaPagamento) {
+            message.error("CPF é obrigatório para pagamento PIX.");
+            return null;
+        }
+
+        return {
+            quadraId: quadraSelecionada.id,
+            dataAgendamento: selectedDate,
+            slotHorarioIds: slotHorarioIds,
+            esporte: esporteSelecionado,
+            periodoFixo: periodoFixoValue,
+            numeroJogadoresNecessarios: isIncomplete ? numeroJogadoresFaltando : 0,
+            isFixo: isFixo,
+            isPublico: isIncomplete,
+            cpfCnpjPagamento: !atletaCpfCadastrado ? cpfParaPagamento : undefined,
+        };
+    };
 
     const getOccurrences = (startDate: Date, months: number): { count: number, lastDate: Date } => {
         if (months === 0) return { count: 0, lastDate: startDate };
@@ -142,69 +196,47 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     }, [quadraSelecionada, open, form]);
 
     const handleFormSubmit = async (values: any) => {
-        if (!quadraSelecionada) {
-            message.error("Nenhuma quadra selecionada.");
-            return;
-        }
+        const payload = buildPayload(values);
+        if (!payload) return;
 
         setSubmitting(true);
-
-        let periodoFixoValue: PeriodoAgendamentoFixo | undefined = undefined;
-        if (isFixo) {
-            if (fixedDurationMonths === 1) periodoFixoValue = 'UM_MES';
-            else if (fixedDurationMonths === 3) periodoFixoValue = 'TRES_MESES';
-            else if (fixedDurationMonths === 6) periodoFixoValue = 'SEIS_MESES';
-        }
-
-        const slotHorarioIds = selectedHorarios.map(h => {
-            const [quadraIdStr, horarioInicio] = h.split('|');
-            const quadraId = Number(quadraIdStr);
-            const quadra = quadras.find(q => q.id === quadraId);
-            const horario = quadra?.horariosDisponiveis.find(slot => slot.horarioInicio === horarioInicio);
-            return horario?.id;
-        }).filter((id): id is number => id !== undefined);
-
-        if (slotHorarioIds.length !== selectedHorarios.length) {
-            message.error("Erro ao processar os horários selecionados. Tente novamente.");
-            setSubmitting(false);
-            return;
-        }
-
-        const esporteSelecionado: TipoQuadra = values.esporte || (quadraSelecionada.tipoQuadra.length === 1 ? quadraSelecionada.tipoQuadra[0] : null);
-
-        if (!esporteSelecionado) {
-            message.error("Por favor, selecione um esporte.");
-            setSubmitting(false);
-            return;
-        }
-
-        const payload: AgendamentoCreate = {
-            quadraId: quadraSelecionada.id,
-            dataAgendamento: selectedDate,
-            slotHorarioIds: slotHorarioIds,
-            esporte: esporteSelecionado,
-            periodoFixo: periodoFixoValue,
-            numeroJogadoresNecessarios: isIncomplete ? numeroJogadoresFaltando : 0,
-            isFixo: isFixo,
-            isPublico: isIncomplete,
-        };
-
         try {
             await createAgendamento(payload);
             message.success('Agendamento criado com sucesso!');
             onClose();
-            router.push('/perfil/atleta/agendamentos?aba=pendentes');
+            router.push('/perfil/atleta/agendamentos');
         } catch (error) {
-            console.error("Falha ao criar agendamento:", error);
-            message.error(
-                (error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string')
-                    ? (error as any).message
-                    : 'Não foi possível realizar o agendamento. Tente novamente.'
-            );
+            message.error((error as any).message || 'Não foi possível realizar o agendamento.');
         } finally {
             setSubmitting(false);
         }
     };
+
+    const handlePagarComPix = async () => {
+        try {
+            const values = await form.validateFields();
+            const payload = buildPayload(values);
+            if (!payload) return;
+
+            setPixLoading(true);
+            const response = await criarPagamentoPix(payload);
+            setPixData(response);
+            setIsPixModalOpen(true);
+            onClose(); // Fecha o drawer para focar no modal
+        } catch (error) {
+            console.error("Falha ao gerar Pix:", error);
+            message.error((error as any).message || "Não foi possível gerar o pagamento Pix.");
+        } finally {
+            setPixLoading(false);
+        }
+    };
+
+    const handlePaymentSuccess = () => {
+        setIsPixModalOpen(false);
+        message.success("Pagamento confirmado! Seu agendamento está garantido.", 5);
+        router.push('/perfil/atleta/agendamentos?aba=historico');
+    };
+
     const renderResumoHorario = () => {
         if (!selectedHorarios || selectedHorarios.length === 0 || !quadraSelecionada) return null;
 
@@ -283,73 +315,74 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     const primeiroHorario = selectedHorarios.length > 0 ? selectedHorarios.map(h => h.split('|')[1]).sort((a, b) => a.localeCompare(b))[0] : "00:00";
 
     return (
-        <Drawer
-            placement="right"
-            onClose={onClose}
-            open={open}
-            closable={false}
-            styles={{ body: { padding: 0 } }}
-            width={440}
-        >
-            <div className='flex flex-col h-full'>
-                <Flex
-                    align="center"
-                    justify="space-between"
-                    className="!pt-4 !pb-2 !px-6 !flex-shrink-0"
-                >
-                    <Title level={4} className="!m-0">{arena.nome}</Title>
+        <>
+            <Drawer
+                placement="right"
+                onClose={onClose}
+                open={open}
+                closable={false}
+                styles={{ body: { padding: 0 } }}
+                width={440}
+            >
+                <div className='flex flex-col h-full'>
+                    <Flex
+                        align="center"
+                        justify="space-between"
+                        className="!pt-4 !pb-2 !px-6 !flex-shrink-0"
+                    >
+                        <Title level={4} className="!m-0">{arena.nome}</Title>
 
-                    <Button
-                        onClick={onClose}
-                        type="text"
-                        shape="circle"
-                        icon={<IoCloseOutline className="text-xl text-gray-500" />}
-                    />
-                </Flex>
+                        <Button
+                            onClick={onClose}
+                            type="text"
+                            shape="circle"
+                            icon={<IoCloseOutline className="text-xl text-gray-500" />}
+                        />
+                    </Flex>
 
-                <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={handleFormSubmit}
-                    className="!flex !flex-col !justify-between !flex-grow !px-6 !pb-6 !overflow-y-auto"
-                >
-                    <div className="flex flex-col">
-                        <div className="flex flex-col mb-4">
-                            <Text className='font-semibold'>{quadraSelecionada?.nomeQuadra}</Text>
-                            {quadraSelecionada?.materiaisFornecidos && quadraSelecionada.materiaisFornecidos.length > 0 && (
-                                <Text className="mt-2">
-                                    A Arena vai disponibilizar para você:{' '}
-                                    <span className="text-green-600 font-semibold">
-                                        {quadraSelecionada.materiaisFornecidos.length === 1
-                                            ? formatarMaterial(quadraSelecionada.materiaisFornecidos[0])
-                                            : quadraSelecionada.materiaisFornecidos.map(formatarMaterial).reduce((acc, curr, idx, arr) => {
-                                                if (idx === 0) return curr;
-                                                if (idx === arr.length - 1) return `${acc} e ${curr}`;
-                                                return `${acc}, ${curr}`;
-                                            }, '')}
-                                    </span>
-                                </Text>
-                            )}
-                        </div>
-
-                        {selectedHorarios.length > 0 && (
-                            <div className="flex flex-row items-center gap-4 rounded-lg py-2 px-3 mb-4 border-2 border-gray-200">
-                                {renderResumoHorario()}
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        onFinish={handleFormSubmit}
+                        className="!flex !flex-col !justify-between !flex-grow !px-6 !pb-6 !overflow-y-auto"
+                    >
+                        <div className="flex flex-col">
+                            <div className="flex flex-col mb-4">
+                                <Text className='font-semibold'>{quadraSelecionada?.nomeQuadra}</Text>
+                                {quadraSelecionada?.materiaisFornecidos && quadraSelecionada.materiaisFornecidos.length > 0 && (
+                                    <Text className="mt-2">
+                                        A Arena vai disponibilizar para você:{' '}
+                                        <span className="text-green-600 font-semibold">
+                                            {quadraSelecionada.materiaisFornecidos.length === 1
+                                                ? formatarMaterial(quadraSelecionada.materiaisFornecidos[0])
+                                                : quadraSelecionada.materiaisFornecidos.map(formatarMaterial).reduce((acc, curr, idx, arr) => {
+                                                    if (idx === 0) return curr;
+                                                    if (idx === arr.length - 1) return `${acc} e ${curr}`;
+                                                    return `${acc}, ${curr}`;
+                                                }, '')}
+                                        </span>
+                                    </Text>
+                                )}
                             </div>
-                        )}
 
-                        <div className="flex flex-col gap-2 mb-4">
-                            {quadraSelecionada && quadraSelecionada.tipoQuadra.length > 1 && (
-                                <Form.Item name="esporte" label={<Text className='font-semibold text-lg'>Selecione um esporte</Text>} rules={[{ required: true, message: 'Por favor, selecione um esporte!' }]}>
-                                    <Select placeholder="Selecione um esporte" className="w-full">
-                                        {quadraSelecionada.tipoQuadra.map((esporte) => (
-                                            <Select.Option key={esporte} value={esporte}>{formatarEsporte(esporte)}</Select.Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
+                            {selectedHorarios.length > 0 && (
+                                <div className="flex flex-row items-center gap-4 rounded-lg py-2 px-3 mb-4 border-2 border-gray-200">
+                                    {renderResumoHorario()}
+                                </div>
                             )}
 
-                            {/* <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
+                            <div className="flex flex-col gap-2 mb-4">
+                                {quadraSelecionada && quadraSelecionada.tipoQuadra.length > 1 && (
+                                    <Form.Item name="esporte" label={<Text className='font-semibold text-lg'>Selecione um esporte</Text>} rules={[{ required: true, message: 'Por favor, selecione um esporte!' }]}>
+                                        <Select placeholder="Selecione um esporte" className="w-full">
+                                            {quadraSelecionada.tipoQuadra.map((esporte) => (
+                                                <Select.Option key={esporte} value={esporte}>{formatarEsporte(esporte)}</Select.Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                )}
+
+                                {/* <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
                                 <span>Quer reservar este horário como fixo?</span>
                                 <Tag icon={<SyncOutlined spin />} color="processing">
                                     BETA
@@ -365,79 +398,134 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                 }} />
                             </div> */}
 
-                            {isFixo && (
-                                <Radio.Group value={fixedDurationMonths} onChange={(e) => setFixedDurationMonths(e.target.value)} className='!flex !justify-between'>
-                                    <Radio value={1}>1 mês</Radio>
-                                    <Radio value={3}>3 meses</Radio>
-                                    <Radio value={6}>6 meses</Radio>
-                                </Radio.Group>
+                                {isFixo && (
+                                    <Radio.Group value={fixedDurationMonths} onChange={(e) => setFixedDurationMonths(e.target.value)} className='!flex !justify-between'>
+                                        <Radio value={1}>1 mês</Radio>
+                                        <Radio value={3}>3 meses</Radio>
+                                        <Radio value={6}>6 meses</Radio>
+                                    </Radio.Group>
+                                )}
+
+                                <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
+                                    <span>Tá faltando gente?</span>
+                                    <Switch size="small" checked={isIncomplete} onChange={(c) => {
+                                        setIsIncomplete(c);
+                                        if (c) {
+                                            setIsFixo(false);
+                                            setFixedDurationMonths(0);
+                                            if (numeroJogadoresFaltando === 0) setNumeroJogadoresFaltando(1);
+                                        } else {
+                                            setNumeroJogadoresFaltando(0);
+                                        }
+                                    }} />
+                                </div>
+
+                                {isIncomplete && (
+                                    <div className='flex justify-between items-center mt-2'>
+                                        <span className='text-sm'>Quantos jogadores você precisa?</span>
+                                        <div className="flex items-center rounded border border-gray-300">
+                                            <Button
+                                                type='text'
+                                                disabled={numeroJogadoresFaltando <= 1}
+                                                onClick={() => setNumeroJogadoresFaltando(p => Math.max(1, p - 1))}
+                                                icon={<AiOutlineMinus />}
+                                            />
+                                            <span className="px-4 font-semibold">{numeroJogadoresFaltando}</span>
+                                            <Button
+                                                type='text'
+                                                disabled={numeroJogadoresFaltando >= 21}
+                                                onClick={() => setNumeroJogadoresFaltando(p => p + 1)}
+                                                icon={<AiOutlinePlus />}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                            </div>
+                            {!atletaCpfCadastrado && (
+                                <Form.Item
+                                    label={<Text className='font-semibold text-sm'>CPF do Pagador</Text>}
+                                    name="cpfPagamento"
+                                    rules={[
+                                        { required: !atletaCpfCadastrado, message: "Insira seu CPF!" },
+                                        {
+                                            validator: (_, value) => {
+                                                if (!value) return Promise.resolve();
+                                                if (!validarCPF(value)) {
+                                                    return Promise.reject(new Error("CPF inválido!"));
+                                                }
+                                                return Promise.resolve();
+                                            },
+                                        },
+                                    ]}
+                                    className="flex-1"
+                                >
+                                    <Input
+                                        placeholder="Digite seu CPF ou CNPJ"
+                                        onChange={(e) => {
+                                            form.setFieldsValue({ cpfPagamento: formatarCPF(e.target.value) });
+                                        }}
+                                    />
+                                </Form.Item>
+                            )}
+                        </div>
+
+
+                        <div className="flex flex-col flex-1 justify-end">
+                            {selectedHorarios.length > 0 && arena.horasCancelarAgendamento > 0 && (
+                                <Alert
+                                    message="Política de Cancelamento"
+                                    description={`Você pode cancelar ${calcularPrazoCancelamento(selectedDate, primeiroHorario, arena.horasCancelarAgendamento)}.`}
+                                    type="info"
+                                    showIcon
+                                    icon={<InfoCircleOutlined />}
+                                    className="!mb-4"
+                                />
                             )}
 
-                            <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
-                                <span>Tá faltando gente?</span>
-                                <Switch size="small" checked={isIncomplete} onChange={(c) => {
-                                    setIsIncomplete(c);
-                                    if (c) {
-                                        setIsFixo(false);
-                                        setFixedDurationMonths(0);
-                                        if (numeroJogadoresFaltando === 0) setNumeroJogadoresFaltando(1);
-                                    } else {
-                                        setNumeroJogadoresFaltando(0);
-                                    }
-                                }} />
+                            <div className='flex justify-between items-center mb-4'>
+                                <span className='text-lg'>Total</span>
+                                <span className='font-bold text-lg text-green-600'>{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                             </div>
 
-                            {isIncomplete && (
-                                <div className='flex justify-between items-center mt-2'>
-                                    <span className='text-sm'>Quantos jogadores você precisa?</span>
-                                    <div className="flex items-center rounded border border-gray-300">
-                                        <Button
-                                            type='text'
-                                            disabled={numeroJogadoresFaltando <= 1}
-                                            onClick={() => setNumeroJogadoresFaltando(p => Math.max(1, p - 1))}
-                                            icon={<AiOutlineMinus />}
-                                        />
-                                        <span className="px-4 font-semibold">{numeroJogadoresFaltando}</span>
-                                        <Button
-                                            type='text'
-                                            disabled={numeroJogadoresFaltando >= 21}
-                                            onClick={() => setNumeroJogadoresFaltando(p => p + 1)}
-                                            icon={<AiOutlinePlus />}
-                                        />
-                                    </div>
-                                </div>
-                            )}
+                            <Flex vertical gap="small" className="mt-4">
+                                <ButtonPrimary
+                                    text="Pagar com Pix"
+                                    onClick={handlePagarComPix}
+                                    className="w-full"
+                                    loading={pixLoading}
+                                    size='large'
+                                />
+                                <Button
+                                    onClick={() => form.submit()}
+                                    className="w-full"
+                                    loading={submitting}
+                                    size='large'
+                                >
+                                    Pagar na Arena
+                                </Button>
+                            </Flex>
 
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col flex-1 justify-end">
-                        {selectedHorarios.length > 0 && arena.horasCancelarAgendamento > 0 && (
-                            <Alert
-                                message="Política de Cancelamento"
-                                description={`Você pode cancelar ${calcularPrazoCancelamento(selectedDate, primeiroHorario, arena.horasCancelarAgendamento)}.`}
-                                type="info"
-                                showIcon
-                                icon={<InfoCircleOutlined />}
-                                className="!mb-4"
-                            />
-                        )}
-
-                        <div className='flex justify-between items-center mb-4'>
-                            <span className='text-lg'>Total</span>
-                            <span className='font-bold text-lg text-green-600'>{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-                        </div>
-                        
-                        <ButtonPrimary
+                            {/* <ButtonPrimary
                             text={submitting ? 'Agendando...' : 'Confirmar agendamento'}
                             htmlType="submit"
                             className="w-full"
                             loading={submitting}
                             size='large'
-                        />
-                    </div>
-                </Form>
-            </div>
-        </Drawer>
+                        /> */}
+                        </div>
+                    </Form>
+                </div>
+            </Drawer>
+
+            {isPixModalOpen && pixData && (
+                <ModalPix
+                    open={isPixModalOpen}
+                    onClose={() => setIsPixModalOpen(false)}
+                    pixData={pixData}
+                    onPaymentSuccess={handlePaymentSuccess}
+                />
+            )}
+        </>
     );
 }

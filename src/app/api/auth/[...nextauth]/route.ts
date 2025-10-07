@@ -13,6 +13,7 @@ declare module "next-auth" {
     expiresIn: number;
     imageUrl: string;
     statusAssinatura?: StatusAssinatura;
+    cpfCnpj?: string;
   }
 }
 
@@ -56,6 +57,7 @@ const handler = NextAuth({
         token.role = user.role;
         token.picture = user.imageUrl;
         token.statusAssinatura = user.statusAssinatura;
+        token.cpfCnpj = user.cpfCnpj;
 
         const nowInSeconds = Math.floor(Date.now() / 1000);
         token.exp = nowInSeconds + user.expiresIn;
@@ -70,23 +72,31 @@ const handler = NextAuth({
 
       // Atualiza o token com os dados mais recentes da sessão
       if (trigger === "update" && session) {
-        token.name = session.name;
-        token.picture = session.picture;
-        token.statusAssinatura = session.statusAssinatura;
+        const updatePayload = session;
+
+        token.name = updatePayload.name as string;
+        token.picture = updatePayload.picture as string;
+        token.statusAssinatura = updatePayload.statusAssinatura as StatusAssinatura;
+        token.cpfCnpj = updatePayload.cpfCnpj as string | undefined;
+
+        return token;
       }
+
 
       return token;
     },
     async session({ session, token }) {
       if (token?.userId) {
         session.user.accessToken = token.accessToken as string;
-        session.user.userId = token.userId as string; 
+        session.user.userId = token.userId as string;
         session.user.name = token.name as string;
         session.user.role = token.role as string;
         session.user.expiresIn = token.exp as number;
         session.user.imageUrl = token.picture as string;
         session.user.statusAssinatura = token.statusAssinatura as StatusAssinatura;
+        session.user.cpfCnpj = token.cpfCnpj as string | undefined;
       }
+
       return session;
     },
   },

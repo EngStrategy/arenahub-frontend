@@ -108,10 +108,10 @@ export default function AjudaSuporte() {
                         <Row gutter={[16, 16]} justify="center" className="mb-10">
                             <Col xs={24} sm={12}>
                                 <Card hoverable className="text-center">
-                                    <a href="mailto:engstrategy25@gmail.com" className="!text-current hover:!text-green-primary">
+                                    <a href="mailto:arenahub.2025@gmail.com" className="!text-current hover:!text-green-primary">
                                         <MailOutlined className="text-3xl mb-2" />
                                         <Text strong className='!block'>Email</Text>
-                                        <Text type="secondary">engstrategy25@gmail.com</Text>
+                                        <Text type="secondary">arenahub.2025@gmail.com</Text>
                                     </a>
                                 </Card>
                             </Col>

@@ -9,6 +9,7 @@ export interface Atleta {
     urlFoto: string;
     dataCriacao: string;
     role: string;
+    cpf: string;
 }
 
 export interface AtletaCreate {

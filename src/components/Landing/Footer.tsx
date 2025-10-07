@@ -44,7 +44,7 @@ export function Footer({ year, isDarkMode }: Readonly<Props>) {
                 <div>
                     <h3 className="font-semibold text-lg">Contato</h3>
                     <ul className="mt-4 space-y-2 text-sm">
-                        <li>Email: engstrategy25@gmail.com</li>
+                        <li>Email: arenahub.2025@gmail.com</li>
                         <li>Telefone: (89) 99467-3969</li>
                     </ul>
                 </div>

@@ -194,7 +194,7 @@ export default function FeedbackPage() {
                                             <Title level={5}>Nossos canais</Title>
                                             <Space size="large" className="mt-2">
                                                 <Link href="https://www.instagram.com/eng.strategy" className="text-gray-500 hover:text-green-500 transition-colors"><FaInstagram size={24} /></Link>
-                                                <Link href="mailto:engstrategy25@gmail.com" className="text-gray-500 hover:text-green-500 transition-colors"><MdOutlineEmail size={24} /></Link>
+                                                <Link href="mailto:arenahub.2025@gmail.com" className="text-gray-500 hover:text-green-500 transition-colors"><MdOutlineEmail size={24} /></Link>
                                                 <Link href="https://wa.me/5589994673969" className="text-gray-500 hover:text-green-500 transition-colors"><FaWhatsapp size={24} /></Link>
                                             </Space>
                                         </div>
