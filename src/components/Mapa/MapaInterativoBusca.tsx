@@ -9,6 +9,8 @@ interface MapaProps {
     apiKey: string;
     addressToSearch: string;
     onCoordinatesChange: (lat: number, lng: number) => void;
+    initialLat?: number;
+    initialLng?: number;
 }
 
 const containerStyle = {
@@ -23,13 +25,24 @@ const defaultCenter = {
     lng: -51.92528
 };
 
-export const MapaInterativoBusca: React.FC<MapaProps> = ({ apiKey, addressToSearch, onCoordinatesChange }) => {
+export const MapaInterativoBusca: React.FC<MapaProps> = ({
+    apiKey,
+    addressToSearch,
+    onCoordinatesChange,
+    initialLat,
+    initialLng
+}) => {
+
     const { isLoaded, loadError } = useJsApiLoader({
         googleMapsApiKey: apiKey,
     });
 
-    const [mapCenter, setMapCenter] = useState(defaultCenter);
-    const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(null);
+    const initialCenter = (initialLat && initialLng) ? { lat: initialLat, lng: initialLng } : defaultCenter;
+    const initialMarker = (initialLat && initialLng) ? { lat: initialLat, lng: initialLng } : null;
+
+
+    const [mapCenter, setMapCenter] = useState(initialCenter);
+    const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(initialMarker);
     const [geocodingError, setGeocodingError] = useState<string | null>(null);
 
     // Função para buscar coordenadas (geocodificação)
@@ -56,11 +69,14 @@ export const MapaInterativoBusca: React.FC<MapaProps> = ({ apiKey, addressToSear
     }, 2000), [apiKey, isLoaded, onCoordinatesChange]); // Debounce de 2s
 
     useEffect(() => {
-        // Aciona a busca sempre que o endereço completo mudar
-        if (addressToSearch) {
+        if (initialLat !== undefined && initialLng !== undefined) {
+            const initialPos = { lat: initialLat, lng: initialLng };
+            setMapCenter(initialPos);
+            setMarkerPosition(initialPos);
+        } else if (addressToSearch && isLoaded) {
             geocodeAddress(addressToSearch);
         }
-    }, [addressToSearch, geocodeAddress]);
+    }, [initialLat, initialLng, addressToSearch, isLoaded, geocodeAddress]);
 
     // Handler para quando o usuário arrasta o marcador
     const handleMarkerDragEnd = (e: google.maps.MapMouseEvent) => {

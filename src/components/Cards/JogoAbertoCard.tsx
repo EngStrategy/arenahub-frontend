@@ -141,10 +141,7 @@ export function JogoAbertoCard({ jogoAberto, onSaidaSucesso }: JogoAbertoCardPro
                         <Flex align="center" gap="small">
                             <CalendarOutlined className="mr-2"/>
                             <Text strong>
-                                {(() => {
-                                    const dateStr = new Date(jogoAberto.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
-                                    return dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
-                                })()}
+                                {jogoAberto.data}
                             </Text>
                         </Flex>
                         <Flex align="center" gap="small">

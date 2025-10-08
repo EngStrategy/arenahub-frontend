@@ -74,6 +74,18 @@ export interface QuadraCreate {
     horariosFuncionamento: Array<HorarioFuncionamentoCreate>;
 }
 
+export interface QuadraUpdate {
+    nomeQuadra: string;
+    urlFotoQuadra: string;
+    tipoQuadra: Array<TipoQuadra>;
+    descricao: string;
+    cobertura: boolean;
+    iluminacaoNoturna: boolean;
+    materiaisFornecidos: Array<MaterialFornecido>;
+    horariosFuncionamento: Array<HorarioFuncionamentoCreate>;
+}
+
+
 export interface QuadraQueryParams {
     page?: number;
     size?: number;
@@ -97,13 +109,13 @@ export const createQuadra = async (newQuadra: QuadraCreate): Promise<Quadra> => 
 
 export const updateQuadra = async (
     id: number,
-    updateQuadra: Partial<QuadraCreate>
-): Promise<QuadraCreate | undefined> => {
+    updateQuadra: Partial<QuadraUpdate>
+): Promise<QuadraUpdate | undefined> => {
     if (!id) {
         console.warn("ID da quadra não fornecido.");
         return undefined;
     }
-    return httpRequests.putMethod<QuadraCreate, Partial<QuadraCreate>>(
+    return httpRequests.putMethod<QuadraUpdate, Partial<QuadraUpdate>>(
         `${URLS.QUADRAS}/${id}`,
         updateQuadra,
     );

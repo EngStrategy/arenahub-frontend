@@ -10,7 +10,6 @@ export interface ResetPasswordPayload {
     email: string;
     newPassword: string;
     confirmation: string;
-    passwordMatch: boolean;
 }
 
 // Verifica o código no email do usuário após o cadastro

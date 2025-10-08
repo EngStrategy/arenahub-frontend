@@ -120,12 +120,14 @@ export default function JogosAbertos() {
         try {
             const backendSport = sport === 'Todos' ? undefined : friendlyNameToBackendEnum[sport];
 
+            const isProximitySearch = loc?.latitude != null && loc?.longitude != null;
+
             const params = {
                 page: page - 1,
                 size: pagination.pageSize,
                 sort: 'dataAgendamento',
                 direction: 'asc',
-                cidade: cidade === '' ? undefined : cidade,
+                cidade: isProximitySearch ? undefined : cidade,
                 esporte: backendSport,
                 latitude: loc?.latitude,
                 longitude: loc?.longitude,
