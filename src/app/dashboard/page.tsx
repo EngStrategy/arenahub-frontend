@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, Avatar, Card, Col, Row, Flex, Typography, Layout, Tag, Alert } from 'antd';
+import { Button, Avatar, Card, Col, Row, Flex, Typography, Layout, Alert } from 'antd';
 import {
   PlusOutlined,
   DollarCircleOutlined,
@@ -19,6 +19,7 @@ import { getDashboardData, DashboardData } from '../api/entities/arena';
 import { useAuth } from '@/context/hooks/use-auth';
 import { type AgendamentoArena, getAgendamentosPendentesResolucao } from '../api/entities/agendamento';
 import { useRouter } from 'next/navigation';
+import { BsBookmarkCheck } from 'react-icons/bs';
 
 const { Title, Text } = Typography;
 
@@ -89,7 +90,6 @@ const DashboardSkeleton = () => (
   </main>
 );
 
-
 export default function Dashboard() {
   const { user, isLoadingSession, isAuthenticated } = useAuth();
   const { isDarkMode } = useTheme();
@@ -98,39 +98,45 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [pendentesResolucao, setPendentesResolucao] = useState<AgendamentoArena[]>([]);
+
+  const fetchDashboardData = async () => {
+    console.log("Buscando dados do dashboard...");
+    return getDashboardData();
+  };
+
+  const fetchPendentesResolucao = async () => {
+    console.log("Buscando agendamentos pendentes de resolução...");
+    return getAgendamentosPendentesResolucao();
+  };
 
   useEffect(() => {
     if (isAuthenticated) {
-      const fetchDashboardData = async () => {
+      const fetchAllData = async () => {
+        setLoading(true);
+        setError(null);
+
         try {
-          setLoading(true);
-          setError(null);
-          const data = await getDashboardData();
+          console.log("Iniciando carga do Dashboard...");
+          const [data, pendentes] = await Promise.all([
+            fetchDashboardData(),
+            fetchPendentesResolucao()
+          ]);
+
           setDashboardData(data);
+          setPendentesResolucao(pendentes);
+
         } catch (err: unknown) {
           const apiError = err as { code?: string; message?: string };
-          console.error("Erro ao buscar dados do dashboard:", apiError);
-          setError(apiError.message || "Não foi possível carregar os dados do dashboard.");
+          console.error("Erro na carga do Dashboard:", apiError);
+          setError(apiError.message || "Não foi possível carregar o dashboard devido a um erro de comunicação.");
         } finally {
           setLoading(false);
         }
       };
 
-      const fetchPendentesResolucao = async () => {
-        try {
-          const data = await getAgendamentosPendentesResolucao();
-          setPendentesResolucao(data);
-        } catch (err) {
-          console.error("Erro ao buscar agendamentos pendentes para resolução:", err);
-        }
-      };
+      fetchAllData();
 
-      Promise.all([
-        fetchDashboardData(),
-        fetchPendentesResolucao()
-      ]);
     } else if (!isAuthenticated) {
       setLoading(false);
     }
@@ -198,8 +204,7 @@ export default function Dashboard() {
   const quickAccessLinks = [
     { label: "Gerenciar Quadras", icon: <GiSoccerField />, path: "/perfil/arena/quadras" },
     { label: "Agendamentos", icon: <ScheduleOutlined />, path: "/perfil/arena/agendamentos" },
-    { label: "Relatórios Financeiros", icon: <BarChartOutlined />, path: "#", inProgress: true },
-    { label: "Gestão de Clientes", icon: <TeamOutlined />, path: "#", inProgress: true },
+    { label: "Assinatura", icon: <BsBookmarkCheck />, path: "/perfil/arena/assinatura" },
   ];
 
   return (
@@ -310,10 +315,9 @@ export default function Dashboard() {
                       size="large"
                       block
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 'auto', padding: '10px 15px' }}
-                      disabled={link.inProgress}
+                      // disabled={link.inProgress}
                     >
                       {link.label}
-                      {/* {link.inProgress && <Tag color="blue" style={{ marginLeft: 'auto' }}>Em progresso</Tag>} */}
                     </Button>
                   </Link>
                 ))}

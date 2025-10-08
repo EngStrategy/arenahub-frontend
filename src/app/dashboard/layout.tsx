@@ -34,14 +34,5 @@ export default function DashboardLayout({
         );
     }
 
-    // Se a assinatura for ATIVA, mostra o conteúdo do dashboard
-    if (user.statusAssinatura === 'ATIVA') {
-        return <>{children}</>;
-    }
-
-    return (
-        <Flex align="center" justify="center" className="min-h-screen">
-            <Spin size="large" />
-        </Flex>
-    );
+    return <>{children}</>;
 }

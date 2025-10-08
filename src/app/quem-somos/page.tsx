@@ -101,7 +101,7 @@ const QuemSomosPulseSkeleton = () => (
 
 const teamMembers = [
     {
-        name: 'Sávio Cavalho',
+        name: 'Sávio Carvalho',
         role: 'CEO & Fundador',
         bio: 'Apaixonado por futebol desde criança, transformou a frustração de não encontrar quadras em uma solução para milhares de atletas.',
         avatar: 'https://i.imgur.com/BkSSSx4.jpeg',

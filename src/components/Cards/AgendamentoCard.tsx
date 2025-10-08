@@ -77,15 +77,15 @@ const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number
     try {
         const [horaInicio, minutoInicio] = horarioInicio.split(':').map(Number);
         const [horaFim, minutoFim] = horarioFim.split(':').map(Number);
- 
+
         let totalMinutosInicio = horaInicio * 60 + minutoInicio;
         let totalMinutosFim = horaFim * 60 + minutoFim;
- 
+
         // Se o horário final for menor que o inicial, assume que o agendamento atravessa a meia-noite.
         if (totalMinutosFim < totalMinutosInicio) {
             totalMinutosFim += 24 * 60; // Adiciona 24 horas em minutos
         }
- 
+
         const diferencaEmMinutos = totalMinutosFim - totalMinutosInicio;
 
         // Retorna a diferença em horas. Ex: 90 min = 1.5h
@@ -199,7 +199,7 @@ export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: Ca
 
         const isActionable = ['pendente', 'aceito', 'pago'].includes(agendamento.status);
 
-        const showButton = agendamento.showSolicitationButton; 
+        const showButton = agendamento.showSolicitationButton;
 
         let jogoTipo: React.ReactNode = null;
         if (!showButton) {
@@ -229,7 +229,7 @@ export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: Ca
                         jogoTipo
                     )}
 
-                    {/* Botão de Cancelar visível para PENDENTE/ACEITO/PAGO (se o prazo permitir) */}
+                    {/* Botão de Cancelar visível para PENDENTE/ACEITO/PAGO */}
                     {agendamento.status !== 'pago' && ( // Exemplo: Permitir cancelar se não foi pago
                         <Popconfirm
                             title="Cancelar Agendamento"
@@ -266,7 +266,10 @@ export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: Ca
                                     <Text type="secondary">{agendamento.quadraName}</Text>
                                 </Flex>
                             </Flex>
-                            <StatusTag status={agendamento.status} />
+                            <Flex gap="small" align="center" vertical>
+                                <StatusTag status={agendamento.status} />
+                                {agendamento.fixo && <Tag color="gold">Fixo</Tag>}
+                            </Flex>
                         </Flex>
 
                         <Divider style={{ marginTop: 12, marginBottom: 12 }} />

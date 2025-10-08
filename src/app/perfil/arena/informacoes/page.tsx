@@ -8,7 +8,8 @@ import {
     Col, Row, Card, Typography,
     Space, type MenuProps, type GetProp,
     type UploadFile, type UploadProps,
-    InputNumber
+    InputNumber,
+    Alert
 } from 'antd';
 import { PictureOutlined, UploadOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
@@ -26,6 +27,8 @@ import axios from 'axios';
 import { Estados } from '@/data/Estados'
 import { useTheme } from '@/context/ThemeProvider';
 import { useAuth } from '@/context/hooks/use-auth';
+import { MapaInterativoBusca } from '@/components/Mapa/MapaInterativoBusca';
+const { Text, Title } = Typography;
 
 type CITYResponse = {
     id: number;
@@ -45,6 +48,8 @@ interface PersonalInfoFormValues {
     horasCancelarAgendamento: number;
     descricao: string;
     urlFoto: string;
+    latitude: number;
+    longitude: number;
 }
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
@@ -129,7 +134,30 @@ export default function InformacoesPessoaisArena() {
     const [isFormAltered, setIsFormAltered] = useState(false);
     const [isPageLoading, setIsPageLoading] = useState(true);
     const [cities, setCities] = useState<CITYResponse[]>([]);
+    const [fullAddress, setFullAddress] = useState("");
     const DEFAULT_AVATAR_URL = "https://i.imgur.com/p0hVrWq.png";
+
+    const numero = Form.useWatch('numero', form);
+    const rua = Form.useWatch('rua', form);
+    const bairro = Form.useWatch('bairro', form);
+    const cidade = Form.useWatch('cidade', form);
+    const estado = Form.useWatch('estado', form);
+
+    // Lógica para montar o endereço completo
+    useEffect(() => {
+        if (rua && cidade && estado) {
+            setFullAddress(`${rua}, ${numero || ''}, ${bairro}, ${cidade}, ${estado}`);
+        }
+    }, [rua, numero, bairro, cidade, estado]);
+
+    // Callback para atualizar a latitude e longitude no formulário
+    const handleCoordinatesChange = useCallback((lat: number, lng: number) => {
+        form.setFieldsValue({
+            latitude: parseFloat(lat.toFixed(6)),
+            longitude: parseFloat(lng.toFixed(6))
+        });
+        setIsFormAltered(true); // Marca o formulário como alterado
+    }, [form]);
 
     useEffect(() => {
         const estadoSelecionado = form.getFieldValue("estado")
@@ -143,7 +171,7 @@ export default function InformacoesPessoaisArena() {
             .then((response) => {
                 setCities(response.data);
             });
-    });
+    }, [form.getFieldValue("estado")]);
 
     const consultarCep = async (cep: string) => {
         message.loading("Consultando CEP...");
@@ -177,6 +205,10 @@ export default function InformacoesPessoaisArena() {
             try {
                 const userData = await getArenaById(user.userId);
                 if (!userData) return message.warning('Dados do usuário não encontrados.');
+
+                const initialLatitude = userData.endereco?.latitude ?? undefined;
+                const initialLongitude = userData.endereco?.longitude ?? undefined;
+
                 form.setFieldsValue({
                     nome: userData.nome,
                     telefone: userData.telefone,
@@ -189,8 +221,11 @@ export default function InformacoesPessoaisArena() {
                     numero: userData.endereco?.numero ?? '',
                     complemento: userData.endereco?.complemento ?? '',
                     descricao: userData.descricao ?? '',
-                    urlFoto: userData.urlFoto ?? null
+                    urlFoto: userData.urlFoto ?? null,
+                    latitude: initialLatitude,
+                    longitude: initialLongitude
                 });
+
                 setImageUrl(userData.urlFoto ?? null);
                 setSelectedFile(null);
                 setIsFormAltered(false);
@@ -274,6 +309,8 @@ export default function InformacoesPessoaisArena() {
                     rua: values.rua ?? '',
                     numero: values.numero ?? '',
                     complemento: values.complemento ?? '',
+                    latitude: values.latitude,
+                    longitude: values.longitude,
                 },
                 horasCancelarAgendamento: values.horasCancelarAgendamento ?? 2,
                 descricao: values.descricao ?? '',
@@ -540,6 +577,58 @@ export default function InformacoesPessoaisArena() {
                         <Col xs={24} md={12}>
                             <Form.Item label="Complemento (opcional)" name="complemento">
                                 <Input placeholder="Ex: Bloco A, Apto 101" />
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24}>
+                            <div className="my-6">
+                                <Title level={5}>Localização no Mapa</Title>
+                                <Text type="secondary">O mapa busca a localização com base no endereço. Você pode arrastar o marcador para ajustar a posição exata, atualizando as coordenadas.</Text>
+                                <div className="mt-4">
+                                    {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
+                                        <MapaInterativoBusca
+                                            apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+                                            addressToSearch={fullAddress}
+                                            onCoordinatesChange={handleCoordinatesChange}
+                                            initialLat={form.getFieldValue('latitude')}
+                                            initialLng={form.getFieldValue('longitude')}
+                                        />
+                                    ) : (
+                                        <div style={{ margin: '16px 0' }}>
+                                            <Alert
+                                                message="Erro: Chave da API do Google Maps não encontrada."
+                                                description="Por favor, contate o administrador do sistema para configurar a chave da API do Google Maps."
+                                                type="error"
+                                                showIcon
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </Col>
+
+                        {/* NOVO: Campos de Latitude e Longitude (Desabilitados) */}
+                        <Col xs={24} md={12}>
+                            <Form.Item label="Latitude"
+                                name="latitude"
+                                rules={[{ required: true, message: "As coordenadas são obrigatórias." }]}
+                            >
+                                <Input
+                                    placeholder="Selecione no mapa"
+                                    disabled
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                label="Longitude"
+                                name="longitude"
+                                rules={[{ required: true, message: "As coordenadas são obrigatórias." }]}
+                            >
+                                <Input
+                                    placeholder="Selecione no mapa"
+                                    disabled
+                                />
                             </Form.Item>
                         </Col>
 

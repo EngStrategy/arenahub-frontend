@@ -27,11 +27,11 @@ import { CardAgendamento, type AgendamentoCardData } from '@/components/Cards/Ag
 
 import {
     getAllAgendamentosNormalAtleta,
-    cancelarAgendamentoNormal,
+    cancelarAgendamento,
     getAgendamentosAvaliacoesPendentes,
     criarOuDispensarAvaliacao,
     atualizarAvaliacao,
-    type AgendamentoNormal,
+    type Agendamento,
     type StatusAgendamento,
 } from '@/app/api/entities/agendamento';
 import { useTheme } from '@/context/ThemeProvider';
@@ -97,7 +97,7 @@ export default function Agendamentos() {
     const searchParams = useSearchParams();
 
     const [view, setView] = useState<AgendamentoView>(isValidView(searchParams.get('aba')) ? searchParams.get('aba') as AgendamentoView : 'ativos');
-    const [agendamentos, setAgendamentos] = useState<AgendamentoNormal[]>([]);
+    const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
     const [loadingAgendamentos, setLoadingAgendamentos] = useState(true);
     const [pagination, setPagination] = useState({
         currentPage: Number(searchParams.get('pagina')) || 1,
@@ -127,7 +127,7 @@ export default function Agendamentos() {
                 page: page - 1,
                 size: pagination.pageSize,
                 sort: 'dataAgendamento',
-                direction: "desc",
+                direction: "asc",
                 tipoAgendamento: currentFilters?.tipo || 'AMBOS',
                 status: status,
             };
@@ -376,7 +376,7 @@ export default function Agendamentos() {
 
     const handleCancelarAgendamento = async (id: number) => {
         try {
-            await cancelarAgendamentoNormal(id);
+            await cancelarAgendamento(id);
             message.success("Agendamento cancelado com sucesso!");
             // Atualiza a lista de agendamentos da página atual
             fetchAgendamentos(pagination.currentPage, statusForView[view], filters);

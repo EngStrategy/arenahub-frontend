@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Alert, Flex, Input } from 'antd';
+import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Alert, Flex, Input, Tag, notification } from 'antd';
 import { IoCloseOutline } from "react-icons/io5";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { format, addMonths, addDays, getDay, isBefore, parseISO, subHours } from 'date-fns';
@@ -16,7 +16,7 @@ import { createAgendamento, criarPagamentoPix, PixPagamentoResponse, type Agenda
 import { ButtonPrimary } from '../Buttons/ButtonPrimary';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeProvider';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import { formatarMaterial } from '@/context/functions/formatarMaterial';
 import { ModalPix } from '../Modais/ModalPix';
 import { useAuth } from '@/context/hooks/use-auth';
@@ -206,7 +206,11 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
             onClose();
             router.push('/perfil/atleta/agendamentos');
         } catch (error) {
-            message.error((error as any).message || 'Não foi possível realizar o agendamento.');
+            notification.error({
+                message: "Erro ao criar agendamento",
+                description: (error as Error).message,
+                duration: 10,
+            });
         } finally {
             setSubmitting(false);
         }
@@ -225,7 +229,11 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
             onClose(); // Fecha o drawer para focar no modal
         } catch (error) {
             console.error("Falha ao gerar Pix:", error);
-            message.error((error as any).message || "Não foi possível gerar o pagamento Pix.");
+            notification.error({
+                message: "Falha ao gerar Pix",
+                description: (error as Error).message,
+                duration: 10,
+            });
         } finally {
             setPixLoading(false);
         }
@@ -382,21 +390,18 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     </Form.Item>
                                 )}
 
-                                {/* <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
-                                <span>Quer reservar este horário como fixo?</span>
-                                <Tag icon={<SyncOutlined spin />} color="processing">
-                                    BETA
-                                </Tag>
-                                <Switch disabled size="small" checked={isFixo} onChange={(c) => {
-                                    setIsFixo(c);
-                                    if (c) {
-                                        setIsIncomplete(false);
-                                        if (fixedDurationMonths === 0) setFixedDurationMonths(1);
-                                    } else {
-                                        setFixedDurationMonths(0);
-                                    }
-                                }} />
-                            </div> */}
+                                <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
+                                    <span>Quer reservar este horário como fixo?</span>
+                                    <Switch size="small" checked={isFixo} onChange={(c) => {
+                                        setIsFixo(c);
+                                        if (c) {
+                                            setIsIncomplete(false);
+                                            if (fixedDurationMonths === 0) setFixedDurationMonths(1);
+                                        } else {
+                                            setFixedDurationMonths(0);
+                                        }
+                                    }} />
+                                </div>
 
                                 {isFixo && (
                                     <Radio.Group value={fixedDurationMonths} onChange={(e) => setFixedDurationMonths(e.target.value)} className='!flex !justify-between'>

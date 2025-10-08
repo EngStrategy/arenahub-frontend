@@ -24,7 +24,7 @@ export type PixPagamentoResponse = {
     expiraEm: string;
 };
 
-export type AgendamentoNormal = {
+export type Agendamento = {
     id: number;
     dataAgendamento: string;
     horarioInicio: string;
@@ -44,6 +44,7 @@ export type AgendamentoNormal = {
     possuiSolicitacoes: boolean;
     avaliacao: { idAvaliacao: number, nota: number; comentario?: string } | null;
     avaliacaoDispensada: boolean;
+    agendamentoFixoId?: number;
 };
 
 export type AgendamentoCreate = {
@@ -72,12 +73,12 @@ export type AgendamentoQueryParams = {
 
 export const createAgendamento = async (
     newAgendamento: AgendamentoCreate
-): Promise<AgendamentoNormal> => {
+): Promise<Agendamento> => {
     if (!newAgendamento.quadraId || !newAgendamento.dataAgendamento || !newAgendamento.slotHorarioIds || newAgendamento.slotHorarioIds.length === 0) {
         console.warn("Dados insuficientes para criar agendamento.");
         return Promise.reject(new Error("Dados insuficientes para criar agendamento."));
     }
-    return httpRequests.postMethod<AgendamentoNormal>(
+    return httpRequests.postMethod<Agendamento>(
         URLS.AGENDAMENTOS,
         newAgendamento
     );
@@ -85,14 +86,14 @@ export const createAgendamento = async (
 
 export const getAllAgendamentosNormalAtleta = async (
     params: AgendamentoQueryParams = {}
-): Promise<httpRequests.PaginatedResponse<AgendamentoNormal>> => {
-    return httpRequests.getMethod<httpRequests.PaginatedResponse<AgendamentoNormal>>(
+): Promise<httpRequests.PaginatedResponse<Agendamento>> => {
+    return httpRequests.getMethod<httpRequests.PaginatedResponse<Agendamento>>(
         `${URLS.AGENDAMENTOS}/meus-agendamentos`,
         params
     );
 }
 
-export const cancelarAgendamentoNormal = async (id: number): Promise<void> => {
+export const cancelarAgendamento = async (id: number): Promise<void> => {
     if (!id) {
         console.warn("ID do agendamento não fornecido.");
         return Promise.reject(new Error("ID do agendamento não fornecido."));
@@ -108,8 +109,8 @@ export const cancelarAgendamentoFixo = async (agendamentoFixoId: number): Promis
     return httpRequests.deleteMethod(`${URLS.AGENDAMENTOS}/fixo/${agendamentoFixoId}`);
 }
 
-export const getAgendamentosAvaliacoesPendentes = async (): Promise<AgendamentoNormal[]> => {
-    return httpRequests.getMethod<AgendamentoNormal[]>(
+export const getAgendamentosAvaliacoesPendentes = async (): Promise<Agendamento[]> => {
+    return httpRequests.getMethod<Agendamento[]>(
         `${URLS.AGENDAMENTOS}/avaliacoes-pendentes`
     );
 }
@@ -233,8 +234,8 @@ export type AgendamentoExterno = {
 
 export const createAgendamentoExterno = async (
     agendamento: AgendamentoExterno
-): Promise<AgendamentoNormal> => {
-    return httpRequests.postMethod<AgendamentoNormal>(
+): Promise<Agendamento> => {
+    return httpRequests.postMethod<Agendamento>(
         `${URLS.ARENAAGENDAMENTOS}/externo`,
         agendamento
     );

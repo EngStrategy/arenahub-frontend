@@ -20,7 +20,8 @@ import { ButtonCancelar } from '@/components/Buttons/ButtonCancelar';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import ModalCriarHorarios from '@/components/Modais/ModalCriarHorarios';
 import {
-    updateQuadra, getQuadraById, QuadraCreate, DiaDaSemana,
+    updateQuadra, getQuadraById, DiaDaSemana,
+    QuadraUpdate,
 } from '@/app/api/entities/quadra';
 import { formatarDiaSemanaCompleto } from '@/context/functions/mapeamentoDiaSemana';
 import { useTheme } from '@/context/ThemeProvider';
@@ -218,10 +219,15 @@ export default function EditarQuadra() {
                     intervalosDeHorario: intervalosValidos.map(({ id, ...resto }) => resto)
                 };
             });
-
-            const updatePayload: Partial<QuadraCreate> = {
-                ...values,
-                urlFotoQuadra: urlParaSalvar,
+            
+            const updatePayload: QuadraUpdate = {
+                nomeQuadra: values.nomeQuadra,
+                urlFotoQuadra: urlParaSalvar || '',
+                tipoQuadra: values.tipoQuadra || [],
+                descricao: values.descricao || '',
+                cobertura: values.cobertura || false,
+                iluminacaoNoturna: values.iluminacaoNoturna || false,
+                materiaisFornecidos: values.materiaisFornecidos || [],
                 horariosFuncionamento: horariosParaEnviar,
             };
 
@@ -459,7 +465,6 @@ export default function EditarQuadra() {
                             <Form.Item
                                 label="Duração de cada reserva"
                                 name="duracaoReserva"
-                                rules={[{ required: true, message: 'Selecione a duração da reserva!' }]}
                             >
                                 <Select
                                     placeholder="Selecione uma opção"
@@ -467,6 +472,7 @@ export default function EditarQuadra() {
                                         { value: 'TRINTA_MINUTOS', label: '30 minutos' },
                                         { value: 'UMA_HORA', label: '1 hora' },
                                     ]}
+                                    disabled
                                 />
                             </Form.Item>
                         </Col>

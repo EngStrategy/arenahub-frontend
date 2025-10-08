@@ -222,7 +222,7 @@ export default function HomePage() {
   let content: React.ReactNode;
   if (isPageLoading) {
     content = (
-      <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="mt-4 mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 8 }).map((_, index) => (
           <ArenaCardSkeleton key={index} />
         ))}
@@ -231,7 +231,7 @@ export default function HomePage() {
   } else if (arenas.length > 0) {
     content = (
       <>
-        <Row gutter={[24, 24]} className="mb-10">
+        <Row gutter={[24, 24]} className="mt-4 mb-10">
           {arenas.map((arena) => (
             <Col key={arena.id} xs={24} sm={24} lg={12}>
               <Link href={`/quadras/${arena.id}`} passHref>

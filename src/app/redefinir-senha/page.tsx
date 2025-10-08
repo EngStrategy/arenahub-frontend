@@ -128,12 +128,24 @@ export default function RedefinirSenha() {
     const handleResetPassword = useCallback(async (values: any) => {
         setLoading(true);
         message.loading({ content: "Atualizando sua senha...", key: "resetPassword" });
+
+        if(values.password !== values.confirmPassword) {
+            message.error({ content: "As senhas não coincidem!", key: "resetPassword", duration: 4 });
+            setLoading(false);
+            return;
+        }
+
+        if(values.password.length < 8) {
+            message.error({ content: "A senha deve ter no mínimo 8 caracteres.", key: "resetPassword", duration: 4 });
+            setLoading(false);
+            return;
+        }
+
         try {
             await resetPassword({
                 email: userEmail,
-                newPassword: password,
+                newPassword: values.password,
                 confirmation: values.confirmPassword,
-                passwordMatch: values.password === values.confirmPassword
             });
             setIsSuccess(true);
             message.success({ content: "Senha redefinida com sucesso!", key: "resetPassword", duration: 3 });
@@ -201,21 +213,22 @@ export default function RedefinirSenha() {
                                 autoComplete="off"
                                 className="w-full"
                             >
-                                <Form.Item
-                                    name="password"
-                                    label="Nova Senha"
-                                    rules={[
-                                        { required: password == '', message: "Por favor, insira sua nova senha!" },
-                                        { min: 8, message: "A senha deve ter no mínimo 8 caracteres." },
-                                    ]}
-                                    hasFeedback
-                                    className="sem-asterisco"
+                                <Popover
+                                    content={<PasswordStrengthIndicator password={password} />}
+                                    placement="top"
+                                    open={isPasswordFocused}
+                                    getPopupContainer={triggerNode => triggerNode.parentNode as HTMLElement}
                                 >
-                                    <Popover
-                                        content={<PasswordStrengthIndicator password={password} />}
-                                        placement="top"
-                                        open={isPasswordFocused}
-                                        getPopupContainer={triggerNode => triggerNode.parentNode as HTMLElement}
+                                    <Form.Item
+                                        name="password"
+                                        label="Nova Senha"
+                                        rules={[
+                                            { required: password == '', message: "Por favor, insira sua nova senha!" },
+                                            { required: true, message: "Por favor, insira sua nova senha!" },
+                                            { min: 8, message: "A senha deve ter no mínimo 8 caracteres." },
+                                        ]}
+                                        hasFeedback
+                                        className="sem-asterisco"
                                     >
                                         <Input.Password
                                             placeholder="Digite a nova senha"
@@ -224,15 +237,15 @@ export default function RedefinirSenha() {
                                             onChange={(e) => {
                                                 const newPassword = e.target.value;
                                                 setPassword(newPassword);
-                                                form.setFieldsValue({ senha: newPassword });
+                                                form.setFieldsValue({ password: newPassword });
                                             }}
                                             onCopy={(e) => {
                                                 e.preventDefault();
                                                 message.warning("Copiar senha não é permitido!");
                                             }}
                                         />
-                                    </Popover>
-                                </Form.Item>
+                                    </Form.Item>
+                                </Popover>
 
                                 <Form.Item
                                     name="confirmPassword"
