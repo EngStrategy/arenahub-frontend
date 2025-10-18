@@ -5,6 +5,8 @@ import { JogosAbertos, solicitarEntrada, sairJogoAberto } from '@/app/api/entiti
 import { useRouter } from 'next/navigation';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { useAuth } from '@/context/hooks/use-auth';
+import { convertArrayOrStringDateToDatePortuguese } from '@/context/functions/convertDate';
+import { parseISO, format } from 'date-fns';
 
 const { Text, Title } = Typography;
 
@@ -22,6 +24,27 @@ type JogoAbertoCardProps = {
         status?: "PENDENTE" | "ACEITO" | "RECUSADO" | "CANCELADO";
     };
     readonly onSaidaSucesso?: (solicitacaoId: number) => void;
+};
+
+const calcularPodeSair = (dataISO: string, horarioInicio: string): boolean => {
+    try {
+        // 1. Combina data ISO + hora
+        const dataHoraStrUTC = `${dataISO}T${horarioInicio}:00Z`;
+
+        const dataHoraDoJogo = parseISO(dataHoraStrUTC);
+        const agora = new Date();
+
+        if (isNaN(dataHoraDoJogo.getTime())) {
+            return false;
+        }
+
+        const diffEmMs = dataHoraDoJogo.getTime() - agora.getTime();
+        const diffEmHoras = diffEmMs / (1000 * 60 * 60);
+
+        return diffEmHoras > 3; // Regra de 3 horas
+    } catch (e) {
+        return false;
+    }
 };
 
 const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number => {
@@ -46,19 +69,12 @@ export function JogoAbertoCard({ jogoAberto, onSaidaSucesso }: JogoAbertoCardPro
     const [loading, setLoading] = useState(false);
     const [sairLoading, setSairLoading] = useState(false);
     const router = useRouter();
-    const { isUserAtleta, isAuthenticated} = useAuth();
+    const { isUserAtleta, isAuthenticated } = useAuth();
 
     const duracaoHoras = calcularDuracaoHoras(jogoAberto.horarioInicio, jogoAberto.horarioFim);
 
     const podeSair = useMemo(() => {
-        const dataHoraDoJogo = new Date(`${jogoAberto.data}T${jogoAberto.horarioInicio}`);
-        const agora = new Date();
-
-        const diffEmMs = dataHoraDoJogo.getTime() - agora.getTime();
-
-        const diffEmHoras = diffEmMs / (1000 * 60 * 60);
-
-        return diffEmHoras > 3;
+        return calcularPodeSair(jogoAberto.data, jogoAberto.horarioInicio);
     }, [jogoAberto.data, jogoAberto.horarioInicio]);
 
     const handleSolicitarEntrada = async () => {
@@ -139,13 +155,13 @@ export function JogoAbertoCard({ jogoAberto, onSaidaSucesso }: JogoAbertoCardPro
 
                     <Flex vertical gap={4}>
                         <Flex align="center" gap="small">
-                            <CalendarOutlined className="mr-2"/>
+                            <CalendarOutlined className="mr-2" />
                             <Text strong>
-                                {jogoAberto.data}
+                                {format(parseISO(jogoAberto.data), 'dd/MM/yyyy')}
                             </Text>
                         </Flex>
                         <Flex align="center" gap="small">
-                            <ClockCircleOutlined className="mr-2"/>
+                            <ClockCircleOutlined className="mr-2" />
                             <Text type="secondary">
                                 {`${jogoAberto.horarioInicio} às ${jogoAberto.horarioFim} (${duracaoHoras}h)`}
                             </Text>

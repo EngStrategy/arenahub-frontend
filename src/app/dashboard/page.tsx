@@ -8,7 +8,6 @@ import {
   UserOutlined,
   ScheduleOutlined,
   BarChartOutlined,
-  TeamOutlined
 } from '@ant-design/icons';
 import { FaWhatsapp } from 'react-icons/fa';
 import Link from 'next/link';
@@ -20,6 +19,7 @@ import { useAuth } from '@/context/hooks/use-auth';
 import { type AgendamentoArena, getAgendamentosPendentesResolucao } from '../api/entities/agendamento';
 import { useRouter } from 'next/navigation';
 import { BsBookmarkCheck } from 'react-icons/bs';
+import { normalizeTime } from '@/context/functions/normalizeTime';
 
 const { Title, Text } = Typography;
 
@@ -194,11 +194,11 @@ export default function Dashboard() {
   ];
 
   const upcomingBookings = dashboardData.proximosAgendamentos.map(booking => ({
-    time: `${booking.horarioInicio.slice(0, 5)} - ${booking.horarioFim.slice(0, 5)}`,
+    time: `${normalizeTime(booking.horarioInicio)} - ${normalizeTime(booking.horarioFim)}`,
     court: booking.quadraNome,
     client: booking.clienteNome,
     avatar: booking.urlFoto || `https://api.dicebear.com/7.x/miniavs/svg?seed=${booking.agendamentoId}`,
-    phoneNumber: booking.clienteTelefone.replace(/\D/g, ''),
+    phoneNumber: booking.clienteTelefone.replaceAll(/\D/g, ''),
   }));
 
   const quickAccessLinks = [
@@ -315,7 +315,7 @@ export default function Dashboard() {
                       size="large"
                       block
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', height: 'auto', padding: '10px 15px' }}
-                      // disabled={link.inProgress}
+                    // disabled={link.inProgress}
                     >
                       {link.label}
                     </Button>

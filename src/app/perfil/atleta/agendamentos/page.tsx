@@ -2,37 +2,18 @@
 
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
-    Pagination,
-    Layout,
-    Row,
-    Col,
-    Flex,
-    Empty,
-    App,
-    Segmented,
-    Typography,
-    Select,
-    DatePicker,
-    Button,
-    Tooltip,
-    Card,
-    Rate,
-    Avatar,
-    Divider,
-    Carousel,
-    Form,
-    Input
+    Pagination, Layout, Row, Col, Flex, Empty, App, Segmented, Typography,
+    Select, DatePicker, Button, Tooltip, Card, Rate, Avatar, Divider, Carousel,
+    Form, Input
 } from 'antd';
 import { CardAgendamento, type AgendamentoCardData } from '@/components/Cards/AgendamentoCard';
 
 import {
-    getAllAgendamentosNormalAtleta,
-    cancelarAgendamento,
-    getAgendamentosAvaliacoesPendentes,
+    getAllAgendamentosAtleta, listarAgendamentosFixosFilhos,
+    cancelarAgendamento, cancelarAgendamentoFixo,
+    getAgendamentosAvaliacoesPendentes, atualizarAvaliacao,
     criarOuDispensarAvaliacao,
-    atualizarAvaliacao,
-    type Agendamento,
-    type StatusAgendamento,
+    type Agendamento, type StatusAgendamento,
 } from '@/app/api/entities/agendamento';
 import { useTheme } from '@/context/ThemeProvider';
 import { JogoAbertoCard } from '@/components/Cards/JogoAbertoCard';
@@ -42,6 +23,7 @@ import { ClearOutlined, CloseOutlined, LeftOutlined, PictureOutlined, RightOutli
 import { useAuth } from '@/context/hooks/use-auth';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import type { CarouselRef } from 'antd/es/carousel';
+import { RecurrenceManagerDrawer } from '@/components/Drawers/RecurrenceManagerDrawer';
 
 const { Content } = Layout;
 const { RangePicker } = DatePicker;
@@ -82,6 +64,18 @@ const statusForView: Record<AgendamentoView, StatusAgendamento | undefined> = {
     participacoes: undefined,
 };
 
+interface AgendamentoFixoMestre extends AgendamentoCardData {
+    tipoAgrupamento: 'FIXO_GRUPO';
+    agendamentoFixoId: number;
+    agendamentosFixosFilhos: AgendamentoCardData[];
+}
+
+interface AgendamentoNormalMestre extends AgendamentoCardData {
+    tipoAgrupamento: 'NORMAL';
+}
+
+type AgendamentoAgrupado = AgendamentoFixoMestre | AgendamentoNormalMestre;
+
 const isValidView = (view: string | null): view is AgendamentoView => {
     return view === 'ativos' || view === 'historico' || view === 'participacoes';
 }
@@ -98,6 +92,8 @@ export default function Agendamentos() {
 
     const [view, setView] = useState<AgendamentoView>(isValidView(searchParams.get('aba')) ? searchParams.get('aba') as AgendamentoView : 'ativos');
     const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+    const [agendamentosFilhos, setAgendamentosFilhos] = useState<AgendamentoCardData[]>([]); // Novo estado para filhos
+    const [loadingFilhos, setLoadingFilhos] = useState(false);
     const [loadingAgendamentos, setLoadingAgendamentos] = useState(true);
     const [pagination, setPagination] = useState({
         currentPage: Number(searchParams.get('pagina')) || 1,
@@ -113,6 +109,14 @@ export default function Agendamentos() {
     const [solicitacoes, setSolicitacoes] = useState<JogoAbertoMeSolicitado[]>([]);
     const [loadingSolicitacoes, setLoadingSolicitacoes] = useState(true);
     const [agendamentosParaAvaliar, setAgendamentosParaAvaliar] = useState<AgendamentoCardData[]>([]);
+
+    const [drawerFixoData, setDrawerFixoData] = useState<AgendamentoFixoMestre | null>(null);
+    const [isDrawerFixoOpen, setIsDrawerFixoOpen] = useState(false);
+
+    interface AgendamentoAgrupado extends AgendamentoCardData {
+        tipoAgrupamento: 'NORMAL' | 'FIXO_GRUPO';
+        agendamentosFixosFilhos?: AgendamentoCardData[];
+    }
 
     const onFinishCarouselItem = async (agendamentoId: number, values: { nota: number, comentario?: string }) => {
         await handleSubmeterAvaliacao(agendamentoId, values.nota, values.comentario);
@@ -140,7 +144,7 @@ export default function Agendamentos() {
                 params.tipoAgendamento = currentFilters.tipo;
             }
 
-            const response = await getAllAgendamentosNormalAtleta(params);
+            const response = await getAllAgendamentosAtleta(params);
             setAgendamentos(response.content);
             setPagination(prev => ({ ...prev, currentPage: response.number + 1, totalElements: response.totalElements }));
         } catch (error) {
@@ -211,6 +215,45 @@ export default function Agendamentos() {
 
     }, [view, filters, pagination.currentPage, pathname, router, searchParams]);
 
+    const fetchAgendamentosFilhos = useCallback(async (agendamentoFixoId: number) => {
+        setLoadingFilhos(true);
+        setAgendamentosFilhos([]); // Limpa a lista antes de carregar
+
+        try {
+            const filhosDaApi = await listarAgendamentosFixosFilhos(agendamentoFixoId);
+
+            const filhosMapeados: AgendamentoCardData[] = filhosDaApi.map(ag => ({
+                id: ag.id,
+                date: ag.dataAgendamento,
+                startTime: ag.horarioInicio,
+                endTime: ag.horarioFim,
+                valor: ag.valorTotal,
+                esporte: ag.esporte,
+                status: ag.status.toLowerCase() as AgendamentoCardData['status'],
+                numeroJogadoresNecessarios: ag.numeroJogadoresNecessarios,
+                quadraName: ag.nomeQuadra,
+                arenaName: ag.nomeArena,
+                urlFotoArena: ag.urlFotoArena,
+                urlFotoQuadra: ag.urlFotoQuadra,
+                fixo: ag.fixo,
+                publico: ag.publico,
+                possuiSolicitacoes: ag.possuiSolicitacoes,
+                avaliacao: ag.avaliacao ? ag.avaliacao : null,
+                avaliacaoDispensada: ag.avaliacaoDispensada,
+                showSolicitationButton: ag.publico && (ag.status === 'PENDENTE' || ag.status === 'PAGO'),
+                agendamentoFixoId: ag.agendamentoFixoId ?? undefined,
+            }));
+
+            filhosMapeados.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+            setAgendamentosFilhos(filhosMapeados);
+        } catch (error) {
+            notification.error({ message: "Falha ao carregar recorrências.", description: "Verifique a conexão ou tente novamente." });
+            setAgendamentosFilhos([]);
+        } finally {
+            setLoadingFilhos(false);
+        }
+    }, [notification]);
 
     const handleLimparFiltros = useCallback(() => {
         setFilters({
@@ -249,6 +292,7 @@ export default function Agendamentos() {
                 } : null,
                 avaliacaoDispensada: agendamento.avaliacaoDispensada,
                 showSolicitationButton: showSolicitationButton,
+                agendamentoFixoId: agendamento.agendamentoFixoId ?? undefined,
             }
         });
     }, [agendamentos, view]);
@@ -304,6 +348,56 @@ export default function Agendamentos() {
         }
     }, [isAuthenticated, isLoadingSession, view]);
 
+    const agendamentosAgrupados = useMemo((): AgendamentoAgrupado[] => {
+
+        const isPendingView = view === 'ativos';
+
+        return agendamentos.map(agendamento => {
+            const isFixoMestre = agendamento.agendamentoFixoId && agendamento.fixo;
+            const showSolicitationButton = agendamento.publico && (isPendingView || agendamento.status === 'PAGO');
+
+            const baseCardData: AgendamentoCardData = {
+                id: agendamento.id,
+                date: agendamento.dataAgendamento,
+                startTime: agendamento.horarioInicio,
+                endTime: agendamento.horarioFim,
+                valor: agendamento.valorTotal,
+                esporte: agendamento.esporte,
+                status: agendamento.status.toLowerCase() as AgendamentoCardData['status'],
+                numeroJogadoresNecessarios: agendamento.numeroJogadoresNecessarios,
+                quadraName: agendamento.nomeQuadra,
+                arenaName: agendamento.nomeArena,
+                urlFotoArena: agendamento.urlFotoArena,
+                urlFotoQuadra: agendamento.urlFotoQuadra,
+                fixo: agendamento.fixo,
+                publico: agendamento.publico,
+                possuiSolicitacoes: agendamento.possuiSolicitacoes,
+                avaliacao: agendamento.avaliacao ? {
+                    idAvaliacao: agendamento.avaliacao.idAvaliacao,
+                    nota: agendamento.avaliacao.nota,
+                    comentario: agendamento.avaliacao.comentario
+                } : null,
+                avaliacaoDispensada: agendamento.avaliacaoDispensada,
+                showSolicitationButton: showSolicitationButton,
+                agendamentoFixoId: agendamento.agendamentoFixoId,
+            };
+
+            if (isFixoMestre) {
+                return {
+                    ...(baseCardData as AgendamentoFixoMestre),
+                    tipoAgrupamento: 'FIXO_GRUPO',
+                    agendamentosFixosFilhos: [],
+                };
+            } else {
+                return {
+                    ...(baseCardData as AgendamentoNormalMestre),
+                    tipoAgrupamento: 'NORMAL',
+                };
+            }
+        });
+
+    }, [agendamentos, view]);
+
     const handleSubmeterAvaliacao = useCallback(async (agendamentoId: number, nota: number, comentario?: string) => {
         try {
             await criarOuDispensarAvaliacao(agendamentoId, { nota, comentario });
@@ -342,6 +436,9 @@ export default function Agendamentos() {
             const errorMsg = (error as Error)?.message ?? "Não foi possível atualizar sua avaliação. Tente novamente.";
             notification.error({ message: errorMsg, duration: 8 });
         }
+        finally {
+            setIsDrawerFixoOpen(false);
+        }
     }, [message]);
 
     const handleDispensarAvaliacao = useCallback(async (agendamentoId: number) => {
@@ -356,6 +453,25 @@ export default function Agendamentos() {
             notification.error({ message: errorMsg, duration: 8 });
         }
     }, [message]);
+
+    const handleCancelarAgendamentoFixo = useCallback(async (agendamentoFixoId: number) => {
+        try {
+            await cancelarAgendamentoFixo(agendamentoFixoId);
+
+            message.success("Recorrência de agendamentos cancelada com sucesso!");
+
+            // Recarrega a lista principal para remover o card mestre e seus filhos
+            fetchAgendamentos(pagination.currentPage, statusForView[view], filters);
+
+        } catch (error) {
+            const errorMsg = (error as Error)?.message ?? "Não foi possível cancelar a recorrência. Tente novamente.";
+            notification.error({ message: errorMsg, duration: 8 });
+            throw error; // Propaga o erro para que o drawer possa lidar com o loading
+        }
+        finally {
+            setIsDrawerFixoOpen(false);
+        }
+    }, [message, notification, fetchAgendamentos, pagination.currentPage, view, filters]);
 
     const handlePageChange = (page: number) => {
         const currentStatus = statusForView[view];
@@ -377,12 +493,23 @@ export default function Agendamentos() {
     const handleCancelarAgendamento = async (id: number) => {
         try {
             await cancelarAgendamento(id);
-            message.success("Agendamento cancelado com sucesso!");
             // Atualiza a lista de agendamentos da página atual
             fetchAgendamentos(pagination.currentPage, statusForView[view], filters);
         } catch (error) {
             const errorMsg = (error as Error)?.message ?? "Não foi possível cancelar o agendamento.";
             notification.error({ message: errorMsg, duration: 8 });
+        }
+        finally {
+            setIsDrawerFixoOpen(false);
+        }
+    };
+
+    const handleAbrirDrawerFixo = (agendamentoMestre: AgendamentoFixoMestre) => {
+        setDrawerFixoData(agendamentoMestre);
+        setIsDrawerFixoOpen(true);
+
+        if (agendamentoMestre.agendamentoFixoId) {
+            fetchAgendamentosFilhos(agendamentoMestre.agendamentoFixoId);
         }
     };
 
@@ -402,12 +529,16 @@ export default function Agendamentos() {
             return (
                 <>
                     <Row gutter={[24, 24]} align="stretch">
-                        {agendamentosTransformados.map(agendamento => (
+                        {agendamentosAgrupados.map(agendamento => (
                             <Col key={agendamento.id} xs={24} md={12} lg={8}>
                                 <CardAgendamento
                                     agendamento={agendamento}
                                     onCancel={handleCancelarAgendamento}
                                     onAvaliacaoSubmit={handleAtualizarAvaliacao}
+                                    onGerenciarFixo={agendamento.tipoAgrupamento === 'FIXO_GRUPO'
+                                        ? () => handleAbrirDrawerFixo(agendamento as AgendamentoFixoMestre)
+                                        : undefined
+                                    }
                                 />
                             </Col>
                         ))}
@@ -595,6 +726,18 @@ export default function Agendamentos() {
                 {view !== 'participacoes' && renderAgendamentos()}
                 {view === 'participacoes' && renderSolicitacoes()}
             </div>
+
+            {drawerFixoData && (
+                <RecurrenceManagerDrawer
+                    open={isDrawerFixoOpen}
+                    onClose={() => setIsDrawerFixoOpen(false)}
+                    agendamentoFixo={drawerFixoData}
+                    onCancelFixo={handleCancelarAgendamentoFixo}
+                    onCancelIndividual={handleCancelarAgendamento}
+                    agendamentosFilhos={agendamentosFilhos}
+                    loadingFilhos={loadingFilhos}
+                />
+            )}
         </Content>
     );
 

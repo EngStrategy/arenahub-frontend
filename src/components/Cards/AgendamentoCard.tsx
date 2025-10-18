@@ -10,7 +10,8 @@ import {
     InfoCircleOutlined,
     CheckCircleOutlined,
     CloseCircleOutlined,
-    EditOutlined
+    EditOutlined,
+    GlobalOutlined
 } from '@ant-design/icons';
 import {
     App,
@@ -52,12 +53,16 @@ export type AgendamentoCardData = {
     avaliacao: { idAvaliacao: number; nota: number; comentario?: string } | null;
     avaliacaoDispensada: boolean;
     showSolicitationButton?: boolean;
+    urlFotoQuadra?: string;
+    agendamentoFixoId?: number;
+    tipoAgrupamento?: 'NORMAL' | 'FIXO_GRUPO';
 };
 
 type CardProps = {
     readonly agendamento: AgendamentoCardData;
     readonly onCancel: (id: number) => Promise<void>;
     readonly onAvaliacaoSubmit: (idAvaliacao: number, nota: number, comentario?: string) => void;
+    readonly onGerenciarFixo?: () => void;
 };
 
 const StatusTag = ({ status }: { status: AgendamentoCardData['status'] }) => {
@@ -96,7 +101,7 @@ const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number
     }
 };
 
-export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: CardProps) {
+export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit, onGerenciarFixo }: CardProps) {
     const { message } = App.useApp();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [solicitacoes, setSolicitacoes] = useState<SolicitacaoJogoAberto[]>([]);
@@ -184,7 +189,22 @@ export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: Ca
     };
 
     const CardFooter = () => {
-        // Se o agendamento já foi avaliado
+        // === LÓGICA DO CARD MESTRE FIXO ===
+        if (onGerenciarFixo) {
+            return (
+                <Flex justify="end" align="center" style={{ padding: '12px 16px' }}>
+                    <Button
+                        type='primary'
+                        icon={<InfoCircleOutlined />}
+                        onClick={onGerenciarFixo}
+                    >
+                        Gerenciar Recorrência
+                    </Button>
+                </Flex>
+            );
+        }
+
+        // === LÓGICA DE AVALIAÇÃO (para agendamento individual finalizado) ===
         if (agendamento.avaliacao) {
             return (
                 <Flex justify="space-between" align="center" style={{ padding: '12px 16px' }}>
@@ -197,7 +217,13 @@ export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: Ca
             );
         }
 
+        // === LÓGICA DE AÇÃO NORMAL (para agendamento individual ativo) ===
         const isActionable = ['pendente', 'aceito', 'pago'].includes(agendamento.status);
+
+        // Se o agendamento for cancelado ou ausente, não mostra ações.
+        if (!isActionable) {
+            return null;
+        }
 
         const showButton = agendamento.showSolicitationButton;
 
@@ -210,50 +236,50 @@ export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: Ca
             );
         }
 
-        if (isActionable) {
-            return (
-                <Flex justify="space-between" align="center" style={{ padding: '12px 16px' }}>
-                    {showButton ? (
-                        <Badge dot={agendamento.possuiSolicitacoes}>
-                            <Button
-                                type='primary'
-                                icon={<UserAddOutlined />}
-                                onClick={handleOpenModal}
-                                ghost
-                            >
-                                Solicitações
-                            </Button>
-                        </Badge>
-                    ) : (
-                        // Se não é para mostrar o botão, mostra o Jogo Aberto/Privado
-                        jogoTipo
-                    )}
-
-                    {/* Botão de Cancelar visível para PENDENTE/ACEITO/PAGO */}
-                    {agendamento.status !== 'pago' && ( // Exemplo: Permitir cancelar se não foi pago
-                        <Popconfirm
-                            title="Cancelar Agendamento"
-                            description="Você tem certeza que quer cancelar?"
-                            onConfirm={handleConfirmCancel}
-                            okText="Sim, cancelar" cancelText="Não"
-                            okButtonProps={{ danger: true }}
+        // Renderiza botões de ação e cancelamento para agendamentos individuais
+        return (
+            <Flex justify="space-between" align="center" style={{ padding: '12px 16px' }}>
+                {showButton ? (
+                    <Badge dot={agendamento.possuiSolicitacoes}>
+                        <Button
+                            type='primary'
+                            icon={<UserAddOutlined />}
+                            onClick={handleOpenModal}
+                            ghost
                         >
-                            <Button danger icon={<DeleteOutlined />}>
-                                Cancelar
-                            </Button>
-                        </Popconfirm>
-                    )}
-                </Flex>
-            );
-        }
+                            Solicitações
+                        </Button>
+                    </Badge>
+                ) : (
+                    jogoTipo
+                )}
 
-        // Retorna null para o restante (cancelado, ausente, etc.)
-        return null;
+                {/* Botão de Cancelar visível para PENDENTE/ACEITO/PAGO */}
+                {agendamento.status !== 'pago' && ( // Exemplo: Permitir cancelar se não foi pago
+                    <Popconfirm
+                        title="Cancelar Agendamento"
+                        description="Você tem certeza que quer cancelar?"
+                        onConfirm={handleConfirmCancel}
+                        okText="Sim, cancelar" cancelText="Não"
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Button danger icon={<DeleteOutlined />}>
+                            Cancelar
+                        </Button>
+                    </Popconfirm>
+                )}
+            </Flex>
+        );
     };
 
     return (
         <>
-            <Card hoverable style={{ height: '100%' }} styles={{ body: { padding: 0, height: '100%' } }}>
+            <Card
+                hoverable
+                style={{ height: '100%' }}
+                styles={{ body: { padding: 0, height: '100%' } }}
+                onClick={agendamento.tipoAgrupamento === "FIXO_GRUPO" ? onGerenciarFixo : undefined}
+            >
                 <Flex vertical justify="space-between" style={{ height: '100%' }}>
                     <div style={{ padding: '16px' }}>
                         <Flex justify="space-between" align="start" gap="middle">
@@ -269,6 +295,7 @@ export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit }: Ca
                             <Flex gap="small" align="center" vertical>
                                 <StatusTag status={agendamento.status} />
                                 {agendamento.fixo && <Tag color="gold">Fixo</Tag>}
+                                {agendamento.publico && <Tag icon={<GlobalOutlined />} color="lime">Aberto</Tag>}
                             </Flex>
                         </Flex>
 

@@ -1,7 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { Modal, List, Button, Avatar, Typography, Empty, Tag, Popconfirm, Flex, Space } from 'antd';
+import React, { useState } from 'react';
+import { Modal, List, Button, Avatar, Typography, Empty, Tag, Popconfirm } from 'antd';
 import { UserOutlined, CheckOutlined, CloseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { type SolicitacaoJogoAberto } from '@/app/api/entities/jogosAbertos';
+import { GiOldKing } from 'react-icons/gi';
+import { MdOutlineDone } from 'react-icons/md';
 
 const { Title, Text } = Typography;
 
@@ -97,6 +99,7 @@ export default function ModalSolicitacoesEntrada({
                                 onCancel={() => setLoadingActionId(null)}
                                 okText="Sim"
                                 cancelText="Não"
+                                icon={<ExclamationCircleOutlined />}
                             >
                                 <Button
                                     key="decline"
@@ -115,6 +118,7 @@ export default function ModalSolicitacoesEntrada({
                                 onCancel={() => setLoadingActionId(null)}
                                 okText="Sim"
                                 cancelText="Não"
+                                icon={<CheckOutlined className='!text-green-600'/>}
                             >
                                 <Button
                                     key="accept"

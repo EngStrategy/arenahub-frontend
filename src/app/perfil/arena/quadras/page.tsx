@@ -138,7 +138,7 @@ const MinhasQuadrasPage: React.FC = () => {
 
       <Row gutter={[24, 24]}>
         {filteredCourts.map(court => (
-          <Col key={court.id} xs={24} sm={12} md={8} xl={6}>
+          <Col key={court.id} xs={24} sm={12} xl={8}>
             <CourtCard court={court} onDelete={handleDelete} />
           </Col>
         ))}

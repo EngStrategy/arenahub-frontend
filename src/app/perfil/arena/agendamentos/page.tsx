@@ -1,17 +1,23 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { Layout, Row, Col, Flex, Empty, App, Select, Tooltip, Button, DatePicker, Pagination, Typography, Segmented } from 'antd';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import {
+    Layout, Row, Col, Flex, Empty, App, Select, Tooltip,
+    Button, DatePicker, Pagination, Typography, Segmented
+} from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
-import { CardAgendamentoArena, type AgendamentoArenaCardData } from '@/components/Cards/CardAgendamentoArena';
+import { CardAgendamentoArena } from '@/components/Cards/CardAgendamentoArena';
 import { useTheme } from '@/context/ThemeProvider';
 import { ClearOutlined } from '@ant-design/icons';
 import {
     getAllAgendamentosArena,
+    cancelarRecorrenciaArena,
     type AgendamentoArena,
     type AgendamentoArenaQueryParams,
     type StatusAgendamentoArena,
-    updateStatusAgendamentoArena
+    type AgendamentoArenaCardData,
+    updateStatusAgendamentoArena,
+    listarAgendamentosFixosFilhosArena
 } from '@/app/api/entities/agendamento';
 import {
     getAllQuadras,
@@ -19,6 +25,7 @@ import {
 } from '@/app/api/entities/quadra';
 import { useAuth } from '@/context/hooks/use-auth';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { RecurrenceManagerDrawerArena } from '@/components/Drawers/RecurrenceManagerDrawerArena';
 
 const { Content } = Layout;
 const { RangePicker } = DatePicker;
@@ -79,16 +86,28 @@ const AgendamentosArenaSkeleton = () => (
     </div>
 );
 
-type ArenaView = 'pendentes' | 'historico';
+type ArenaView = 'ativos' | 'historico';
 
 const statusForView: Record<ArenaView, StatusAgendamentoArena> = {
-    pendentes: 'PENDENTE',
+    ativos: 'PENDENTE',
     historico: 'FINALIZADO',
 };
 
 const isValidView = (view: string | null): view is ArenaView => {
-    return view === 'pendentes' || view === 'historico';
+    return view === 'ativos' || view === 'historico';
 }
+
+interface AgendamentoArenaMestre extends AgendamentoArenaCardData {
+    tipoAgrupamento: 'FIXO_GRUPO';
+    agendamentoFixoId: number;
+    agendamentosFixosFilhos: AgendamentoArenaCardData[];
+}
+
+interface AgendamentoArenaNormal extends AgendamentoArenaCardData {
+    tipoAgrupamento: 'NORMAL';
+}
+
+type AgendamentoArenaAgrupado = AgendamentoArenaMestre | AgendamentoArenaNormal;
 
 export default function MeusAgendamentosArena() {
     const { session, user, isAuthenticated, isLoadingSession } = useAuth();
@@ -101,9 +120,11 @@ export default function MeusAgendamentosArena() {
 
     const [view, setView] = useState<ArenaView>(() => {
         const aba = searchParams.get('aba');
-        return isValidView(aba) ? aba : 'pendentes';
+        return isValidView(aba) ? aba : 'ativos';
     });
     const [agendamentos, setAgendamentos] = useState<AgendamentoArena[]>([]);
+    const [agendamentosFilhos, setAgendamentosFilhos] = useState<AgendamentoArenaCardData[]>([]);
+    const [loadingFilhos, setLoadingFilhos] = useState(false);
     const [quadras, setQuadras] = useState<Quadra[]>([]);
     const [loadingAgendamentos, setLoadingAgendamentos] = useState(true);
     const [pagination, setPagination] = useState({
@@ -111,7 +132,8 @@ export default function MeusAgendamentosArena() {
         pageSize: 18,
         totalElements: 0
     });
-
+    const [drawerFixoData, setDrawerFixoData] = useState<AgendamentoArenaMestre | null>(null);
+    const [isDrawerFixoOpen, setIsDrawerFixoOpen] = useState(false);
     const [filters, setFilters] = useState(() => {
         const quadraIdParam = searchParams.get('quadra');
         const dataInicioParam = searchParams.get('dataInicio');
@@ -144,13 +166,19 @@ export default function MeusAgendamentosArena() {
     const fetchAgendamentos = useCallback(async (page: number, currentFilters: typeof filters, currentView: ArenaView) => {
         if (!isAuthenticated) return;
         setLoadingAgendamentos(true);
+
+        let statusParam: StatusAgendamentoArena | undefined = undefined;
+
+        if (currentView === 'historico') {
+            statusParam = statusForView[currentView];
+        }
         try {
             const params: AgendamentoArenaQueryParams = {
                 page: page - 1,
                 size: pagination.pageSize,
                 sort: 'dataAgendamento',
-                direction: currentView === 'pendentes' ? 'asc' : 'desc',
-                status: statusForView[currentView],
+                direction: currentView === 'ativos' ? 'asc' : 'desc',
+                status: statusParam,
                 dataInicio: currentFilters.dateRange?.[0]?.format('YYYY-MM-DD'),
                 dataFim: currentFilters.dateRange?.[1]?.format('YYYY-MM-DD'),
                 quadraId: currentFilters.quadraId === 'TODAS' ? undefined : currentFilters.quadraId,
@@ -165,7 +193,26 @@ export default function MeusAgendamentosArena() {
         } finally {
             setLoadingAgendamentos(false);
         }
-    }, [session, isAuthenticated, pagination.pageSize, message, statusForView]);
+    }, [session, isAuthenticated, message, statusForView]);
+
+    const agendamentosAgrupados = useMemo((): AgendamentoArenaAgrupado[] => {
+        return agendamentos.map(ag => {
+            const isFixoMestre = ag.agendamentoFixoId && ag.fixo;
+
+            if (isFixoMestre) {
+                return {
+                    ...ag,
+                    tipoAgrupamento: 'FIXO_GRUPO',
+                    agendamentosFixosFilhos: [],
+                } as AgendamentoArenaMestre;
+            } else {
+                return {
+                    ...ag,
+                    tipoAgrupamento: 'NORMAL',
+                } as AgendamentoArenaNormal;
+            }
+        });
+    }, [agendamentos]);
 
     useEffect(() => {
         const params = new URLSearchParams(searchParams.toString());
@@ -208,6 +255,54 @@ export default function MeusAgendamentosArena() {
         }
     }, [pagination.currentPage, filters, view, fetchAgendamentos, isAuthenticated]);
 
+    const handleAbrirDrawerFixo = useCallback(async (agendamentoMestre: AgendamentoArenaMestre) => {
+        if (!agendamentoMestre.agendamentoFixoId) return;
+
+        setDrawerFixoData(agendamentoMestre);
+        setIsDrawerFixoOpen(true);
+        setLoadingFilhos(true);
+        setAgendamentosFilhos([]); // Limpa a lista anterior
+
+        try {
+            const filhosDaApi = await listarAgendamentosFixosFilhosArena(agendamentoMestre.agendamentoFixoId);
+
+            const filhosMapeados: AgendamentoArenaCardData[] = filhosDaApi.map(ag => ({
+                ...ag,
+                tipoAgrupamento: 'NORMAL',
+                dataAgendamento: ag.dataAgendamento,
+            }));
+
+            filhosMapeados.sort((a, b) => {
+                const dateA = new Date(a.dataAgendamento[0], a.dataAgendamento[1] - 1, a.dataAgendamento[2]).getTime();
+                const dateB = new Date(b.dataAgendamento[0], b.dataAgendamento[1] - 1, b.dataAgendamento[2]).getTime();
+                return dateA - dateB;
+            });
+
+            setAgendamentosFilhos(filhosMapeados);
+        } catch (error) {
+            message.error("Falha ao carregar as recorrências. Tente novamente.");
+            console.error(error);
+            setIsDrawerFixoOpen(false);
+        } finally {
+            setLoadingFilhos(false);
+        }
+    }, [message]);
+
+    const handleCancelarAgendamentoFixo = useCallback(async (agendamentoFixoId: number) => {
+        try {
+            await cancelarRecorrenciaArena(agendamentoFixoId);
+
+            message.success("Recorrência de agendamentos cancelada com sucesso!");
+
+            fetchAgendamentos(pagination.currentPage, filters, view);
+
+        } catch (error) {
+            const errorMsg = (error as Error)?.message ?? "Não foi possível cancelar a recorrência.";
+            message.error(errorMsg);
+            throw error;
+        }
+    }, [message, fetchAgendamentos, pagination.currentPage, filters, view]);
+
     const handleFilterChange = (key: keyof typeof filters, value: any) => {
         setPagination(prev => ({ ...prev, currentPage: 1 }));
         setFilters(prev => ({ ...prev, [key]: value }));
@@ -239,35 +334,29 @@ export default function MeusAgendamentosArena() {
                 totalElements: prev.totalElements > 0 ? prev.totalElements - 1 : 0
             }));
 
-            message.success(`Status do agendamento alterado com sucesso!`);
         } catch (error) {
             console.error("Falha ao atualizar status:", error);
             message.error("Não foi possível alterar o status do agendamento.");
         }
+        finally {
+            setIsDrawerFixoOpen(false);
+        }
     };
 
-    const agendamentosTransformados: AgendamentoArenaCardData[] = agendamentos.map(ag => ({
-        id: ag.id,
-        dataAgendamento: ag.dataAgendamento,
-        horarioInicio: ag.horarioInicio,
-        horarioFim: ag.horarioFim,
-        valorTotal: ag.valorTotal,
-        status: ag.status,
-        nomeQuadra: ag.nomeQuadra,
-        nomeAtleta: ag.nomeAtleta,
-        urlFotoAtleta: ag.urlFotoAtleta,
-    }));
-
     const renderContent = () => {
-        if (agendamentosTransformados.length > 0) {
+        if (agendamentosAgrupados.length > 0) {
             return (
                 <>
                     <Row gutter={[24, 24]}>
-                        {agendamentosTransformados.map(agendamento => (
-                            <Col key={agendamento.id} xs={24} md={12} lg={8}>
+                        {agendamentosAgrupados.map(agendamento => (
+                            <Col key={agendamento.id} xs={24} sm={12} md={12} lg={8}>
                                 <CardAgendamentoArena
                                     agendamento={agendamento}
                                     onStatusChange={handleStatusChange}
+                                    onGerenciarFixo={agendamento.tipoAgrupamento === 'FIXO_GRUPO'
+                                        ? () => handleAbrirDrawerFixo(agendamento as AgendamentoArenaMestre)
+                                        : undefined
+                                    }
                                 />
                             </Col>
                         ))}
@@ -301,7 +390,7 @@ export default function MeusAgendamentosArena() {
                         <Flex justify="center">
                             <Segmented<ArenaView>
                                 options={[
-                                    { label: 'Pendentes', value: 'pendentes' },
+                                    { label: 'Ativos', value: 'ativos' },
                                     { label: 'Histórico', value: 'historico' }
                                 ]}
                                 value={view}
@@ -348,6 +437,18 @@ export default function MeusAgendamentosArena() {
                         {renderContent()}
                     </div>
                 </>
+            )}
+
+            {drawerFixoData && (
+                <RecurrenceManagerDrawerArena
+                    open={isDrawerFixoOpen}
+                    onClose={() => setIsDrawerFixoOpen(false)}
+                    agendamentoFixo={drawerFixoData}
+                    onCancelFixo={handleCancelarAgendamentoFixo}
+                    onStatusChangeIndividual={handleStatusChange}
+                    agendamentosFilhos={agendamentosFilhos}
+                    loadingFilhos={loadingFilhos}
+                />
             )}
         </Content>
     );

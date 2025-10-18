@@ -118,8 +118,21 @@ export default function QuadraPage() {
 
     const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
 
+    const [diasFuncionamentoDaArena, setDiasFuncionamentoDaArena] = useState<string[]>([]);
+
     const allDates = Array.from({ length: 60 }, (_, i) => addDays(new Date(), i));
     const VISIBLE_DATES_WINDOW_SIZE = 10;
+
+    function extractDiasFuncionamento(quadras: QuadraOficial[]): string[] {
+        return quadras.flatMap(quadra =>
+            quadra.horariosFuncionamento?.flatMap(horario => {
+                if (horario.intervalosDeHorario && horario.intervalosDeHorario.length > 0) {
+                    return [horario.diaDaSemana.charAt(0) + horario.diaDaSemana.slice(1).toLowerCase()];
+                }
+                return [];
+            }) || []
+        );
+    }
 
     useEffect(() => {
         if (!arenaId) return;
@@ -139,6 +152,24 @@ export default function QuadraPage() {
 
                 if (quadrasResponse?.content) {
                     setQuadras(quadrasResponse.content);
+
+                    // Verificação para garantir que há quadras.
+                    if (quadrasResponse.content.length > 0) {
+                        const todosDias = extractDiasFuncionamento(quadrasResponse.content);
+
+                        // Removendo duplicatas
+                        const diasUnicos = Array.from(new Set(todosDias));
+                        // Ordenando os dias da semana para exibição
+                        const ordemDias = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado'];
+                        
+                        const diasOrdenados = diasUnicos.toSorted((a, b) => 
+                            ordemDias.indexOf(a) - ordemDias.indexOf(b)
+                        );
+                        
+                        setDiasFuncionamentoDaArena(diasOrdenados);
+                    } else {
+                        setDiasFuncionamentoDaArena([]);
+                    }
                 }
             } catch (err) {
                 setError("Falha ao carregar os dados da arena. Tente novamente mais tarde.");
@@ -273,6 +304,7 @@ export default function QuadraPage() {
                             showDescription={true}
                             showHover={false}
                             showEsportes={false}
+                            diasFuncionamento={diasFuncionamentoDaArena}
                         />
                     </div>
                     {selectedHorarios.length > 0 && (

@@ -47,7 +47,14 @@ export const solicitarEntrada = async (agendamentoId: number): Promise<void> => 
 
 // Aceitar ou recusar entrada em um jogo aberto
 export const aceitarOuRecusarEntrada = async (solicitacaoId: number, aceitar: boolean): Promise<void> => {
-    return httpRequests.patchMethod<void>(`${URLS.JOGOS_ABERTOS}/solicitacoes/${solicitacaoId}`, { aceitar });
+    const url = `${URLS.JOGOS_ABERTOS}/solicitacoes/${solicitacaoId}`;
+    
+    const payload = {
+        aceitar: aceitar 
+    };
+
+    console.log(`PATCH para ${url}. JSON enviado:`, payload);
+    return httpRequests.patchMethod<void>(url, payload);
 };
 
 export type SolicitacaoJogoAberto = {

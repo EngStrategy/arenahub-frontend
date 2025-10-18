@@ -59,6 +59,19 @@ export type AgendamentoCreate = {
     cpfCnpjPagamento?: string;
 };
 
+export interface AgendamentoArenaCardData {
+    id: number;
+    dataAgendamento: string;
+    horarioInicio: string;
+    horarioFim: string;
+    valorTotal: number;
+    status: StatusAgendamentoArena;
+    nomeQuadra: string;
+    nomeAtleta: string;
+    urlFotoAtleta?: string;
+    agendamentoFixoId?: number;
+    tipoAgrupamento?: 'NORMAL' | 'FIXO_GRUPO';
+}
 
 export type AgendamentoQueryParams = {
     page?: number;
@@ -84,7 +97,7 @@ export const createAgendamento = async (
     );
 };
 
-export const getAllAgendamentosNormalAtleta = async (
+export const getAllAgendamentosAtleta = async (
     params: AgendamentoQueryParams = {}
 ): Promise<httpRequests.PaginatedResponse<Agendamento>> => {
     return httpRequests.getMethod<httpRequests.PaginatedResponse<Agendamento>>(
@@ -92,6 +105,18 @@ export const getAllAgendamentosNormalAtleta = async (
         params
     );
 }
+
+export const listarAgendamentosFixosFilhos = async (agendamentoFixoId: number): Promise<Agendamento[]> => {
+    if (!agendamentoFixoId) {
+        console.warn("ID do agendamento fixo não fornecido.");
+        return Promise.reject(new Error("ID do agendamento fixo não fornecido."));
+    }
+    // Assumimos que o endpoint para o Atleta é /api/v1/agendamentos/fixo/{id}/filhos
+    // Este endpoint PRECISA ser criado e implementado no seu AgendamentoController.java
+    return httpRequests.getMethod<Agendamento[]>(
+        `${URLS.AGENDAMENTOS}/fixo/${agendamentoFixoId}/filhos`
+    );
+};
 
 export const cancelarAgendamento = async (id: number): Promise<void> => {
     if (!id) {
@@ -146,10 +171,6 @@ export const atualizarAvaliacao = async (
     avaliacaoId: number,
     avaliacao: { nota?: number; comentario?: string }
 ): Promise<AvaliacaoResponse> => {
-    if (!avaliacaoId) {
-        console.warn("ID da avaliação não fornecido.");
-        return Promise.reject(new Error("ID da avaliação não fornecido."));
-    }
     return httpRequests.putMethod(`${URLS.AGENDAMENTOS}/avaliacoes/${avaliacaoId}`, avaliacao);
 }
 
@@ -218,6 +239,7 @@ export type AgendamentoArena = {
     }>;
     fixo: boolean;
     publico: boolean;
+    agendamentoFixoId?: number;
 };
 
 export type AgendamentoExterno = {
@@ -254,10 +276,6 @@ export const updateStatusAgendamentoArena = async (
     agendamentoId: number,
     status: StatusAgendamentoArena
 ): Promise<void> => {
-    if (!agendamentoId) {
-        console.warn("ID do agendamento não fornecido.");
-        return Promise.reject(new Error("ID do agendamento não fornecido."));
-    }
     return httpRequests.patchMethod(`${URLS.ARENAAGENDAMENTOS}/${agendamentoId}/status`, { status });
 }
 
@@ -266,3 +284,13 @@ export const getAgendamentosPendentesResolucao = async (): Promise<AgendamentoAr
         `${URLS.ARENAAGENDAMENTOS}/pendentes-resolucao`
     );
 }
+
+export const cancelarRecorrenciaArena = async (agendamentoFixoId: number): Promise<void> => {
+    return httpRequests.deleteMethod(`${URLS.ARENAAGENDAMENTOS}/fixo/${agendamentoFixoId}`);
+}
+
+export const listarAgendamentosFixosFilhosArena = async (agendamentoFixoId: number): Promise<AgendamentoArena[]> => {
+    return httpRequests.getMethod<AgendamentoArena[]>(
+        `${URLS.ARENAAGENDAMENTOS}/fixo/${agendamentoFixoId}/filhos`
+    );
+};

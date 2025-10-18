@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Alert, Flex, Input, Tag, notification } from 'antd';
+import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Alert, Flex, Input, notification } from 'antd';
 import { IoCloseOutline } from "react-icons/io5";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { format, addMonths, addDays, getDay, isBefore, parseISO, subHours } from 'date-fns';
@@ -16,7 +16,7 @@ import { createAgendamento, criarPagamentoPix, PixPagamentoResponse, type Agenda
 import { ButtonPrimary } from '../Buttons/ButtonPrimary';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeProvider';
-import { InfoCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { formatarMaterial } from '@/context/functions/formatarMaterial';
 import { ModalPix } from '../Modais/ModalPix';
 import { useAuth } from '@/context/hooks/use-auth';
@@ -137,20 +137,76 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     const getOccurrences = (startDate: Date, months: number): { count: number, lastDate: Date } => {
         if (months === 0) return { count: 0, lastDate: startDate };
 
+        // 1. Calcula a data limite (replicando a lógica do backend)
+        const dataLimite = addMonths(startDate, months);
+
         const targetDayOfWeek = getDay(startDate);
-        const endDate = addMonths(startDate, months);
         let count = 0;
+
+        // 2. Começa a contagem A PARTIR da data inicial (incluindo o agendamento base)
         let currentDate = startDate;
         let lastDate = startDate;
 
-        while (isBefore(currentDate, endDate)) {
+        // A condição de parada deve ser a mesma: enquanto não for DEPOIS da dataLimite
+        while (!isBefore(dataLimite, currentDate)) {
             if (getDay(currentDate) === targetDayOfWeek) {
                 count++;
                 lastDate = currentDate;
             }
             currentDate = addDays(currentDate, 7);
+
+            // Verifica se excedeu a dataLimite (se o addDays pulou o mês)
+            if (!isBefore(currentDate, dataLimite) && isBefore(lastDate, dataLimite)) {
+                // Se a última data válida já foi definida e a próxima ultrapassa, para aqui
+                break;
+            }
         }
-        return { count, lastDate };
+
+        // A contagem real no backend (multiplier) é feita de forma ligeiramente diferente:
+        // Ele conta o agendamento base + as ocorrências futuras.
+        // Vamos garantir que a contagem reflete o número TOTAL de semanas no período.
+
+        let totalCount = 0;
+        let checkDate = startDate;
+        let finalDate = startDate;
+
+        // Conta todas as semanas a partir da data de início (incluindo ela)
+        while (isBefore(checkDate, dataLimite) || checkDate.getTime() === dataLimite.getTime()) {
+            if (getDay(checkDate) === targetDayOfWeek) {
+                totalCount++;
+                finalDate = checkDate;
+            }
+            checkDate = addDays(checkDate, 7);
+
+            // Se a data de verificação ultrapassou o limite, mas a última data contada é a última semana válida
+            if (isBefore(dataLimite, checkDate)) {
+                // Garante que não contamos a semana que ultrapassa o limite
+                break;
+            }
+        }
+
+        // A lógica de `plusWeeks(1)` no backend e `plusMonths` aqui é sutilmente diferente
+        // Vou simplificar para a contagem total, garantindo que o loop conta corretamente:
+
+        let finalCount = 0;
+        let cursorDate = startDate;
+        let finalRecurrenceDate = startDate;
+
+        // Loop que conta a primeira semana (dataAgendamento) + todas as semanas futuras até o limite.
+        while (isBefore(cursorDate, dataLimite) || format(cursorDate, 'yyyy-MM-dd') === format(dataLimite, 'yyyy-MM-dd')) {
+            if (getDay(cursorDate) === targetDayOfWeek) {
+                finalCount++;
+                finalRecurrenceDate = cursorDate;
+            }
+            cursorDate = addDays(cursorDate, 7);
+
+            // Se a próxima iteração exceder o limite, encerra (evitando contar a primeira ocorrência do próximo mês)
+            if (isBefore(dataLimite, cursorDate)) {
+                break;
+            }
+        }
+
+        return { count: finalCount, lastDate: finalRecurrenceDate };
     };
 
     useEffect(() => {

@@ -14,9 +14,10 @@ interface ArenaCardProps {
   showDescription?: boolean;
   showHover?: boolean;
   showEsportes?: boolean;
+  diasFuncionamento?: string[];
 }
 
-export const ArenaCard = ({ arena, showDescription, showHover = true, showEsportes = true }: ArenaCardProps) => {
+export const ArenaCard = ({ arena, showDescription, showHover = true, showEsportes = true, diasFuncionamento = []}: ArenaCardProps) => {
   const fallbackSrc = '/images/imagem-default.png';
   const [imgSrc, setImgSrc] = useState(arena.urlFoto || fallbackSrc);
 
@@ -60,6 +61,12 @@ export const ArenaCard = ({ arena, showDescription, showHover = true, showEsport
             )}
           </Flex>
 
+          {diasFuncionamento.length > 0 && (
+            <Text type="secondary" className="!text-green-600 mt-1 mb-1" style={{ fontSize: '0.8rem' }}>
+              {listFormatter.format(diasFuncionamento)}
+            </Text>
+          )}
+
           {showDescription && arena.descricao &&
             <Paragraph ellipsis={{ rows: 2 }} type="secondary" className="!my-1">
               {arena.descricao}
@@ -67,7 +74,7 @@ export const ArenaCard = ({ arena, showDescription, showHover = true, showEsport
           }
 
           <Flex align="center">
-            <StarFilled className="!text-yellow-500 mr-1" />
+            <StarFilled className="!text-yellow-500 mr-1 " />
             <Text strong>{arena.notaMedia?.toFixed(1)}</Text>
             <Text type="secondary" className="ml-1">({arena.quantidadeAvaliacoes} avaliações)</Text>
           </Flex>

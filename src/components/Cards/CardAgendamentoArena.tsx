@@ -1,27 +1,24 @@
 "use client";
 
 import { Avatar, Card, Dropdown, MenuProps, Space, Tag, Typography, Button } from "antd";
-import { UserOutlined, MoreOutlined, CalendarOutlined, ClockCircleOutlined, DollarCircleOutlined, CheckCircleOutlined, CloseCircleOutlined, StopOutlined } from '@ant-design/icons';
+import {
+    UserOutlined, MoreOutlined, CalendarOutlined, ClockCircleOutlined,
+    DollarCircleOutlined, CheckCircleOutlined, CloseCircleOutlined, StopOutlined,
+    InfoCircleOutlined
+} from '@ant-design/icons';
 import { useMemo } from "react";
-import { type StatusAgendamentoArena } from "@/app/api/entities/agendamento";
+import { AgendamentoArenaCardData } from "@/app/api/entities/agendamento";
+import { convertArrayOrStringDateToDatePortuguese } from "@/context/functions/convertDate";
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const { Text, Title } = Typography;
 
-export interface AgendamentoArenaCardData {
-    id: number;
-    dataAgendamento: string;
-    horarioInicio: string;
-    horarioFim: string;
-    valorTotal: number;
-    status: StatusAgendamentoArena;
-    nomeQuadra: string;
-    nomeAtleta: string;
-    urlFotoAtleta?: string;
-}
 
 interface CardAgendamentoArenaProps {
     agendamento: AgendamentoArenaCardData;
     onStatusChange: (agendamentoId: number, newStatus: 'PAGO' | 'AUSENTE' | 'CANCELADO') => Promise<void>;
+    onGerenciarFixo?: () => void;
 }
 
 const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number => {
@@ -45,7 +42,7 @@ const calcularDuracaoHoras = (horarioInicio: string, horarioFim: string): number
     }
 };
 
-export const CardAgendamentoArena = ({ agendamento, onStatusChange }: CardAgendamentoArenaProps) => {
+export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarFixo }: CardAgendamentoArenaProps) => {
 
     const statusConfig = useMemo(() => ({
         PAGO: { color: 'success', icon: <CheckCircleOutlined />, text: 'Pago' },
@@ -86,11 +83,36 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange }: CardAgenda
         },
     ];
 
+    // Função para formatar a data (dia, mês por extenso) para exibição
+    const formatarDataExtenso = (dataArray: string): string => {
+        if (!dataArray || (Array.isArray(dataArray) && dataArray.length < 3)) return 'Data Indisponível';
+
+        // 1. Converte a string ISO para Date e formata (usando date-fns)
+        const dateObj = convertArrayOrStringDateToDatePortuguese(dataArray)
+
+        const formatted = format(dateObj, 'eee, dd/MM/yyyy', { locale: ptBR });
+        return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    };
+
+    const renderTopAction = () => {
+        // Prioridade 2: Dropdown de Ações (para agendamentos individuais pendentes)
+        if (agendamento.status === 'PENDENTE' && agendamento.tipoAgrupamento === 'NORMAL') {
+            return (
+                <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>
+                    <Button type="text" shape="circle" icon={<MoreOutlined />} />
+                </Dropdown>
+            );
+        }
+
+        return null;
+    };
+
     return (
         <Card
             hoverable
             className="w-full h-full flex flex-col"
             styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', padding: '16px' } }}
+            onClick={agendamento.tipoAgrupamento === "FIXO_GRUPO" ? onGerenciarFixo : undefined}
         >
             <div className="flex-grow">
                 <div className="flex justify-between items-start mb-3">
@@ -101,22 +123,18 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange }: CardAgenda
                             <Text type="secondary">{agendamento.nomeQuadra}</Text>
                         </div>
                     </Space>
-                    {agendamento.status === 'PENDENTE' && (
-                        <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>
-                            <Button type="text" shape="circle" icon={<MoreOutlined />} />
-                        </Dropdown>
-                    )}
+                    {renderTopAction()}
                 </div>
 
+                {/* DETALHES DO AGENDAMENTO */}
                 <Space direction="vertical" size="small" className="w-full">
                     <Text>
                         <CalendarOutlined className="mr-2" />
-                        {new Date(agendamento.dataAgendamento).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                        {formatarDataExtenso(agendamento.dataAgendamento)}
                     </Text>
                     <Text>
                         <ClockCircleOutlined className="mr-2" />
                         {`${agendamento.horarioInicio} às ${agendamento.horarioFim} (${duracaoHoras}h)`}
-
                     </Text>
                     <Text strong className={`${agendamento.status === "CANCELADO" || agendamento.status === "AUSENTE" ?
                         "line-through !text-red-500" :
@@ -128,10 +146,21 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange }: CardAgenda
                 </Space>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-gray-200">
+            {/* RODAPÉ: STATUS */}
+            <div className="flex justify-between mt-4 pt-3 border-t border-gray-200">
                 <Tag icon={currentStatus.icon} color={currentStatus.color} className="!text-sm !py-1 !px-2">
                     {currentStatus.text}
                 </Tag>
+                {
+                    agendamento.tipoAgrupamento === 'FIXO_GRUPO' && (
+                        <Button
+                            type="primary"
+                            icon={<InfoCircleOutlined />}
+                            onClick={onGerenciarFixo}
+                        >
+                            Gerenciar Recorrência
+                        </Button>
+                    )}
             </div>
         </Card>
     );
