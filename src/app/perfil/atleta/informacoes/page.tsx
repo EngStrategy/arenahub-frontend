@@ -113,7 +113,7 @@ export default function InformacoesPessoaisAtleta() {
                     return message.warning('Dados do usuário não encontrados.');
                 }
                 form.setFieldsValue({ name: userData.nome, phone: userData.telefone, email: userData.email });
-                setImageUrl(userData.urlFoto ?? null);
+                setImageUrl(userData.urlFoto ?? undefined);
                 setSelectedFile(null);
                 setIsFormAltered(false);
             } catch (error) {
@@ -293,7 +293,7 @@ export default function InformacoesPessoaisAtleta() {
                                             <Avatar
                                                 size={64}
                                                 src={imageUrl ?? undefined}
-                                                icon={!imageUrl ? <UserOutlined /> : undefined}
+                                                icon={imageUrl ? undefined : <UserOutlined />}
                                                 className="flex-shrink-0"
                                             />
                                             <div className="absolute inset-0 flex items-center justify-center rounded-full bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300">

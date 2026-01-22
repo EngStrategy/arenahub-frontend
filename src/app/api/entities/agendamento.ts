@@ -89,7 +89,7 @@ export const createAgendamento = async (
 ): Promise<Agendamento> => {
     if (!newAgendamento.quadraId || !newAgendamento.dataAgendamento || !newAgendamento.slotHorarioIds || newAgendamento.slotHorarioIds.length === 0) {
         console.warn("Dados insuficientes para criar agendamento.");
-        return Promise.reject(new Error("Dados insuficientes para criar agendamento."));
+        throw new Error("Dados insuficientes para criar agendamento.");
     }
     return httpRequests.postMethod<Agendamento>(
         URLS.AGENDAMENTOS,
@@ -109,10 +109,8 @@ export const getAllAgendamentosAtleta = async (
 export const listarAgendamentosFixosFilhos = async (agendamentoFixoId: number): Promise<Agendamento[]> => {
     if (!agendamentoFixoId) {
         console.warn("ID do agendamento fixo não fornecido.");
-        return Promise.reject(new Error("ID do agendamento fixo não fornecido."));
+        throw new Error("ID do agendamento fixo não fornecido.");
     }
-    // Assumimos que o endpoint para o Atleta é /api/v1/agendamentos/fixo/{id}/filhos
-    // Este endpoint PRECISA ser criado e implementado no seu AgendamentoController.java
     return httpRequests.getMethod<Agendamento[]>(
         `${URLS.AGENDAMENTOS}/fixo/${agendamentoFixoId}/filhos`
     );
@@ -121,7 +119,7 @@ export const listarAgendamentosFixosFilhos = async (agendamentoFixoId: number): 
 export const cancelarAgendamento = async (id: number): Promise<void> => {
     if (!id) {
         console.warn("ID do agendamento não fornecido.");
-        return Promise.reject(new Error("ID do agendamento não fornecido."));
+        throw new Error("ID do agendamento não fornecido.");
     }
     return httpRequests.deleteMethod(`${URLS.AGENDAMENTOS}/${id}`);
 }
@@ -129,7 +127,7 @@ export const cancelarAgendamento = async (id: number): Promise<void> => {
 export const cancelarAgendamentoFixo = async (agendamentoFixoId: number): Promise<void> => {
     if (!agendamentoFixoId) {
         console.warn("ID do agendamento fixo não fornecido.");
-        return Promise.reject(new Error("ID do agendamento fixo não fornecido."));
+        throw new Error("ID do agendamento fixo não fornecido.");
     }
     return httpRequests.deleteMethod(`${URLS.AGENDAMENTOS}/fixo/${agendamentoFixoId}`);
 }
@@ -162,7 +160,7 @@ export const criarOuDispensarAvaliacao = async (
 ): Promise<AvaliacaoResponse> => {
     if (!agendamentoId) {
         console.warn("ID do agendamento não fornecido.");
-        return Promise.reject(new Error("ID do agendamento não fornecido."));
+        throw new Error("ID do agendamento não fornecido.");
     }
     return httpRequests.postMethod(`${URLS.AGENDAMENTOS}/${agendamentoId}/avaliacoes`, avaliacao);
 }

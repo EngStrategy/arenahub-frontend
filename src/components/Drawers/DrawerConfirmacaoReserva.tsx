@@ -13,15 +13,15 @@ import type {
 import type { Arena as ArenaOficial } from '@/app/api/entities/arena';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
 import { createAgendamento, criarPagamentoPix, PixPagamentoResponse, type AgendamentoCreate, type PeriodoAgendamentoFixo } from '@/app/api/entities/agendamento';
-import { ButtonPrimary } from '../Buttons/ButtonPrimary';
+// import { ButtonPrimary } from '../Buttons/ButtonPrimary';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeProvider';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { formatarMaterial } from '@/context/functions/formatarMaterial';
-import { ModalPix } from '../Modais/ModalPix';
-import { useAuth } from '@/context/hooks/use-auth';
-import { validarCPF } from '@/context/functions/validarCPF';
-import { formatarCPF } from '@/context/functions/formatarCPF';
+// import { ModalPix } from '../Modais/ModalPix';
+// import { useAuth } from '@/context/hooks/use-auth';
+// import { validarCPF } from '@/context/functions/validarCPF';
+// import { formatarCPF } from '@/context/functions/formatarCPF';
 
 const { Title, Text } = Typography;
 
@@ -70,8 +70,8 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     selectedHorarios,
     quadras
 }) => {
-    const { user } = useAuth();
-    const atletaCpfCadastrado = user?.cpfCnpj;
+    // const { user } = useAuth();
+    // const atletaCpfCadastrado = user?.cpfCnpj;
 
     const [form] = Form.useForm();
     const router = useRouter();
@@ -84,9 +84,9 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     const [submitting, setSubmitting] = useState(false);
     const { isDarkMode } = useTheme();
 
-    const [isPixModalOpen, setIsPixModalOpen] = useState(false);
-    const [pixData, setPixData] = useState<PixPagamentoResponse | null>(null);
-    const [pixLoading, setPixLoading] = useState(false);
+    // const [isPixModalOpen, setIsPixModalOpen] = useState(false);
+    // const [pixData, setPixData] = useState<PixPagamentoResponse | null>(null);
+    // const [pixLoading, setPixLoading] = useState(false);
 
     const buildPayload = (values: any): AgendamentoCreate | null => {
         if (!quadraSelecionada) {
@@ -114,12 +114,12 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
             return null;
         }
 
-        const cpfParaPagamento = values.cpfPagamento || atletaCpfCadastrado;
+        // const cpfParaPagamento = values.cpfPagamento || atletaCpfCadastrado;
 
-        if (!cpfParaPagamento) {
-            message.error("CPF é obrigatório para pagamento PIX.");
-            return null;
-        }
+        // if (!cpfParaPagamento) {
+        //     message.error("CPF é obrigatório para pagamento PIX.");
+        //     return null;
+        // }
 
         return {
             quadraId: quadraSelecionada.id,
@@ -130,20 +130,20 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
             numeroJogadoresNecessarios: isIncomplete ? numeroJogadoresFaltando : 0,
             isFixo: isFixo,
             isPublico: isIncomplete,
-            cpfCnpjPagamento: !atletaCpfCadastrado ? cpfParaPagamento : undefined,
+            // cpfCnpjPagamento: !atletaCpfCadastrado ? cpfParaPagamento : undefined,
         };
     };
 
     const getOccurrences = (startDate: Date, months: number): { count: number, lastDate: Date } => {
         if (months === 0) return { count: 0, lastDate: startDate };
 
-        // 1. Calcula a data limite (replicando a lógica do backend)
+        // Calcula a data limite (replicando a lógica do backend)
         const dataLimite = addMonths(startDate, months);
 
         const targetDayOfWeek = getDay(startDate);
         let count = 0;
 
-        // 2. Começa a contagem A PARTIR da data inicial (incluindo o agendamento base)
+        // Começa a contagem A PARTIR da data inicial (incluindo o agendamento base)
         let currentDate = startDate;
         let lastDate = startDate;
 
@@ -161,10 +161,6 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                 break;
             }
         }
-
-        // A contagem real no backend (multiplier) é feita de forma ligeiramente diferente:
-        // Ele conta o agendamento base + as ocorrências futuras.
-        // Vamos garantir que a contagem reflete o número TOTAL de semanas no período.
 
         let totalCount = 0;
         let checkDate = startDate;
@@ -184,9 +180,6 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                 break;
             }
         }
-
-        // A lógica de `plusWeeks(1)` no backend e `plusMonths` aqui é sutilmente diferente
-        // Vou simplificar para a contagem total, garantindo que o loop conta corretamente:
 
         let finalCount = 0;
         let cursorDate = startDate;
@@ -272,34 +265,34 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
         }
     };
 
-    const handlePagarComPix = async () => {
-        try {
-            const values = await form.validateFields();
-            const payload = buildPayload(values);
-            if (!payload) return;
+    // const handlePagarComPix = async () => {
+    //     try {
+    //         const values = await form.validateFields();
+    //         const payload = buildPayload(values);
+    //         if (!payload) return;
 
-            setPixLoading(true);
-            const response = await criarPagamentoPix(payload);
-            setPixData(response);
-            setIsPixModalOpen(true);
-            onClose(); // Fecha o drawer para focar no modal
-        } catch (error) {
-            console.error("Falha ao gerar Pix:", error);
-            notification.error({
-                message: "Falha ao gerar Pix",
-                description: (error as Error).message,
-                duration: 10,
-            });
-        } finally {
-            setPixLoading(false);
-        }
-    };
+    //         setPixLoading(true);
+    //         const response = await criarPagamentoPix(payload);
+    //         setPixData(response);
+    //         setIsPixModalOpen(true);
+    //         onClose(); // Fecha o drawer para focar no modal
+    //     } catch (error) {
+    //         console.error("Falha ao gerar Pix:", error);
+    //         notification.error({
+    //             message: "Falha ao gerar Pix",
+    //             description: (error as Error).message,
+    //             duration: 10,
+    //         });
+    //     } finally {
+    //         setPixLoading(false);
+    //     }
+    // };
 
-    const handlePaymentSuccess = () => {
-        setIsPixModalOpen(false);
-        message.success("Pagamento confirmado! Seu agendamento está garantido.", 5);
-        router.push('/perfil/atleta/agendamentos?aba=historico');
-    };
+    // const handlePaymentSuccess = () => {
+    //     setIsPixModalOpen(false);
+    //     message.success("Pagamento confirmado! Seu agendamento está garantido.", 5);
+    //     router.push('/perfil/atleta/agendamentos?aba=historico');
+    // };
 
     const renderResumoHorario = () => {
         if (!selectedHorarios || selectedHorarios.length === 0 || !quadraSelecionada) return null;
@@ -447,7 +440,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                 )}
 
                                 <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
-                                    <span>Quer reservar este horário como fixo?</span>
+                                    <span>Horário Fixo</span>
                                     <Switch size="small" checked={isFixo} onChange={(c) => {
                                         setIsFixo(c);
                                         if (c) {
@@ -468,7 +461,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                 )}
 
                                 <div className={`flex justify-between items-center p-2 rounded-md ${isDarkMode ? 'bg-dark-mode' : 'bg-gray-100'}`}>
-                                    <span>Tá faltando gente?</span>
+                                    <span>Jogo Aberto</span>
                                     <Switch size="small" checked={isIncomplete} onChange={(c) => {
                                         setIsIncomplete(c);
                                         if (c) {
@@ -503,7 +496,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                 )}
 
                             </div>
-                            {!atletaCpfCadastrado && (
+                            {/* {!atletaCpfCadastrado && (
                                 <Form.Item
                                     label={<Text className='font-semibold text-sm'>CPF do Pagador</Text>}
                                     name="cpfPagamento"
@@ -528,7 +521,7 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                         }}
                                     />
                                 </Form.Item>
-                            )}
+                            )} */}
                         </div>
 
 
@@ -550,13 +543,13 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                             </div>
 
                             <Flex vertical gap="small" className="mt-4">
-                                <ButtonPrimary
+                                {/* <ButtonPrimary
                                     text="Pagar com Pix"
                                     onClick={handlePagarComPix}
                                     className="w-full"
                                     loading={pixLoading}
                                     size='large'
-                                />
+                                /> */}
                                 <Button
                                     onClick={() => form.submit()}
                                     className="w-full"
@@ -579,14 +572,14 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                 </div>
             </Drawer>
 
-            {isPixModalOpen && pixData && (
+            {/* {isPixModalOpen && pixData && (
                 <ModalPix
                     open={isPixModalOpen}
                     onClose={() => setIsPixModalOpen(false)}
                     pixData={pixData}
                     onPaymentSuccess={handlePaymentSuccess}
                 />
-            )}
+            )} */}
         </>
     );
 }

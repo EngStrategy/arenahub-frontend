@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Pagination, Layout, Typography, Row, Col, Flex, Empty, App, Alert } from 'antd';
+import { Pagination, Layout, Typography, Row, Col, Flex, Empty, App } from 'antd';
 import { JogoAbertoCard } from '@/components/Cards/JogoAbertoCard';
 import CitySports from '@/components/CitySports';
 import { sportIcons } from '@/data/sportIcons';
@@ -10,9 +10,8 @@ import { getAllJogosAbertos, JogosAbertosQueryParams, type JogosAbertos as JogoA
 import { mapeamentoEsportes } from '@/context/functions/mapeamentoEsportes';
 import { TipoQuadra } from '../api/entities/quadra';
 import { useAuth } from '@/context/hooks/use-auth';
-import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
-import { GlobalOutlined } from '@ant-design/icons';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { AskingPermissionLocation } from '@/components/Alerts/AskingPermissionLocation';
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
@@ -281,34 +280,10 @@ export default function JogosAbertos() {
             <Title level={3} className="!text-center !mb-8">Jogos abertos</Title>
 
             {isLocationBannerVisible && (
-                <Alert
-                    type="info"
-                    showIcon
-                    icon={<GlobalOutlined />}
-                    closable
-                    onClose={() => setIsLocationBannerVisible(false)}
-                    className="!mb-6"
-                    message={
-                        <Flex
-                            className="flex-col sm:flex-row sm:items-center sm:justify-between w-full"
-                        >
-                            <div className="flex-grow sm:mr-4">
-                                <Typography.Text strong className='!text-lg'>
-                                    Encontre arenas perto de você
-                                </Typography.Text>
-                                <Typography.Paragraph type="secondary" className="!mb-1">
-                                    Permita o acesso à sua localização para descobrirmos as melhores opções na sua área.
-                                </Typography.Paragraph>
-                            </div>
-
-                            <ButtonPrimary
-                                text='Usar minha localização'
-                                onClick={handleRequestLocation}
-                                loading={isAskingPermission}
-                                className="mt-3 sm:mt-0"
-                            />
-                        </Flex>
-                    }
+                <AskingPermissionLocation
+                    setIsLocationBannerVisible={setIsLocationBannerVisible}
+                    handleRequestLocation={handleRequestLocation}
+                    isAskingPermission={isAskingPermission}
                 />
             )}
 

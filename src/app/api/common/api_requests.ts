@@ -54,17 +54,15 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (axios.isAxiosError(error) && error.response) {
-      if (error.response.status === 401) {
-        // console.warn("Interceptor: Recebido 401. Deslogando...");
-        // if (typeof window !== 'undefined') {
-        //   const callbackUrl = `${window.location.origin}/login`;
-        //   await signOut({ callbackUrl, redirect: true });
-        // }
-        return Promise.reject(error);
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      console.warn("Interceptor: Recebido 401. Deslogando...");
+      if (globalThis.window !== undefined) {
+        const callbackUrl = `${globalThis.window.location.origin}/login`;
+        await signOut({ callbackUrl, redirect: true });
       }
+      throw new Error(await Promise.reject(error));
     }
-    return Promise.reject(error);
+    throw new Error(await Promise.reject(error));
   }
 );
 

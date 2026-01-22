@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Col, Flex, Pagination, Row, Alert, App, Typography, Button } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Col, Flex, Pagination, Row, App, Typography, Button } from 'antd';
 import { ArenaCard } from '@/components/Cards/ArenaCard';
 import { sportIcons } from '@/data/sportIcons';
 import { type Arena, getAllArenas, type ArenaQueryParams } from '@/app/api/entities/arena';
@@ -9,11 +9,10 @@ import Link from 'next/link';
 import CitySports from '@/components/CitySports';
 import { useTheme } from '@/context/ThemeProvider';
 import { useAuth } from '@/context/hooks/use-auth';
-import { GlobalOutlined } from '@ant-design/icons';
-import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useDebounce } from '@/context/hooks/use-debounce';
 import { IoCloseOutline } from 'react-icons/io5';
+import { AskingPermissionLocation } from '@/components/Alerts/AskingPermissionLocation';
 
 const { Text } = Typography;
 
@@ -271,34 +270,10 @@ export default function HomePage() {
     >
       <div className="w-full">
         {isLocationBannerVisible && (
-          <Alert
-            type="info"
-            showIcon
-            icon={<GlobalOutlined />}
-            closable
-            onClose={() => setIsLocationBannerVisible(false)}
-            className="!mb-6"
-            message={
-              <Flex
-                className="flex-col sm:flex-row sm:items-center sm:justify-between w-full"
-              >
-                <div className="flex-grow sm:mr-4">
-                  <Typography.Text strong className='!text-lg'>
-                    Encontre arenas perto de você
-                  </Typography.Text>
-                  <Typography.Paragraph type="secondary" className="!mb-1">
-                    Permita o acesso à sua localização para descobrirmos as melhores opções na sua área.
-                  </Typography.Paragraph>
-                </div>
-
-                <ButtonPrimary
-                  text='Usar minha localização'
-                  onClick={handleRequestLocation}
-                  loading={isAskingPermission}
-                  className="mt-3 sm:mt-0"
-                />
-              </Flex>
-            }
+          <AskingPermissionLocation
+            setIsLocationBannerVisible={setIsLocationBannerVisible}
+            handleRequestLocation={handleRequestLocation}
+            isAskingPermission={isAskingPermission}
           />
         )}
 

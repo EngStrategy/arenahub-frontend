@@ -11,11 +11,11 @@ const { Title, Text, Paragraph } = Typography;
 const planos = [
     {
         nome: "Mensal",
-        preco: "R$ 199,90",
+        preco: "R$ 89,90",
         periodo: "/mês",
         descricao: "Ideal para começar sem compromisso de longo prazo.",
         features: [
-            "Gerenciamento de até 2 quadras",
+            "Gerenciamento de quadras ilimitado",
             "Agenda online completa",
             "Relatórios básicos de agendamento",
             "Suporte via email"
@@ -24,12 +24,12 @@ const planos = [
     },
     {
         nome: "Trimestral",
-        preco: "R$ 189,90",
+        preco: "R$ 79,90",
         periodo: "/mês",
-        economia: "Economize 5%",
+        economia: "Economize 11%",
         descricao: "O melhor custo-benefício para arenas em crescimento.",
         features: [
-            "Gerenciamento de até 3 quadras",
+            "Gerenciamento de quadras ilimitado",
             "Tudo do plano Mensal",
             "Relatórios financeiros avançados",
             "Suporte prioritário via WhatsApp"
@@ -38,9 +38,9 @@ const planos = [
     },
     {
         nome: "Semestral",
-        preco: "R$ 179,90",
+        preco: "R$ 69,90",
         periodo: "/mês",
-        economia: "Economize 10%",
+        economia: "Economize 22%",
         descricao: "Máxima economia para arenas estabelecidas.",
         features: [
             "Gerenciamento de quadras ilimitado",
@@ -63,7 +63,7 @@ export default function PlanosPage() {
                     Escolha o período de assinatura que faz mais sentido para sua Arena.
                     O cadastro é feito em seguida, e a escolha do plano é confirmada apenas após o registro.
                 </Paragraph>
-                <Paragraph className="!font-bold !text-md !max-w-2xl !mx-auto !text-gray-500">
+                <Paragraph className="!font-bold !text-md !max-w-2xl !mx-auto !text-green-600">
                     Todos os planos incluem um período de teste gratuito de 30 dias. Cancele quando quiser.
                 </Paragraph>
             </div>
