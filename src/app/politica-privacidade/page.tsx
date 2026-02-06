@@ -23,7 +23,7 @@ export default function PoliticaPrivacidadePage() {
                         <Paragraph type="secondary" className="text-lg">
                             Sua privacidade é importante para nós. Entenda como coletamos, usamos e protegemos seus dados.
                         </Paragraph>
-                        <Text type="secondary">Última atualização: {new Date().toLocaleDateString('pt-BR')}</Text>
+                        <Text type="secondary">Última atualização: 06/02/2026</Text>
                     </header>
 
                     <div className={`p-8 rounded-lg shadow-sm ${isDarkMode ? 'bg-neutral-800' : 'bg-white'}`}>
