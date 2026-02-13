@@ -6,6 +6,7 @@ import { useTheme } from '@/context/ThemeProvider';
 import { FaUsers, FaHeartbeat, FaLightbulb, FaShieldAlt } from 'react-icons/fa';
 import { FaLinkedin, FaGithub } from 'react-icons/fa6';
 import Link from 'next/link';
+import JsonLd from '@/components/JsonLd';
 
 const { Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -148,8 +149,35 @@ export default function QuemSomosPage() {
         return <QuemSomosPulseSkeleton />;
     }
 
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "AboutPage",
+                "mainEntity": {
+                    "@type": "Organization",
+                    "name": "ArenaHub",
+                    "foundingDate": "2023",
+                    "description": "Plataforma de gestão e agendamento de quadras esportivas.",
+                    "founder": teamMembers.map(member => ({
+                        "@type": "Person",
+                        "name": member.name,
+                        "jobTitle": member.role,
+                        "description": member.bio,
+                        "image": member.avatar,
+                        "sameAs": [
+                            member.socials.linkedin,
+                            member.socials.github
+                        ].filter(url => url && url !== '#')
+                    }))
+                }
+            }
+        ]
+    };
+
     return (
         <Layout className={`${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
+            <JsonLd data={jsonLd} />
             <Content>
                 <div className="relative h-[50vh] w-full">
                     <Image

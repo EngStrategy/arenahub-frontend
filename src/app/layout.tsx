@@ -1,5 +1,6 @@
 import "./styles/globals.css";
 import Navbar from "@/components/Navbar";
+import JsonLd from "@/components/JsonLd";
 import SessionAuthProvider from "@/context/SessionAuthProvider";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import type { Metadata } from "next";
@@ -12,13 +13,17 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ArenaHub",
-  description: "",
+  metadataBase: new URL(process.env.NEXTAUTH_URL ?? "https://arenahub.app"),
+  title: "ArenaHub - Gestão e Agendamento de Quadras Esportivas",
+  description: "O ArenaHub facilita o agendamento de quadras e a gestão da sua Arena. Encontre horários, gerencie agendamentos e automatize seu negócio em um só lugar.",
   icons: {
     icon: "/icons/logo_arenahub_icone.svg",
   },
-  keywords: ["ArenaHub", "Aluguel de quadras", "alugar jogo", "jogar futebol"],
-  authors: [{ name: "Sávio Soares", url: "https://github.com/saviosoaresUFC" }],
+  keywords: ["arenahub", "aluguel de quadras", "alugar jogo", "jogar futebol", "gestão de arenas", "agendamento de quadras", "plataforma de esportes", "gestão de espaços esportivos", "agendamento de espaços esportivos", "plataforma de gestão esportiva", "quadras esportivas"],
+  authors: [{ name: "Sávio Soares", url: "https://saviosoaresufc.github.io/meu-portfolio" }],
+  alternates: {
+    canonical: "/",
+  },
 };
 
 const ThemeScript = () => {
@@ -46,10 +51,54 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://arenahub.app/#website",
+        "url": "https://arenahub.app",
+        "name": "ArenaHub - Gestão e Agendamento de Quadras Esportivas",
+        "description": "O ArenaHub facilita o agendamento de quadras e a gestão da sua Arena. Encontre horários, gerencie agendamentos e automatize seu negócio em um só lugar.",
+        "publisher": {
+          "@id": "https://arenahub.app/#organization"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://arenahub.app/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://arenahub.app/#organization",
+        "name": "ArenaHub",
+        "url": "https://arenahub.app",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://arenahub.app/icons/logo_arenahub_icone.svg",
+          "width": 112,
+          "height": 112
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+55-89-99467-3969",
+          "contactType": "customer service",
+          "areaServed": "BR",
+          "availableLanguage": ["Portuguese", "English"]
+        },
+        "sameAs": [
+          "https://www.instagram.com/arenahub.br"
+        ]
+      }
+    ]
+  };
+
   return (
     <html lang="pt-br" suppressHydrationWarning>
       <head>
         <ThemeScript />
+        <JsonLd data={jsonLd} />
       </head>
       <body className={`${inter.variable} antialiased h-full`}>
         <SessionAuthProvider>

@@ -5,6 +5,7 @@ import { Collapse, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import { PlusOutlined } from '@ant-design/icons';
 import Link from 'next/link';
+import { useTheme } from "@/context/ThemeProvider";
 
 const { Paragraph } = Typography;
 
@@ -36,7 +37,8 @@ const faqItems = [
     }
 ];
 
-export function Faq({ isDarkMode }: { readonly isDarkMode: boolean }) {
+export function Faq() {
+    const { isDarkMode } = useTheme();
     return (
         <section
             id="faq"

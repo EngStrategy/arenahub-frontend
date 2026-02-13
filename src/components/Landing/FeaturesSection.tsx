@@ -4,6 +4,7 @@ import React from 'react';
 import { Card, Typography } from 'antd';
 import { Search, LayoutDashboard, Globe, Shuffle, Star, Bell } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTheme } from "@/context/ThemeProvider";
 
 const { Title, Paragraph } = Typography;
 
@@ -46,7 +47,8 @@ const features = [
     }
 ];
 
-export function Features({ isDarkMode }: { readonly isDarkMode: boolean }) {
+export function Features() {
+    const { isDarkMode } = useTheme();
     return (
         <section
             id="features" className="py-20"

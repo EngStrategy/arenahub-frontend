@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeProvider';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { formatarMaterial } from '@/context/functions/formatarMaterial';
+import { ButtonPrimary } from '../Buttons/ButtonPrimary';
 // import { ModalPix } from '../Modais/ModalPix';
 // import { useAuth } from '@/context/hooks/use-auth';
 // import { validarCPF } from '@/context/functions/validarCPF';
@@ -550,14 +551,13 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     loading={pixLoading}
                                     size='large'
                                 /> */}
-                                <Button
+                                <ButtonPrimary
+                                    text={submitting ? 'Agendando...' : 'Pagar na Arena'}
                                     onClick={() => form.submit()}
                                     className="w-full"
                                     loading={submitting}
                                     size='large'
-                                >
-                                    Pagar na Arena
-                                </Button>
+                                />
                             </Flex>
 
                             {/* <ButtonPrimary

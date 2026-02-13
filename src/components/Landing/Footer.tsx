@@ -1,9 +1,14 @@
+"use client";
+
+import { useTheme } from "@/context/ThemeProvider";
+
 type Props = {
-    year: number,
-    isDarkMode: boolean
+    year: number;
 };
 
-export function Footer({ year, isDarkMode }: Readonly<Props>) {
+export function Footer({ year }: Readonly<Props>) {
+    const { isDarkMode } = useTheme();
+
     return (
         <footer
             id="contato"

@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-export function Hero({ isDarkMode }: { readonly isDarkMode: boolean }) {
+import { useTheme } from "@/context/ThemeProvider";
+
+export function Hero() {
+    const { isDarkMode } = useTheme();
     return (
         <motion.section
             className={`relative overflow-hidden`}

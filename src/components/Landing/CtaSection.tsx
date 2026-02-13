@@ -3,8 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useTheme } from "@/context/ThemeProvider";
 
-export function Cta({ isDarkMode }: { readonly isDarkMode: boolean }) {
+export function Cta() {
+    const { isDarkMode } = useTheme();
     return (
         <section
             id="cta"

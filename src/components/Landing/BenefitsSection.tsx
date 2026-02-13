@@ -4,12 +4,14 @@ import React from 'react';
 import { Card, Flex, Typography, Avatar, Button } from 'antd';
 import { Users, ShieldCheck, BarChart3, CalendarClock } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ArrowRightOutlined, CalendarOutlined, DollarCircleOutlined, TeamOutlined } from '@ant-design/icons';
+import { CalendarOutlined, DollarCircleOutlined, TeamOutlined } from '@ant-design/icons';
 import Link from 'next/link';
+import { useTheme } from "@/context/ThemeProvider";
 
 const { Title, Paragraph, Text } = Typography;
 
-export function Benefits({ isDarkMode }: { readonly isDarkMode: boolean }) {
+export function Benefits() {
+    const { isDarkMode } = useTheme();
     const cardVariants = {
         offscreen: { y: 50, opacity: 0 },
         onscreen: {

@@ -12,6 +12,7 @@ import { TipoQuadra } from '../api/entities/quadra';
 import { useAuth } from '@/context/hooks/use-auth';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { AskingPermissionLocation } from '@/components/Alerts/AskingPermissionLocation';
+import JsonLd from '@/components/JsonLd';
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
@@ -272,11 +273,47 @@ export default function JogosAbertos() {
         );
     }
 
+    const jsonLd = jogos.length > 0 ? {
+        "@context": "https://schema.org",
+        "@graph": jogos.map(jogo => ({
+            "@type": "SportsEvent",
+            "name": `${jogo.esporte} no ${jogo.nomeArena}`,
+            "startDate": `${jogo.data}T${jogo.horarioInicio}`,
+            "endDate": `${jogo.data}T${jogo.horarioFim}`,
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "location": {
+                "@type": "SportsActivityLocation",
+                "name": jogo.nomeArena,
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": jogo.cidade,
+                    "addressCountry": "BR"
+                },
+                "image": jogo.urlFotoArena
+            },
+            "image": [jogo.urlFotoArena],
+            "description": `Partida de ${jogo.esporte} no ${jogo.nomeArena} em ${jogo.cidade}.`,
+            "offers": {
+                "@type": "Offer",
+                "availability": jogo.vagasDisponiveis > 0 ? "https://schema.org/InStock" : "https://schema.org/SoldOut",
+                "price": "0",
+                "priceCurrency": "BRL"
+            },
+            "organizer": {
+                "@type": "Organization",
+                "name": "ArenaHub",
+                "url": "https://arenahub.app"
+            }
+        }))
+    } : null;
+
     return (
         <Content
             className="px-4 sm:px-10 lg:px-40 py-8 flex-1"
             style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark)' : 'var(--cor-fundo-light)' }}
         >
+            {jsonLd && <JsonLd data={jsonLd} />}
             <Title level={3} className="!text-center !mb-8">Jogos abertos</Title>
 
             {isLocationBannerVisible && (
