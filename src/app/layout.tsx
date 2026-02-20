@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/context/ThemeProvider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { App as AntdApp } from 'antd';
-
+import Script from 'next/script';
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -97,6 +97,20 @@ export default function RootLayout({
   return (
     <html lang="pt-br" suppressHydrationWarning>
       <head>
+        {/* Google tag (gtag.js) */}
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-L1EKJW34FT"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-L1EKJW34FT');
+          `}
+        </Script>
         <ThemeScript />
         <JsonLd data={jsonLd} />
       </head>
