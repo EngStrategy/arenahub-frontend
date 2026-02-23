@@ -1,5 +1,6 @@
 import "./styles/globals.css";
 import Navbar from "@/components/Navbar";
+import SmartAppBanner from "@/components/Navigation/SmartAppBanner";
 import JsonLd from "@/components/JsonLd";
 import SessionAuthProvider from "@/context/SessionAuthProvider";
 import { ThemeProvider } from "@/context/ThemeProvider";
@@ -119,6 +120,7 @@ export default function RootLayout({
           <ThemeProvider>
             <AntdApp>
               <div className="relative flex flex-col min-h-screen">
+                <SmartAppBanner />
                 <Navbar />
                 {children}
               </div>

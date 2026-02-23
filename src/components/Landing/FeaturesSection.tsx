@@ -65,26 +65,56 @@ export function Features() {
                     </p>
                 </div>
                 <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {features.map((feature, index) => (
-                        <motion.div
-                            key={feature.title}
-                            initial={{ opacity: 0, y: 50 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, amount: 0.5 }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                        >
-                            <Card variant="borderless" className="h-full text-center bg-gray-50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                                <div className="p-4">
-                                    {/* O contêiner do ícone agora usa as cores dinâmicas */}
-                                    <div className={`inline-flex p-4 rounded-full ${feature.bgColor}`}>
-                                        {feature.icon}
+                    {features.map((feature, index) => {
+                        const isJogosAbertos = feature.title === "Jogos Abertos";
+                        const isArenaPainel = feature.title === "Painel de Gestão para Arenas";
+
+                        let cardStyles = `!bg-gray-50 hover:shadow-xl hover:-translate-y-1 ${isDarkMode && '!bg-zinc-900'}`;
+                        if (isJogosAbertos) {
+                            cardStyles = `!border-2 !border-orange-400 !bg-orange-50/50 hover:!shadow-orange-200 hover:-translate-y-2 !shadow-lg ${isDarkMode ? '!bg-orange-900/20 !border-orange-500/50' : ''}`;
+                        } else if (isArenaPainel) {
+                            cardStyles = `!border-2 !border-purple-300 !bg-purple-50/50 hover:!shadow-purple-200 hover:-translate-y-2 !shadow-lg md:scale-105 ${isDarkMode ? '!bg-purple-900/20 !border-purple-500/50' : ''}`;
+                        }
+
+                        return (
+                            <motion.div
+                                key={feature.title}
+                                initial={{ opacity: 0, y: 50 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, amount: 0.5 }}
+                                transition={{ duration: 0.5, delay: index * 0.1 }}
+                                className={isJogosAbertos || isArenaPainel ? "relative z-10" : ""}
+                            >
+                                {isJogosAbertos && (
+                                    <div className="absolute -top-3 -right-3 z-10 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md animate-pulse">
+                                        Novo!
                                     </div>
-                                    <Title level={4} className="!mt-5">{feature.title}</Title>
-                                    <Paragraph type="secondary" className="mt-2">{feature.description}</Paragraph>
-                                </div>
-                            </Card>
-                        </motion.div>
-                    ))}
+                                )}
+                                {isArenaPainel && (
+                                    <div className="absolute -top-3 inset-x-0 flex justify-center z-10">
+                                        <span className="bg-purple-600 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wider">
+                                            🌟 Exclusivo Parceiros
+                                        </span>
+                                    </div>
+                                )}
+                                <Card
+                                    variant="borderless"
+                                    className={`h-full text-center transition-all duration-300 ${cardStyles}`}
+                                >
+                                    <div className="p-4 mt-2">
+                                        {/* O contêiner do ícone agora usa as cores dinâmicas */}
+                                        <div className={`inline-flex p-4 rounded-full ${feature.bgColor} ${(isJogosAbertos || isArenaPainel) && 'shadow-inner'}`}>
+                                            {feature.icon}
+                                        </div>
+                                        <Title level={4} className="!mt-5">{feature.title}</Title>
+                                        <Paragraph type="secondary" className={`mt-2 ${((isJogosAbertos || isArenaPainel) && isDarkMode) ? '!text-gray-300' : ''}`}>
+                                            {feature.description}
+                                        </Paragraph>
+                                    </div>
+                                </Card>
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
         </section>

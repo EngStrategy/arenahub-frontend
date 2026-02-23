@@ -15,25 +15,25 @@ export function AskingPermissionLocation({ setIsLocationBannerVisible, handleReq
             icon={<IoLocationOutline />}
             closable
             onClose={() => setIsLocationBannerVisible(false)}
-            className="!mb-6"
+            className="!mb-4 !py-2 !px-3 sm:!py-3 sm:!px-4"
             message={
                 <Flex
                     className="flex-col sm:flex-row sm:items-center sm:justify-between w-full"
                 >
                     <div className="flex-grow sm:mr-4">
-                        <Typography.Text strong className='!text-lg'>
+                        <Typography.Text strong className='!text-sm sm:!text-lg'>
                             Encontre arenas perto de você
                         </Typography.Text>
-                        <Typography.Paragraph type="secondary" className="!mb-1">
-                            Permita o acesso à sua localização para descobrirmos as melhores opções na sua área.
+                        <Typography.Paragraph type="secondary" className="!mb-1 !text-xs sm:!text-sm !leading-tight mt-1">
+                            Permita o acesso à localização para descobrirmos as melhores opções.
                         </Typography.Paragraph>
                     </div>
 
                     <ButtonPrimary
-                        text='Usar minha localização'
+                        text='Ativar'
                         onClick={handleRequestLocation}
                         loading={isAskingPermission}
-                        className="mt-3 sm:mt-0"
+                        className="mt-2 sm:mt-0 w-full sm:w-auto !text-xs sm:!text-sm !py-1 sm:!py-2"
                     />
                 </Flex>
             }
