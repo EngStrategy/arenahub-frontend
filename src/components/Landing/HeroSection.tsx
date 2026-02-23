@@ -57,7 +57,7 @@ export function Hero() {
                                     </svg>
                                 </Link>
                                 <a
-                                    href="/downloads/ArenaHub.apk"
+                                    href="https://github.com/EngStrategy/arenahub-frontend/releases/download/arenahub/ArenaHub.apk"
                                     download="ArenaHub.apk"
                                     className={`!inline-flex !items-center !gap-2 !px-6 !py-3 !rounded-full !border !font-semibold !transition-all !duration-300 focus:!outline-none focus:!ring-2 focus:!ring-offset-2 focus:!ring-gray-500
                                     ${isDarkMode

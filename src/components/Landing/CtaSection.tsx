@@ -40,7 +40,7 @@ export function Cta() {
                             Quero 30 Dias Grátis para minha Arena
                         </Link>
                         <a
-                            href="/downloads/ArenaHub.apk"
+                            href="https://github.com/EngStrategy/arenahub-frontend/releases/download/arenahub/ArenaHub.apk"
                             download="ArenaHub.apk"
                             className="!inline-flex !items-center !px-6 !py-3 !rounded-full !border-2 !border-white/70 !text-white font-semibold hover:!bg-white/10 hover:!border-white !transition-colors !duration-300 focus:!outline-none focus:!ring-2 focus:!ring-offset-2 focus:!ring-white"
                         >
