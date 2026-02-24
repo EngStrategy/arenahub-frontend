@@ -15,7 +15,7 @@ export function Hero() {
             transition={{ duration: 1 }}
         >
             <section
-                className={`relative overflow-hidden pt-14 opacity-0 animate-fadeIn`}
+                className={`relative overflow-hidden pt-6 opacity-0 animate-fadeIn`}
                 style={{ backgroundColor: isDarkMode ? 'var(--cor-fundo-dark-secondary)' : 'var(--cor-fundo-light)' }}
             >
 
@@ -25,7 +25,7 @@ export function Hero() {
                 </div>
 
                 {/* Container principal com layout de grelha */}
-                <div className="max-w-7xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
+                <div className="max-w-7xl mx-auto px-6 pt-10 pb-20 grid lg:grid-cols-2 gap-12 items-center">
 
                     {/* Coluna de Texto (Esquerda) */}
                     <div>
@@ -35,9 +35,26 @@ export function Hero() {
                         >
                             A plataforma definitiva para <span className="text-green-600">Arenas</span> e <span className="text-green-600">Atletas</span>.
                         </h1>
-                        <p className={`mt-5 text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                            As arenas gerenciam suas quadras pela nossa plataforma web, enquanto os atletas utilizam o aplicativo para agendar partidas e encontrar grupos.
-                        </p>
+
+                        <div className={`mt-8 p-1 rounded-2xl bg-gradient-to-r from-green-500 to-green-400 shadow-lg shadow-green-500/30 transform hover:scale-[1.02] transition-transform duration-300`}>
+                            <div className={`p-4 rounded-xl h-full w-full ${isDarkMode ? 'bg-neutral-800' : 'bg-white'}`}>
+                                <div className="flex items-start gap-4">
+                                    <div className={`p-3 rounded-full ${isDarkMode ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-600'}`}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className={`text-lg sm:text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                            Sua arena aberta para reservas 24h por dia.
+                                        </p>
+                                        <p className={`mt-1 font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                                            Comece a usar o ArenaHub sem custo de implementação.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         {/* Botões de Ação */}
                         <div className="mt-8">
@@ -72,24 +89,6 @@ export function Hero() {
                             </div>
                             <div className={`mt-3 text-sm font-medium ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>
                                 ✨ Crie sua conta de Arena e ganhe 30 dias grátis!
-                            </div>
-                        </div>
-
-                        {/* Selos de Confiança */}
-                        <div className="mt-8 flex flex-wrap items-center gap-5 text-sm text-gray-600">
-                            <div className={`flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <span
-                                    className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-600 text-white text-xs"
-                                >✓</span>{" "}
-                                Agenda Integrada
-                            </div>
-                            <div className={`flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-600 text-white text-xs">✓</span>{" "}
-                                Relatórios Financeiros
-                            </div>
-                            <div className={`flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-600 text-white text-xs">✓</span>{" "}
-                                Aumento de Receita
                             </div>
                         </div>
                     </div>

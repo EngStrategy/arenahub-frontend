@@ -12,7 +12,7 @@ export function Footer({ year }: Readonly<Props>) {
     return (
         <footer
             id="contato"
-            className={`py-12 px-6 ${isDarkMode ? 'bg-zinc-900 text-gray-300' : 'bg-green-200 text-gray-700'}`}
+            className={`py-12 pb-20 lg:pb-8 px-6 ${isDarkMode ? 'bg-zinc-900 text-gray-300' : 'bg-green-200 text-gray-700'}`}
         >
             <div className="max-w-7xl mx-auto px-6 lg:px-8 grid gap-8 md:grid-cols-3">
                 <div>
