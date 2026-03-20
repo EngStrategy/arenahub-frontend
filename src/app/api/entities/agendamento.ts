@@ -1,8 +1,10 @@
 import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
+import { TipoChavePix } from "./arena";
 import { TipoQuadra } from "./quadra";
 
 export type StatusAgendamento = "PENDENTE" | "AUSENTE" | "CANCELADO" | "PAGO" | "ACEITO" | "RECUSADO" | "FINALIZADO" | "AGUARDANDO_PAGAMENTO";
+export type FormaPagamento = "PIX" | "LOCAL" | "AMBOS";
 
 export type PeriodoAgendamentoFixo = "UM_MES" | "TRES_MESES" | "SEIS_MESES";
 
@@ -22,6 +24,8 @@ export type PixPagamentoResponse = {
     qrCodeData: string;
     copiaECola: string;
     expiraEm: string;
+    tipoChavePix: TipoChavePix | null;
+    pagamentoConfirmadoGateway: boolean;
 };
 
 export type Agendamento = {
@@ -45,6 +49,9 @@ export type Agendamento = {
     avaliacao: { idAvaliacao: number, nota: number; comentario?: string } | null;
     avaliacaoDispensada: boolean;
     agendamentoFixoId?: number;
+    formaPagamentoEscolhida?: FormaPagamento;
+    pagamentoConfirmadoGateway?: boolean;
+    nomePagadorPix?: string | null;
 };
 
 export type AgendamentoCreate = {
@@ -57,6 +64,7 @@ export type AgendamentoCreate = {
     isFixo?: boolean;
     isPublico?: boolean;
     cpfCnpjPagamento?: string;
+    formaPagamento?: FormaPagamento;
 };
 
 export interface AgendamentoArenaCardData {
@@ -183,9 +191,19 @@ export const criarPagamentoPix = async (
 
 export const getAgendamentoStatus = async (
     agendamentoId: number
-): Promise<{ status: StatusAgendamento }> => {
-    return httpRequests.getMethod<{ status: StatusAgendamento }>(
+): Promise<{ status: StatusAgendamento; pagamentoConfirmadoGateway: boolean; nomePagadorInformado: boolean }> => {
+    return httpRequests.getMethod<{ status: StatusAgendamento; pagamentoConfirmadoGateway: boolean; nomePagadorInformado: boolean }>(
         `${URLS.AGENDAMENTOS}/${agendamentoId}/status`
+    );
+};
+
+export const informarPagadorPix = async (
+    agendamentoId: number,
+    nomeCompletoPagador: string
+): Promise<Agendamento> => {
+    return httpRequests.postMethod<Agendamento>(
+        `${URLS.AGENDAMENTOS}/${agendamentoId}/pagador-pix`,
+        { nomeCompletoPagador }
     );
 };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Alert, Flex, Input, notification } from 'antd';
+import { Drawer, Form, Button, Switch, Select, Radio, Typography, App, Alert, Flex, notification } from 'antd';
 import { IoCloseOutline } from "react-icons/io5";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { format, addMonths, addDays, getDay, isBefore, parseISO, subHours } from 'date-fns';
@@ -12,17 +12,13 @@ import type {
 } from '@/app/api/entities/quadra';
 import type { Arena as ArenaOficial } from '@/app/api/entities/arena';
 import { formatarEsporte } from '@/context/functions/mapeamentoEsportes';
-import { createAgendamento, criarPagamentoPix, PixPagamentoResponse, type AgendamentoCreate, type PeriodoAgendamentoFixo } from '@/app/api/entities/agendamento';
-// import { ButtonPrimary } from '../Buttons/ButtonPrimary';
+import { createAgendamento, criarPagamentoPix, type PixPagamentoResponse, type AgendamentoCreate, type FormaPagamento, type PeriodoAgendamentoFixo } from '@/app/api/entities/agendamento';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeProvider';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { CopyOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { formatarMaterial } from '@/context/functions/formatarMaterial';
 import { ButtonPrimary } from '../Buttons/ButtonPrimary';
-// import { ModalPix } from '../Modais/ModalPix';
-// import { useAuth } from '@/context/hooks/use-auth';
-// import { validarCPF } from '@/context/functions/validarCPF';
-// import { formatarCPF } from '@/context/functions/formatarCPF';
+import { ModalPix } from '../Modais/ModalPix';
 
 const { Title, Text } = Typography;
 
@@ -71,9 +67,6 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     selectedHorarios,
     quadras
 }) => {
-    // const { user } = useAuth();
-    // const atletaCpfCadastrado = user?.cpfCnpj;
-
     const [form] = Form.useForm();
     const router = useRouter();
     const { message } = App.useApp();
@@ -83,11 +76,12 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     const [fixedDurationMonths, setFixedDurationMonths] = useState<number>(0);
     const [total, setTotal] = useState<number>(0);
     const [submitting, setSubmitting] = useState(false);
+    const [formaPagamentoSelecionada, setFormaPagamentoSelecionada] = useState<FormaPagamento>('LOCAL');
     const { isDarkMode } = useTheme();
 
-    // const [isPixModalOpen, setIsPixModalOpen] = useState(false);
-    // const [pixData, setPixData] = useState<PixPagamentoResponse | null>(null);
-    // const [pixLoading, setPixLoading] = useState(false);
+    const [isPixModalOpen, setIsPixModalOpen] = useState(false);
+    const [pixData, setPixData] = useState<PixPagamentoResponse | null>(null);
+    const [pixLoading, setPixLoading] = useState(false);
 
     const buildPayload = (values: any): AgendamentoCreate | null => {
         if (!quadraSelecionada) {
@@ -131,9 +125,24 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
             numeroJogadoresNecessarios: isIncomplete ? numeroJogadoresFaltando : 0,
             isFixo: isFixo,
             isPublico: isIncomplete,
-            // cpfCnpjPagamento: !atletaCpfCadastrado ? cpfParaPagamento : undefined,
+            formaPagamento: formaPagamentoSelecionada,
         };
     };
+
+    const opcoesPagamento = (() => {
+        switch (arena.formaPagamento) {
+            case 'PIX':
+                return [{ label: 'PIX', value: 'PIX' as FormaPagamento }];
+            case 'AMBOS':
+                return [
+                    { label: 'Pagar na arena', value: 'LOCAL' as FormaPagamento },
+                    { label: 'PIX', value: 'PIX' as FormaPagamento },
+                ];
+            case 'LOCAL':
+            default:
+                return [{ label: 'Pagar na arena', value: 'LOCAL' as FormaPagamento }];
+        }
+    })();
 
     const getOccurrences = (startDate: Date, months: number): { count: number, lastDate: Date } => {
         if (months === 0) return { count: 0, lastDate: startDate };
@@ -229,6 +238,12 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
 
 
     useEffect(() => {
+        if (open) {
+            setFormaPagamentoSelecionada(arena.formaPagamento === 'PIX' ? 'PIX' : 'LOCAL');
+        }
+    }, [open, arena.formaPagamento]);
+
+    useEffect(() => {
         if (quadraSelecionada) {
             if (quadraSelecionada.tipoQuadra.length === 1) {
                 form.setFieldValue('esporte', quadraSelecionada.tipoQuadra[0]);
@@ -241,9 +256,10 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
             setIsIncomplete(false);
             setNumeroJogadoresFaltando(0);
             setFixedDurationMonths(0);
+            setFormaPagamentoSelecionada(arena.formaPagamento === 'PIX' ? 'PIX' : 'LOCAL');
             form.resetFields();
         }
-    }, [quadraSelecionada, open, form]);
+    }, [quadraSelecionada, open, form, arena.formaPagamento]);
 
     const handleFormSubmit = async (values: any) => {
         const payload = buildPayload(values);
@@ -266,34 +282,39 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
         }
     };
 
-    // const handlePagarComPix = async () => {
-    //     try {
-    //         const values = await form.validateFields();
-    //         const payload = buildPayload(values);
-    //         if (!payload) return;
+    const handlePagarComPix = async () => {
+        try {
+            const values = await form.validateFields();
+            const payload = buildPayload(values);
+            if (!payload) return;
 
-    //         setPixLoading(true);
-    //         const response = await criarPagamentoPix(payload);
-    //         setPixData(response);
-    //         setIsPixModalOpen(true);
-    //         onClose(); // Fecha o drawer para focar no modal
-    //     } catch (error) {
-    //         console.error("Falha ao gerar Pix:", error);
-    //         notification.error({
-    //             message: "Falha ao gerar Pix",
-    //             description: (error as Error).message,
-    //             duration: 10,
-    //         });
-    //     } finally {
-    //         setPixLoading(false);
-    //     }
-    // };
+            setPixLoading(true);
+            const response = await criarPagamentoPix(payload);
+            setPixData(response);
+            setIsPixModalOpen(true);
+        } catch (error) {
+            notification.error({
+                message: "Falha ao gerar Pix",
+                description: (error as Error).message,
+                duration: 10,
+            });
+        } finally {
+            setPixLoading(false);
+        }
+    };
 
-    // const handlePaymentSuccess = () => {
-    //     setIsPixModalOpen(false);
-    //     message.success("Pagamento confirmado! Seu agendamento está garantido.", 5);
-    //     router.push('/perfil/atleta/agendamentos?aba=historico');
-    // };
+    const handlePaymentSuccess = () => {
+        setIsPixModalOpen(false);
+        onClose();
+        message.success("Pagamento registrado. Agora a arena fará a conferência manual.", 5);
+        router.push('/perfil/atleta/agendamentos');
+    };
+
+    const handleCopyPixKey = async () => {
+        if (!arena.chavePix) return;
+        await navigator.clipboard.writeText(arena.chavePix);
+        message.success('Chave Pix copiada.');
+    };
 
     const renderResumoHorario = () => {
         if (!selectedHorarios || selectedHorarios.length === 0 || !quadraSelecionada) return null;
@@ -496,33 +517,49 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                                     </div>
                                 )}
 
+                                {opcoesPagamento.length > 1 && (
+                                    <Form.Item
+                                        label={<Text className='font-semibold text-lg'>Forma de pagamento</Text>}
+                                        className="!mb-2"
+                                    >
+                                        <Radio.Group
+                                            value={formaPagamentoSelecionada}
+                                            onChange={(e) => setFormaPagamentoSelecionada(e.target.value)}
+                                            className='!flex !gap-4'
+                                        >
+                                            {opcoesPagamento.map((opcao) => (
+                                                <Radio key={opcao.value} value={opcao.value}>
+                                                    {opcao.label}
+                                                </Radio>
+                                            ))}
+                                        </Radio.Group>
+                                    </Form.Item>
+                                )}
+
+                                {formaPagamentoSelecionada === 'PIX' && arena.chavePix && (
+                                    <div className={`rounded-lg border p-4 ${isDarkMode ? 'border-neutral-700 bg-dark-mode' : 'border-gray-200 bg-gray-50'}`}>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="flex flex-col gap-1">
+                                                <Text className='font-semibold'>Chave PIX da arena</Text>
+                                                <Text type="secondary">
+                                                    {arena.tipoChavePix ? `Tipo: ${arena.tipoChavePix}` : 'Use a chave abaixo para pagar'}
+                                                </Text>
+                                                <Text copyable={false} className='break-all'>{arena.chavePix}</Text>
+                                            </div>
+                                            <Button
+                                                icon={<CopyOutlined />}
+                                                onClick={handleCopyPixKey}
+                                            >
+                                                Copiar
+                                            </Button>
+                                        </div>
+                                        <Text type="secondary" className='!mt-3 !block'>
+                                            Após o pagamento, o sistema aguardará o webhook da Stripe para liberar o campo com o nome completo de quem realizou o PIX.
+                                        </Text>
+                                    </div>
+                                )}
+
                             </div>
-                            {/* {!atletaCpfCadastrado && (
-                                <Form.Item
-                                    label={<Text className='font-semibold text-sm'>CPF do Pagador</Text>}
-                                    name="cpfPagamento"
-                                    rules={[
-                                        { required: !atletaCpfCadastrado, message: "Insira seu CPF!" },
-                                        {
-                                            validator: (_, value) => {
-                                                if (!value) return Promise.resolve();
-                                                if (!validarCPF(value)) {
-                                                    return Promise.reject(new Error("CPF inválido!"));
-                                                }
-                                                return Promise.resolve();
-                                            },
-                                        },
-                                    ]}
-                                    className="flex-1"
-                                >
-                                    <Input
-                                        placeholder="Digite seu CPF ou CNPJ"
-                                        onChange={(e) => {
-                                            form.setFieldsValue({ cpfPagamento: formatarCPF(e.target.value) });
-                                        }}
-                                    />
-                                </Form.Item>
-                            )} */}
                         </div>
 
 
@@ -544,42 +581,37 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                             </div>
 
                             <Flex vertical gap="small" className="mt-4">
-                                {/* <ButtonPrimary
-                                    text="Pagar com Pix"
-                                    onClick={handlePagarComPix}
-                                    className="w-full"
-                                    loading={pixLoading}
-                                    size='large'
-                                /> */}
-                                <ButtonPrimary
-                                    text={submitting ? 'Agendando...' : 'Pagar na Arena'}
-                                    onClick={() => form.submit()}
-                                    className="w-full"
-                                    loading={submitting}
-                                    size='large'
-                                />
+                                {formaPagamentoSelecionada === 'PIX' ? (
+                                    <ButtonPrimary
+                                        text={pixLoading ? 'Gerando PIX...' : 'Pagar com PIX'}
+                                        onClick={handlePagarComPix}
+                                        className="w-full"
+                                        loading={pixLoading}
+                                        size='large'
+                                    />
+                                ) : (
+                                    <ButtonPrimary
+                                        text={submitting ? 'Agendando...' : 'Pagar na Arena'}
+                                        onClick={() => form.submit()}
+                                        className="w-full"
+                                        loading={submitting}
+                                        size='large'
+                                    />
+                                )}
                             </Flex>
-
-                            {/* <ButtonPrimary
-                            text={submitting ? 'Agendando...' : 'Confirmar agendamento'}
-                            htmlType="submit"
-                            className="w-full"
-                            loading={submitting}
-                            size='large'
-                        /> */}
                         </div>
                     </Form>
                 </div>
             </Drawer>
 
-            {/* {isPixModalOpen && pixData && (
+            {isPixModalOpen && pixData && (
                 <ModalPix
                     open={isPixModalOpen}
                     onClose={() => setIsPixModalOpen(false)}
                     pixData={pixData}
                     onPaymentSuccess={handlePaymentSuccess}
                 />
-            )} */}
+            )}
         </>
     );
 }

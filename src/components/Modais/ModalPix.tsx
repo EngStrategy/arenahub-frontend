@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Modal, Spin, Typography, Button, App, Result, Flex, Input, Tooltip } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Modal, Typography, Button, App, Result, Flex, Input, Tooltip, Spin, Form } from 'antd';
 import { CopyOutlined, CheckOutlined } from '@ant-design/icons';
-import { QRCodeSVG } from 'qrcode.react';
-import { getAgendamentoStatus } from '@/app/api/entities/agendamento';
+import { getAgendamentoStatus, informarPagadorPix } from '@/app/api/entities/agendamento';
 import type { PixPagamentoResponse } from '@/app/api/entities/agendamento';
 
 const { Title, Paragraph, Text } = Typography;
@@ -16,30 +15,48 @@ interface ModalPixProps {
     onPaymentSuccess: () => void;
 }
 
-const useCountdown = (expirationTime: string | undefined) => {
+const tipoChavePixLabel: Record<string, string> = {
+    CPF: 'CPF',
+    CNPJ: 'CNPJ',
+    EMAIL: 'E-mail',
+    TELEFONE: 'Telefone',
+    ALEATORIA: 'Chave aleatória',
+};
+
+const useCountdown = (expirationTime: string | undefined, open: boolean) => {
     const [timeLeft, setTimeLeft] = useState({ minutes: 0, seconds: 0 });
 
     useEffect(() => {
-        if (!expirationTime) return;
+        if (!expirationTime || !open) return;
 
-        const interval = setInterval(() => {
+        const updateTimeLeft = () => {
             const now = new Date().getTime();
             const expiration = new Date(expirationTime).getTime();
             const distance = expiration - now;
 
-            if (distance < 0) {
-                clearInterval(interval);
+            if (distance <= 0) {
                 setTimeLeft({ minutes: 0, seconds: 0 });
-                return;
+                return false;
             }
 
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             setTimeLeft({ minutes, seconds });
+            return true;
+        };
+
+        if (!updateTimeLeft()) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            if (!updateTimeLeft()) {
+                clearInterval(interval);
+            }
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [expirationTime]);
+    }, [expirationTime, open]);
 
     return timeLeft;
 };
@@ -47,106 +64,186 @@ const useCountdown = (expirationTime: string | undefined) => {
 export const ModalPix: React.FC<ModalPixProps> = ({ open, onClose, pixData, onPaymentSuccess }) => {
     const { message } = App.useApp();
     const [isCopied, setIsCopied] = useState(false);
-    const [isPaid, setIsPaid] = useState(false);
+    const [pagamentoConfirmado, setPagamentoConfirmado] = useState(false);
+    const [nomePagadorInformado, setNomePagadorInformado] = useState(false);
+    const [nomeCompletoPagador, setNomeCompletoPagador] = useState('');
+    const [saving, setSaving] = useState(false);
 
-    const timeLeft = useCountdown(pixData?.expiraEm);
-    const hasExpired = timeLeft.minutes === 0 && timeLeft.seconds === 0;
+    const timeLeft = useCountdown(pixData?.expiraEm, open);
+    const hasExpired = !pagamentoConfirmado && timeLeft.minutes === 0 && timeLeft.seconds === 0;
+    const chavePix = useMemo(() => (pixData?.copiaECola || '').trim(), [pixData?.copiaECola]);
 
-    let rawPixCode = pixData?.copiaECola || '';
-
-    rawPixCode = rawPixCode.replace(/^(http|https):\/\//, '');
-
-    // Efeito para verificar o status do pagamento (polling)
     useEffect(() => {
-        if (!open || !pixData || isPaid || hasExpired) return;
+        if (!open) {
+            setIsCopied(false);
+            setPagamentoConfirmado(false);
+            setNomePagadorInformado(false);
+            setNomeCompletoPagador('');
+            setSaving(false);
+            return;
+        }
+
+        setPagamentoConfirmado(Boolean(pixData?.pagamentoConfirmadoGateway));
+    }, [open, pixData?.pagamentoConfirmadoGateway]);
+
+    useEffect(() => {
+        if (!open || !pixData || pagamentoConfirmado || hasExpired) return;
 
         const interval = setInterval(async () => {
             try {
-                const { status } = await getAgendamentoStatus(pixData.agendamentoId);
-                if (status === 'PAGO') {
-                    setIsPaid(true);
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        onPaymentSuccess();
-                    }, 2000); // Espera 2 segundos na tela de sucesso antes de fechar
-                }
+                const status = await getAgendamentoStatus(pixData.agendamentoId);
+                setPagamentoConfirmado(Boolean(status.pagamentoConfirmadoGateway));
+                setNomePagadorInformado(Boolean(status.nomePagadorInformado));
             } catch (error) {
                 console.error("Erro ao verificar status do pagamento:", error);
             }
-        }, 5000); // Verifica a cada 5 segundos
+        }, 5000);
 
         return () => clearInterval(interval);
-    }, [open, pixData, onPaymentSuccess, isPaid, hasExpired]);
+    }, [open, pixData, pagamentoConfirmado, hasExpired]);
 
+    useEffect(() => {
+        if (!open || !pixData || !pagamentoConfirmado || nomePagadorInformado) return;
 
-    const handleCopy = () => {
-        if (rawPixCode) {
-            navigator.clipboard.writeText(rawPixCode);
-            setIsCopied(true);
-            message.success("Código Pix copiado!");
-            setTimeout(() => setIsCopied(false), 2000);
+        const syncStatus = async () => {
+            try {
+                const status = await getAgendamentoStatus(pixData.agendamentoId);
+                setNomePagadorInformado(Boolean(status.nomePagadorInformado));
+            } catch (error) {
+                console.error("Erro ao sincronizar status do pagador PIX:", error);
+            }
+        };
+
+        syncStatus();
+    }, [open, pixData, pagamentoConfirmado, nomePagadorInformado]);
+
+    const handleCopy = async () => {
+        if (!chavePix) return;
+        await navigator.clipboard.writeText(chavePix);
+        setIsCopied(true);
+        message.success("Chave Pix copiada.");
+        setTimeout(() => setIsCopied(false), 2000);
+    };
+
+    const handleInformarPagador = async () => {
+        if (!pixData || !nomeCompletoPagador.trim()) return;
+
+        setSaving(true);
+        try {
+            await informarPagadorPix(pixData.agendamentoId, nomeCompletoPagador.trim());
+            setNomePagadorInformado(true);
+            message.success("Nome do pagador enviado para a arena.");
+            setTimeout(() => {
+                onPaymentSuccess();
+            }, 1200);
+        } catch (error) {
+            message.error((error as Error).message || 'Não foi possível salvar o nome do pagador.');
+        } finally {
+            setSaving(false);
         }
     };
 
     const renderContent = () => {
-        if (isPaid) {
-            return <Result status="success" title="Pagamento Confirmado!" subTitle="Seu agendamento foi efetuado com sucesso." />;
+        if (nomePagadorInformado) {
+            return (
+                <Result
+                    status="success"
+                    title="Pagamento recebido"
+                    subTitle="O nome do pagador foi enviado. Agora a arena fará a conferência manual antes de marcar o agendamento como pago."
+                />
+            );
         }
-        if (hasExpired) {
-            return <Result status="warning" title="Pix Expirado" subTitle="O tempo para pagamento acabou. Por favor, gere um novo Pix para continuar." />;
-        }
 
-        const qrCodeValue = pixData?.qrCodeData;
-        const isBase64Image = qrCodeValue && qrCodeValue.startsWith('iVBORw');
-        return (
-            <Flex vertical align="center" gap="middle">
-                <Title level={4}>Pague com Pix para confirmar</Title>
-
-                {isBase64Image ? (
-                    // Se for imagem Base64 (encodedImage)
-                    <img
-                        src={`data:image/png;base64,${qrCodeValue}`}
-                        alt="QR Code Pix"
-                        width={200}
-                        height={200}
-                        style={{ border: '1px solid #ddd' }}
+        if (pagamentoConfirmado) {
+            return (
+                <Flex vertical gap="middle">
+                    <Result
+                        status="success"
+                        title="Pagamento confirmado pelo provedor"
+                        subTitle="Informe agora o nome completo de quem realizou o PIX para liberar a revisão manual da arena."
                     />
-                ) : (
-                    <QRCodeSVG value={rawPixCode} size={200} />
-                )}
 
-                <Paragraph strong>Expira em: {String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</Paragraph>
-                <Paragraph>Abra o app do seu banco e escaneie o código ou use o "Copia e Cola".</Paragraph>
-
-                <Input.Group compact style={{ width: '100%' }}>
-                    <Input
-                        style={{ width: 'calc(100% - 100px)' }}
-                        value={rawPixCode}
-                        readOnly
-                    />
-                    <Tooltip title={isCopied ? "Copiado!" : "Copiar código"}>
-                        <Button
-                            icon={isCopied ? <CheckOutlined /> : <CopyOutlined />}
-                            onClick={handleCopy}
-                            style={{ width: '100px' }}
+                    <Form layout="vertical">
+                        <Form.Item
+                            label="Nome completo de quem realizou o pagamento"
+                            required
                         >
-                            {isCopied ? "Copiado" : "Copiar"}
+                            <Input
+                                value={nomeCompletoPagador}
+                                onChange={(e) => setNomeCompletoPagador(e.target.value)}
+                                placeholder="Ex.: Maria Aparecida da Silva"
+                                maxLength={120}
+                            />
+                        </Form.Item>
+                        <Button
+                            type="primary"
+                            block
+                            onClick={handleInformarPagador}
+                            loading={saving}
+                            disabled={!nomeCompletoPagador.trim()}
+                        >
+                            Enviar nome do pagador
                         </Button>
-                    </Tooltip>
-                </Input.Group>
+                    </Form>
+                </Flex>
+            );
+        }
 
-                <Spin tip="Aguardando pagamento..."  />
+        if (hasExpired) {
+            return <Result status="warning" title="Prazo do pagamento expirado" subTitle="O bloqueio do horário venceu porque não houve confirmação do pagamento a tempo." />;
+        }
+
+        return (
+            <Flex vertical gap="middle">
+                <Title level={4} className="!mb-0">Pague com pix para confirmar o agendamento</Title>
+                <Paragraph className="!mb-0">
+                    O horário fica reservado por 30 minutos enquanto aguardamos a confirmação do pagamento.
+                </Paragraph>
+
+                <div className="rounded-lg border border-gray-200 p-4">
+                    <Text type="secondary">Tipo de chave</Text>
+                    <div className="font-semibold">
+                        {pixData?.tipoChavePix ? tipoChavePixLabel[pixData.tipoChavePix] : 'PIX'}
+                    </div>
+
+                    <Text type="secondary" className="!mt-3 !block">Chave Pix da arena</Text>
+                    <Input.Group compact>
+                        <Input value={chavePix} readOnly style={{ width: 'calc(100% - 112px)' }} />
+                        <Tooltip title={isCopied ? "Copiado!" : "Copiar chave"}>
+                            <Button
+                                icon={isCopied ? <CheckOutlined /> : <CopyOutlined />}
+                                onClick={handleCopy}
+                                style={{ width: 112 }}
+                            >
+                                {isCopied ? "Copiado" : "Copiar"}
+                            </Button>
+                        </Tooltip>
+                    </Input.Group>
+                </div>
+
+                <Paragraph strong className="!mb-0">
+                    Expira em: {String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
+                </Paragraph>
+                <Paragraph className="!mb-0">
+                    Após o webhook confirmar o pagamento, este modal liberará o campo para informar o nome completo de quem pagou.
+                </Paragraph>
+
+                <Flex align="center" gap="small">
+                    <Spin size="small" />
+                    <Text>Aguardando confirmação do pagamento...</Text>
+                </Flex>
             </Flex>
         );
-    }
+    };
 
     return (
         <Modal
             open={open}
             onCancel={onClose}
             footer={null}
-            closable={!isPaid}
-            maskClosable={!isPaid}
+            closable={!saving}
+            maskClosable={!saving}
+            destroyOnClose
         >
             {renderContent()}
         </Modal>

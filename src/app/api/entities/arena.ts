@@ -2,6 +2,7 @@ import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 
 export type StatusAssinatura = 'ATIVA' | 'INATIVA' | 'CANCELADA' | 'ATRASADA';
+export type TipoChavePix = "CPF" | "CNPJ" | "EMAIL" | "TELEFONE" | "ALEATORIA";
 export interface Arena {
     id: string;
     nome: string;
@@ -20,7 +21,7 @@ export interface Arena {
     };
     horasCancelarAgendamento: number;
     formaPagamento: "PIX" | "LOCAL" | "AMBOS" | null;
-    tipoChavePix: "CPF" | "CNPJ" | "EMAIL" | "TELEFONE" | "ALEATORIA" | null;
+    tipoChavePix: TipoChavePix | null;
     chavePix: string | null;
     descricao: string;
     urlFoto: string;
@@ -53,7 +54,7 @@ export interface ArenaCreate {
         longitude: number | null;
     };
     formaPagamento: "PIX" | "LOCAL" | "AMBOS" | null;
-    tipoChavePix: "CPF" | "CNPJ" | "EMAIL" | "TELEFONE" | "ALEATORIA" | null;
+    tipoChavePix: TipoChavePix | null;
     chavePix: string | null;
     descricao: string | null;
     urlFoto: string | null;
