@@ -13,7 +13,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { type AgendamentoArenaCardData, StatusAgendamentoArena, cancelarRecorrenciaArena } from '@/app/api/entities/agendamento';
-import { convertArrayOrStringDateToDatePortuguese } from '@/context/functions/convertDate';
+import { parseDateToLocal } from '@/context/functions/convertDate';
 import { normalizeTime } from '@/context/functions/normalizeTime';
 
 const { Title, Text } = Typography;
@@ -88,8 +88,8 @@ export const RecurrenceManagerDrawerArena = ({
             await onStatusChangeIndividual(agendamentoId, key as 'PAGO' | 'AUSENTE' | 'CANCELADO');
 
             if (agendamentoParaMensagem) {
-                const dataISO = convertArrayOrStringDateToDatePortuguese(agendamentoParaMensagem.dataAgendamento);
-                message.success(`Agendamento de ${format(dataISO, 'dd/MM')} atualizado.`);
+                const dateObj = parseDateToLocal(agendamentoParaMensagem.dataAgendamento);
+                message.success(`Agendamento de ${format(dateObj, 'dd/MM')} atualizado.`);
             }
 
         } catch (error) {
@@ -193,7 +193,7 @@ export const RecurrenceManagerDrawerArena = ({
                                     title={
                                         <Flex justify="space-between" align="center">
                                             <Text strong>
-                                                {format(convertArrayOrStringDateToDatePortuguese(item.dataAgendamento), 'EEEE, dd/MM/yyyy', { locale: ptBR }).charAt(0).toUpperCase() + format(convertArrayOrStringDateToDatePortuguese(item.dataAgendamento), 'EEEE, dd/MM/yyyy', { locale: ptBR }).slice(1)}
+                                                {format(parseDateToLocal(item.dataAgendamento), 'EEEE, dd/MM/yyyy', { locale: ptBR }).charAt(0).toUpperCase() + format(parseDateToLocal(item.dataAgendamento), 'EEEE, dd/MM/yyyy', { locale: ptBR }).slice(1)}
                                             </Text>
                                             <Text type="secondary">
                                                 {normalizeTime(item.horarioInicio)} - {normalizeTime(item.horarioFim)}

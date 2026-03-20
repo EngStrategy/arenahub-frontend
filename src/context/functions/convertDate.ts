@@ -1,9 +1,15 @@
-// Função auxiliar para converter [ano, mes, dia] em string ISO 'YYYY-MM-DD'
-export const convertArrayOrStringDateToDatePortuguese = (dataArray: Array<number> | string): string => {
-    if (typeof dataArray === 'string') {
-        return dataArray;
+export const parseDateToLocal = (dateInput: string | Array<number>): Date => {
+    if (Array.isArray(dateInput)) {
+        const [ano, mes, dia] = dateInput;
+        return new Date(ano, mes - 1, dia);
     }
-    
-    const [ano, mes, dia] = dataArray;
-    return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+    if (typeof dateInput === 'string') {
+        if (dateInput.includes('-') && dateInput.length <= 10) {
+            const [ano, mes, dia] = dateInput.split('-').map(Number);
+            return new Date(ano, mes - 1, dia);
+        }
+        const parsed = new Date(dateInput);
+        return Number.isNaN(parsed.getTime()) ? new Date() : new Date(parsed.getTime() + parsed.getTimezoneOffset() * 60000);
+    }
+    return new Date();
 };

@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons';
 import { useMemo } from "react";
 import { AgendamentoArenaCardData } from "@/app/api/entities/agendamento";
-import { convertArrayOrStringDateToDatePortuguese } from "@/context/functions/convertDate";
+import { parseDateToLocal } from "@/context/functions/convertDate";
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -84,18 +84,18 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
     ];
 
     // Função para formatar a data (dia, mês por extenso) para exibição
-    const formatarDataExtenso = (dataArray: string): string => {
+    const formatarDataExtenso = (dataArray: string | number[]): string => {
         if (!dataArray || (Array.isArray(dataArray) && dataArray.length < 3)) return 'Data Indisponível';
 
-        // 1. Converte a string ISO para Date e formata (usando date-fns)
-        const dateObj = convertArrayOrStringDateToDatePortuguese(dataArray)
+        // Analisa a data com segurança para a zona local
+        const dateObj = parseDateToLocal(dataArray);
 
         const formatted = format(dateObj, 'eee, dd/MM/yyyy', { locale: ptBR });
         return formatted.charAt(0).toUpperCase() + formatted.slice(1);
     };
 
     const renderTopAction = () => {
-        // Prioridade 2: Dropdown de Ações (para agendamentos individuais pendentes)
+        // Dropdown de Ações (para agendamentos individuais pendentes)
         if (agendamento.status === 'PENDENTE' && agendamento.tipoAgrupamento === 'NORMAL') {
             return (
                 <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>

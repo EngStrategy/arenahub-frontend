@@ -1,6 +1,6 @@
-# Alugai - Sistema de Agendamentos de Quadras Esportivas
+# ArenaHub - Sistema de Agendamentos de Quadras Esportivas
 
-Bem-vindo ao **Alugai**, um projeto Next.js desenvolvido para agendamentos de quadras esportivas. Construído com `create-next-app`, este aplicativo utiliza tecnologias web modernas para oferecer uma experiência fluida aos usuários. Este README fornece instruções claras para clonar, configurar e executar o projeto localmente, além de detalhes para contribuir e implantar.
+Bem-vindo ao **ArenaHub**, um projeto Next.js desenvolvido para agendamentos de quadras esportivas. Construído com `create-next-app`, este aplicativo utiliza tecnologias web modernas para oferecer uma experiência fluida aos usuários. Este README fornece instruções claras para clonar, configurar e executar o projeto localmente, além de detalhes para contribuir e implantar.
 
 ## Índice
 - [Pré-requisitos](#pré-requisitos)
@@ -25,17 +25,17 @@ Certifique-se de ter instalado:
 
 ## Primeiros Passos
 
-Siga estas etapas para configurar e executar o Alugai localmente.
+Siga estas etapas para configurar e executar o ArenaHub localmente.
 
 ### Clonando o Repositório
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/EngStrategy/alugai-frontend.git
+   git clone https://github.com/EngStrategy/arenahub-frontend.git
    ```
 2. Acesse o diretório do projeto:
    ```bash
-   cd alugai-front
+   cd arenahub-front
    ```
 
 ### Instalando Dependências
@@ -80,7 +80,7 @@ Inicie o servidor de desenvolvimento:
   bun dev
   ```
 
-Acesse [http://localhost:3000](http://localhost:3000) no seu navegador para ver o Alugai. O aplicativo atualiza automaticamente conforme você edita o código.
+Acesse [http://localhost:3000](http://localhost:3000) no seu navegador para ver o ArenaHub. O aplicativo atualiza automaticamente conforme você edita o código.
 
 ## Estrutura do Projeto
 
@@ -115,7 +115,7 @@ No diretório do projeto, você pode executar:
 
 ## Otimizações
 
-O Alugai inclui:
+O ArenaHub inclui:
 - **Fontes**: Otimizadas com [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) usando [Geist](https://vercel.com/font).
 - **App Router**: Melhora roteamento e desempenho.
 - **TypeScript**: Garante segurança de tipos e melhor experiência de desenvolvimento.
@@ -143,7 +143,7 @@ Certifique-se de que seu código segue os padrões do projeto e inclui testes.
 
 ## Implantação
 
-A maneira mais fácil de implantar o Alugai é com o [Vercel](https://vercel.com/):
+A maneira mais fácil de implantar o ArenaHub é com o [Vercel](https://vercel.com/):
 
 1. Envie o código para um repositório no GitHub.
 2. Importe o repositório no [Vercel Dashboard](https://vercel.com/new).

@@ -22,11 +22,11 @@ const planos = [
     {
         nome: "Mensal",
         priceId: priceIdMensal,
-        preco: "R$ 199,90",
+        preco: "R$ 89,90",
         periodo: "/mês",
         descricao: "Ideal para começar sem compromisso de longo prazo.",
         features: [
-            "Gerenciamento de até 2 quadras",
+            "Gerenciamento de quadras ilimitado",
             "Agenda online completa",
             "Relatórios básicos de agendamento",
             "Suporte via email"
@@ -36,12 +36,12 @@ const planos = [
     {
         nome: "Trimestral",
         priceId: priceIdTrimestral,
-        preco: "R$ 189,90",
+        preco: "R$ 79,90",
         periodo: "/mês",
         descricao: "O melhor custo-benefício para arenas em crescimento.",
-        economia: "Economize 5%",
+        economia: "Economize 11%",
         features: [
-            "Gerenciamento de até 3 quadras",
+            "Gerenciamento de quadras ilimitado",
             "Tudo do plano Mensal",
             "Relatórios financeiros avançados",
             "Suporte prioritário via WhatsApp"
@@ -51,10 +51,10 @@ const planos = [
     {
         nome: "Semestral",
         priceId: priceIdSemestral,
-        preco: "R$ 179,90",
+        preco: "R$ 69,90",
         periodo: "/mês",
         descricao: "Máxima economia para arenas estabelecidas.",
-        economia: "Economize 10%",
+        economia: "Economize 22%",
         features: [
             "Gerenciamento de quadras ilimitado",
             "Tudo do plano Trimestral",
@@ -101,7 +101,7 @@ export default function PlanosPage() {
                 <Paragraph className="!text-lg !max-w-2xl !mx-auto !text-gray-500">
                     Escolha o plano que melhor se adapta ao tamanho e às necessidades do seu negócio.
                 </Paragraph>
-                <Paragraph className="!font-bold !text-md !max-w-2xl !mx-auto !text-gray-500">
+                <Paragraph className="!font-bold !text-md !max-w-2xl !mx-auto !text-green-600">
                     Todos os planos incluem um período de teste gratuito de 30 dias. Cancele quando quiser.
                 </Paragraph>
             </div>
