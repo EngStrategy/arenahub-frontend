@@ -2,8 +2,8 @@
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { RegistroAtleta } from "@/components/RegistroAtleta";
-import { RegistroArena } from "@/components/RegistroArena";
+import { RegistroAtleta } from "./RegistroAtleta";
+import { RegistroArena } from "./RegistroArena";
 import Image from "next/image";
 import { Flex, Segmented, Typography } from "antd";
 import { useTheme } from "@/context/ThemeProvider";

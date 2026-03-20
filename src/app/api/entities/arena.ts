@@ -19,8 +19,8 @@ export interface Arena {
         longitude?: number | null;
     };
     horasCancelarAgendamento: number;
-    metodoPagamentoAceito: string;
-    tipoChavePix: "email" | "CPF" | "CNPJ" | "telefone" | null;
+    formaPagamento: "PIX" | "LOCAL" | "AMBOS" | null;
+    tipoChavePix: "CPF" | "CNPJ" | "EMAIL" | "TELEFONE" | "ALEATORIA" | null;
     chavePix: string | null;
     descricao: string;
     urlFoto: string;
@@ -52,8 +52,8 @@ export interface ArenaCreate {
         latitude: number | null;
         longitude: number | null;
     };
-    metodoPagamentoAceito: string | null;
-    tipoChavePix: "email" | "CPF" | "CNPJ" | "telefone" | null;
+    formaPagamento: "PIX" | "LOCAL" | "AMBOS" | null;
+    tipoChavePix: "CPF" | "CNPJ" | "EMAIL" | "TELEFONE" | "ALEATORIA" | null;
     chavePix: string | null;
     descricao: string | null;
     urlFoto: string | null;

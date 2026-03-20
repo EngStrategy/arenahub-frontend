@@ -3,50 +3,36 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Form,
-  Input,
-  Upload,
-  Avatar,
   App,
   Button,
-  Select,
-  Dropdown,
   Flex,
-  Col,
   Row,
   Card,
   Typography,
-  Checkbox,
   Space,
   type MenuProps,
   type GetProp,
   type UploadFile,
   type UploadProps,
-  InputNumber,
-  Alert,
+  Upload,
 } from "antd";
-import {
-  PictureOutlined,
-  UploadOutlined,
-  DeleteOutlined,
-  EditOutlined,
-} from "@ant-design/icons";
+import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import { ButtonPrimary } from "@/components/Buttons/ButtonPrimary";
 import { ButtonCancelar } from "@/components/Buttons/ButtonCancelar";
-import { validarCPF } from "@/context/functions/validarCPF";
-import { formatarCNPJ } from "@/context/functions/formatarCNPJ";
-import { formatarCPF } from "@/context/functions/formatarCPF";
 import ImgCrop from "antd-img-crop";
 import { getArenaById, updateArena, Arena } from "@/app/api/entities/arena";
 import { useRouter } from "next/navigation";
-import { formatarTelefone } from "@/context/functions/formatarTelefone";
-import { formatarCEP } from "@/context/functions/formatarCEP";
 import axios from "axios";
-import { Estados } from "@/data/Estados";
 import { useTheme } from "@/context/ThemeProvider";
 import { useAuth } from "@/context/hooks/use-auth";
-import { MapaInterativoBusca } from "@/components/Mapa/MapaInterativoBusca";
+
+import { InformacoesPessoaisArenaSkeleton } from "./components/InformacoesPessoaisArenaSkeleton";
+import { FotoArenaForm } from "./components/FotoArenaForm";
+import { DadosGeraisArenaForm } from "./components/DadosGeraisArenaForm";
+import { EnderecoArenaForm } from "./components/EnderecoArenaForm";
+import { ConfiguracaoArenaForm } from "./components/ConfiguracaoArenaForm";
+
 const { Text, Title } = Typography;
-const { Option } = Select;
 
 type CITYResponse = {
   id: number;
@@ -63,8 +49,8 @@ interface PersonalInfoFormValues {
   rua: string;
   numero: string;
   complemento?: string;
-  metodoPagamentoAceito: string;
-  tipoChavePix: "email" | "CPF" | "CNPJ" | "telefone" | null;
+  formaPagamento: "PIX" | "LOCAL" | "AMBOS" | null;
+  tipoChavePix: "CPF" | "CNPJ" | "EMAIL" | "TELEFONE" | "ALEATORIA" | null;
   chavePix: string | null;
   horasCancelarAgendamento: number;
   descricao: string;
@@ -98,77 +84,6 @@ const uploadToImgur = async (imageFile: File): Promise<string> => {
   return data.link;
 };
 
-const InformacoesPessoaisArenaSkeleton = () => (
-  <div className="px-4 sm:px-10 lg:px-40 flex-1 flex items-start justify-center my-6">
-    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl animate-pulse">
-      <div className="h-8 bg-gray-300 rounded w-1/2 mb-3"></div>
-      <div className="space-y-2">
-        <div className="h-4 bg-gray-300 rounded w-full"></div>
-        <div className="h-4 bg-gray-300 rounded w-5/6"></div>
-      </div>
-
-      <div className="mt-10 space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="h-16 w-16 bg-gray-300 rounded-full"></div>
-          <div className="flex-1 space-y-2">
-            <div className="h-4 bg-gray-300 rounded w-1/3"></div>
-            <div className="h-10 bg-gray-300 rounded-lg w-1/2"></div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-300 rounded-lg"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-300 rounded-lg"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-300 rounded-lg"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-300 rounded-lg"></div>
-            </div>
-          </div>
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-300 rounded-lg"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-300 rounded-lg"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-300 rounded-lg"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-300 rounded-lg"></div>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-          <div className="h-24 bg-gray-300 rounded-lg"></div>
-        </div>
-
-        <div className="flex justify-end gap-4 pt-4">
-          <div className="h-10 w-28 bg-gray-300 rounded-lg"></div>
-          <div className="h-10 w-40 bg-gray-300 rounded-lg"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
 export default function InformacoesPessoaisArena() {
   const {
     user,
@@ -190,9 +105,11 @@ export default function InformacoesPessoaisArena() {
   const [cities, setCities] = useState<CITYResponse[]>([]);
   const [fullAddress, setFullAddress] = useState("");
   const DEFAULT_AVATAR_URL = "https://i.imgur.com/p0hVrWq.png";
-  const [metodoPagamento, setMetodoPagamento] = useState<string | null>(null);
+  const [formaPagamento, setFormaPagamento] = useState<
+    "PIX" | "LOCAL" | "AMBOS" | null
+  >(null);
   const [tipoChavePix, setTipoChavePix] = useState<
-    "email" | "CPF" | "CNPJ" | "telefone" | null
+    "EMAIL" | "CPF" | "CNPJ" | "TELEFONE" | "ALEATORIA" | null
   >(null);
 
   const numero = Form.useWatch("numero", form);
@@ -201,7 +118,6 @@ export default function InformacoesPessoaisArena() {
   const cidade = Form.useWatch("cidade", form);
   const estado = Form.useWatch("estado", form);
 
-  // Lógica para montar o endereço completo
   useEffect(() => {
     if (rua && cidade && estado) {
       setFullAddress(
@@ -210,21 +126,20 @@ export default function InformacoesPessoaisArena() {
     }
   }, [rua, numero, bairro, cidade, estado]);
 
-  // Callback para atualizar a latitude e longitude no formulário
   const handleCoordinatesChange = useCallback(
     (lat: number, lng: number) => {
       form.setFieldsValue({
-        latitude: parseFloat(lat.toFixed(6)),
-        longitude: parseFloat(lng.toFixed(6)),
+        latitude: Number.parseFloat(lat.toFixed(6)),
+        longitude: Number.parseFloat(lng.toFixed(6)),
       });
-      setIsFormAltered(true); // Marca o formulário como alterado
+      setIsFormAltered(true); 
     },
     [form],
   );
 
   useEffect(() => {
     const estadoSelecionado = form.getFieldValue("estado");
-    if (estadoSelecionado === "0") {
+    if (estadoSelecionado === "0" || !estadoSelecionado) {
       return;
     }
     axios
@@ -234,7 +149,7 @@ export default function InformacoesPessoaisArena() {
       .then((response) => {
         setCities(response.data);
       });
-  }, [form.getFieldValue("estado")]);
+  }, [form.getFieldValue("estado"), estado]);
 
   const consultarCep = async (cep: string) => {
     message.loading("Consultando CEP...");
@@ -287,7 +202,7 @@ export default function InformacoesPessoaisArena() {
           complemento: userData.endereco?.complemento ?? "",
           descricao: userData.descricao ?? "",
           horasCancelarAgendamento: userData.horasCancelarAgendamento ?? 2,
-          metodoPagamentoAceito: userData.metodoPagamentoAceito ?? "",
+          formaPagamento: userData.formaPagamento ?? "",
           tipoChavePix: userData.tipoChavePix ?? null,
           chavePix: userData.chavePix ?? null,
           urlFoto: userData.urlFoto ?? null,
@@ -295,6 +210,8 @@ export default function InformacoesPessoaisArena() {
           longitude: initialLongitude,
         });
 
+        setFormaPagamento(userData.formaPagamento ?? null);
+        setTipoChavePix(userData.tipoChavePix ?? null);
         setImageUrl(userData.urlFoto ?? null);
         setSelectedFile(null);
         setIsFormAltered(false);
@@ -305,7 +222,7 @@ export default function InformacoesPessoaisArena() {
         setIsSubmitting(false);
       }
     }
-  }, [statusSession, user, form, message]);
+  }, [statusSession, user, form, message, isAuthenticated]);
 
   useEffect(() => {
     if (!isLoadingSession) {
@@ -314,7 +231,7 @@ export default function InformacoesPessoaisArena() {
         setIsPageLoading(false);
       });
     }
-  }, [statusSession, fetchAndSetUserData]);
+  }, [statusSession, fetchAndSetUserData, isLoadingSession]);
 
   const handlePreview = async (file: UploadFile) => {
     if (!file.url && !file.preview) {
@@ -398,7 +315,7 @@ export default function InformacoesPessoaisArena() {
           longitude: values.longitude,
         },
         horasCancelarAgendamento: values.horasCancelarAgendamento ?? 2,
-        metodoPagamentoAceito: values.metodoPagamentoAceito ?? "",
+        formaPagamento: values.formaPagamento ?? null,
         tipoChavePix: values.tipoChavePix ?? null,
         chavePix: values.chavePix ?? null,
         descricao: values.descricao ?? "",
@@ -435,7 +352,7 @@ export default function InformacoesPessoaisArena() {
         <ImgCrop rotationSlider>
           <Upload
             showUploadList={false}
-            beforeUpload={beforeUpload}
+            beforeUpload={beforeUpload as any}
             onChange={handleChange}
             maxCount={1}
             multiple={false}
@@ -506,480 +423,34 @@ export default function InformacoesPessoaisArena() {
           disabled={isPageLoading || isSubmitting || !isAuthenticated}
         >
           <Row gutter={[24, 24]} className="!gap-0">
-            <Col xs={24} md={12}>
-              <Form.Item label="Foto ou logomarca da arena" className="!mb-2">
-                <Flex align="center" gap="middle">
-                  <Dropdown
-                    menu={{ items: menuItems }}
-                    trigger={["click"]}
-                    placement="bottomLeft"
-                  >
-                    <div
-                      className="relative group cursor-pointer"
-                      title="Clique para alterar a foto"
-                    >
-                      <Avatar
-                        size={64}
-                        src={imageUrl ?? undefined}
-                        icon={<PictureOutlined />}
-                        className="flex-shrink-0"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300">
-                        <EditOutlined className="!text-white !text-xl !opacity-0 group-hover:!opacity-100 !transition-opacity !duration-300" />
-                      </div>
-                    </div>
-                  </Dropdown>
-                  <Flex vertical>
-                    <Typography.Text
-                      type="secondary"
-                      style={{ fontSize: "12px" }}
-                    >
-                      Recomendamos uma imagem quadrada para melhor visualização.
-                    </Typography.Text>
-                    <ImgCrop rotationSlider>
-                      <Upload
-                        showUploadList={false}
-                        beforeUpload={beforeUpload}
-                        onChange={handleChange}
-                        onPreview={handlePreview}
-                        maxCount={1}
-                        multiple={false}
-                        accept="image/jpeg,image/png"
-                        disabled={isSubmitting ?? !isAuthenticated}
-                      >
-                        {uploadButton}
-                      </Upload>
-                    </ImgCrop>
-                  </Flex>
-                </Flex>
-              </Form.Item>
-            </Col>
+            <FotoArenaForm
+               imageUrl={imageUrl}
+               menuItems={menuItems}
+               beforeUpload={beforeUpload as any}
+               handleChange={handleChange}
+               handlePreview={handlePreview as any}
+               isSubmitting={isSubmitting}
+               isAuthenticated={isAuthenticated}
+               uploadButton={uploadButton}
+            />
 
-            <Col xs={24} md={12}>
-              <Form.Item label="E-mail" name="email">
-                <Input name="email" disabled />
-              </Form.Item>
-            </Col>
+            <DadosGeraisArenaForm form={form} />
 
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Nome da Arena"
-                name="nome"
-                rules={[
-                  { required: true, message: "Insira o nome da sua arena" },
-                ]}
-              >
-                <Input placeholder="Insira o nome da sua arena" />
-              </Form.Item>
-            </Col>
+            <EnderecoArenaForm
+               form={form}
+               cities={cities}
+               consultarCep={consultarCep}
+               fullAddress={fullAddress}
+               handleCoordinatesChange={handleCoordinatesChange}
+            />
 
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Telefone"
-                name="telefone"
-                rules={[
-                  { required: true, message: "Insira seu telefone" },
-                  {
-                    validator: (_, value) => {
-                      if (!value) return Promise.resolve();
-                      const digits = value.replace(/\D/g, "");
-                      if (digits.length !== 11) {
-                        return Promise.reject(new Error("Telefone inválido"));
-                      }
-                      return Promise.resolve();
-                    },
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="(99) 99999-9999"
-                  onChange={(e) => {
-                    form.setFieldsValue({
-                      telefone: formatarTelefone(e.target.value),
-                    });
-                  }}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="CEP"
-                name="cep"
-                rules={[
-                  { required: true, message: "Insira o CEP da sua arena" },
-                  {
-                    validator: (_, value) => {
-                      if (!value) return Promise.resolve();
-                      const cep = value.replace(/\D/g, "");
-                      if (cep.length !== 8) {
-                        return Promise.reject(
-                          new Error("CEP deve ter 8 dígitos"),
-                        );
-                      }
-                      return Promise.resolve();
-                    },
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="Insira o CEP da sua arena"
-                  onChange={(e) => {
-                    form.setFieldsValue({ cep: formatarCEP(e.target.value) });
-                  }}
-                  onBlur={(e) => {
-                    consultarCep(e.target.value);
-                  }}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={12}>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label="Estado"
-                    name="estado"
-                    rules={[{ required: true, message: "Selecione o estado" }]}
-                  >
-                    <Select placeholder="Estado" options={Estados} />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    label="Cidade"
-                    name="cidade"
-                    rules={[{ required: true, message: "Selecione a cidade" }]}
-                  >
-                    <Select
-                      placeholder="Cidade"
-                      options={cities.map((city) => ({
-                        label: city.nome,
-                        value: city.nome,
-                        key: city.id,
-                      }))}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Col>
-
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Bairro"
-                name="bairro"
-                rules={[{ required: true, message: "Insira o bairro" }]}
-              >
-                <Input placeholder="Insira o bairro da sua arena" />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Rua"
-                name="rua"
-                rules={[{ required: true, message: "Insira a rua" }]}
-              >
-                <Input placeholder="Insira a rua da sua arena" />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Número"
-                name="numero"
-                rules={[{ required: true, message: "Insira o número" }]}
-              >
-                <Input placeholder="Nº" />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={12}>
-              <Form.Item label="Complemento (opcional)" name="complemento">
-                <Input placeholder="Ex: Bloco A, Apto 101" />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24}>
-              <div className="my-6">
-                <Title level={5}>Localização no Mapa</Title>
-                <Text type="secondary">
-                  O mapa busca a localização com base no endereço. Você pode
-                  arrastar o marcador para ajustar a posição exata, atualizando
-                  as coordenadas.
-                </Text>
-                <div className="mt-4">
-                  {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
-                    <MapaInterativoBusca
-                      apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-                      addressToSearch={fullAddress}
-                      onCoordinatesChange={handleCoordinatesChange}
-                      initialLat={form.getFieldValue("latitude")}
-                      initialLng={form.getFieldValue("longitude")}
-                    />
-                  ) : (
-                    <div style={{ margin: "16px 0" }}>
-                      <Alert
-                        message="Erro: Chave da API do Google Maps não encontrada."
-                        description="Por favor, contate o administrador do sistema para configurar a chave da API do Google Maps."
-                        type="error"
-                        showIcon
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Col>
-
-            {/* NOVO: Campos de Latitude e Longitude (Desabilitados) */}
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Latitude"
-                name="latitude"
-                rules={[
-                  {
-                    required: true,
-                    message: "As coordenadas são obrigatórias.",
-                  },
-                ]}
-              >
-                <Input placeholder="Selecione no mapa" disabled />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Longitude"
-                name="longitude"
-                rules={[
-                  {
-                    required: true,
-                    message: "As coordenadas são obrigatórias.",
-                  },
-                ]}
-              >
-                <Input placeholder="Selecione no mapa" disabled />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Política de Cancelamento"
-                name="horasCancelarAgendamento"
-                tooltip="Defina o prazo mínimo, em horas, que um atleta pode cancelar um agendamento sem custos."
-                rules={[
-                  { required: true, message: "Este campo é obrigatório." },
-                ]}
-                initialValue={2}
-                className="!mt-5"
-              >
-                <InputNumber
-                  min={1}
-                  max={168} // Máximo de 1 semana (7 * 24 = 168 horas)
-                  addonAfter="horas de antecedência"
-                  style={{ width: "100%" }}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Métodos de pagamento aceitos"
-                name="metodoPagamentoAceito"
-                tooltip="Indique quais métodos de pagamento sua arena aceita"
-                rules={[
-                  { required: true, message: "Este campo é obrigatório." },
-                ]}
-                className="!mt-5"
-              >
-                <Select
-                  placeholder="Selecione o método de pagamento"
-                  onChange={(value) => {
-                    setMetodoPagamento(value);
-                  }}
-                >
-                  <Option value="LOCAL">Somente no local</Option>
-                  <Option value="ARENAHUB">Somente pelo ArenaHub</Option>
-                  <Option value="AMBOS">Ambos</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-
-            {(metodoPagamento === "ARENAHUB" ||
-              metodoPagamento === "AMBOS") && (
-              <Col xs={24}>
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      label="Tipo de Chave Pix"
-                      name="tipoChavePix"
-                      rules={[
-                        {
-                          required: true,
-                          message: "Selecione o tipo de chave Pix",
-                        },
-                      ]}
-                    >
-                      <Select
-                        placeholder="Selecione o tipo"
-                        onChange={(value) => {
-                          setTipoChavePix(value);
-                          form.setFieldsValue({ chavePix: "" });
-                        }}
-                      >
-                        <Select.Option value="CPF">CPF</Select.Option>
-                        <Select.Option value="CNPJ">CNPJ</Select.Option>
-                        <Select.Option value="email">Email</Select.Option>
-                        <Select.Option value="telefone">Telefone</Select.Option>
-                      </Select>
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      label="Chave Pix"
-                      name="chavePix"
-                      rules={[
-                        { required: true, message: "Insira sua chave Pix" },
-                        {
-                          validator: (_, value) => {
-                            if (!value || !tipoChavePix)
-                              return Promise.resolve();
-
-                            const cleanValue = value.replace(/\D/g, "");
-
-                            if (tipoChavePix === "CPF") {
-                              if (!validarCPF(value)) {
-                                return Promise.reject(
-                                  new Error("CPF inválido!"),
-                                );
-                              }
-                            } else if (tipoChavePix === "CNPJ") {
-                              if (cleanValue.length !== 14) {
-                                return Promise.reject(
-                                  new Error("CNPJ deve ter 14 dígitos!"),
-                                );
-                              }
-                              let tamanho = cleanValue.length - 2;
-                              let numeros = cleanValue.substring(0, tamanho);
-                              const digitos = cleanValue.substring(tamanho);
-                              let soma = 0;
-                              let pos = tamanho - 7;
-                              for (let i = tamanho; i >= 1; i--) {
-                                soma +=
-                                  parseInt(numeros.charAt(tamanho - i)) * pos--;
-                                if (pos < 2) pos = 9;
-                              }
-                              let resultado =
-                                soma % 11 < 2 ? 0 : 11 - (soma % 11);
-                              if (resultado !== parseInt(digitos.charAt(0))) {
-                                return Promise.reject(
-                                  new Error("CNPJ inválido!"),
-                                );
-                              }
-                              tamanho = tamanho + 1;
-                              numeros = cleanValue.substring(0, tamanho);
-                              soma = 0;
-                              pos = tamanho - 7;
-                              for (let i = tamanho; i >= 1; i--) {
-                                soma +=
-                                  parseInt(numeros.charAt(tamanho - i)) * pos--;
-                                if (pos < 2) pos = 9;
-                              }
-                              resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-                              if (resultado !== parseInt(digitos.charAt(1))) {
-                                return Promise.reject(
-                                  new Error("CNPJ inválido!"),
-                                );
-                              }
-                            } else if (tipoChavePix === "email") {
-                              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                              if (!emailRegex.test(value)) {
-                                return Promise.reject(
-                                  new Error("Email inválido!"),
-                                );
-                              }
-                            } else if (tipoChavePix === "telefone") {
-                              if (cleanValue.length !== 11) {
-                                return Promise.reject(
-                                  new Error("Telefone inválido! (11 dígitos)"),
-                                );
-                              }
-                            }
-
-                            return Promise.resolve();
-                          },
-                        },
-                      ]}
-                      hasFeedback
-                    >
-                      {tipoChavePix === "CPF" && (
-                        <Input
-                          placeholder="000.000.000-00"
-                          onChange={(e) => {
-                            form.setFieldsValue({
-                              chavePix: formatarCPF(e.target.value),
-                            });
-                          }}
-                        />
-                      )}
-                      {tipoChavePix === "CNPJ" && (
-                        <Input
-                          placeholder="00.000.000/0000-00"
-                          onChange={(e) => {
-                            form.setFieldsValue({
-                              chavePix: formatarCNPJ(e.target.value),
-                            });
-                          }}
-                        />
-                      )}
-                      {tipoChavePix === "email" && (
-                        <Input
-                          placeholder="Insira seu email"
-                          onChange={(e) => {
-                            form.setFieldsValue({ chavePix: e.target.value });
-                          }}
-                        />
-                      )}
-                      {tipoChavePix === "telefone" && (
-                        <Input
-                          placeholder="(99) 99999-9999"
-                          onChange={(e) => {
-                            form.setFieldsValue({
-                              chavePix: formatarTelefone(e.target.value),
-                            });
-                          }}
-                        />
-                      )}
-                      {!tipoChavePix && (
-                        <Input
-                          placeholder="Selecione o tipo de chave acima"
-                          disabled
-                        />
-                      )}
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Col>
-            )}
-
-            <Col xs={24} md={12}>
-              <Form.Item
-                label="Descrição (opcional)"
-                name="descricao"
-                rules={[
-                  {
-                    max: 500,
-                    message: "A descrição deve ter no máximo 500 caracteres.",
-                  },
-                ]}
-              >
-                <Input.TextArea
-                  placeholder="Digite algo que descreva sua arena e ajude a atrair mais reservas"
-                  autoSize={{ minRows: 3, maxRows: 6 }}
-                  count={{ show: true, max: 500 }}
-                />
-              </Form.Item>
-            </Col>
+            <ConfiguracaoArenaForm
+               form={form}
+               formaPagamento={formaPagamento}
+               setFormaPagamento={setFormaPagamento}
+               tipoChavePix={tipoChavePix}
+               setTipoChavePix={setTipoChavePix}
+            />
           </Row>
 
           <Flex justify="end" className="mt-8">

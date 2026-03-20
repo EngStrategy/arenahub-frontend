@@ -204,7 +204,7 @@ const Navbar = () => {
         {session ? (
           <>
             <Flex vertical align="center" style={{ padding: '1.5rem 1rem' }}>
-              <Avatar size={64} src={user?.imageUrl} icon={<UserOutlined />} />
+              <Avatar size={64} src={user?.imageUrl || undefined} icon={<UserOutlined />} />
               <Text strong style={{ marginTop: '0.75rem', fontSize: '1.1rem' }}>
                 {user?.name?.split(' ').slice(0, 3).join(' ')}
               </Text>
@@ -385,7 +385,7 @@ const Navbar = () => {
                 overlayClassName="!mt-2 !w-50 !shadow-none !rounded-md"
               >
                 <Space style={{ cursor: 'pointer' }}>
-                  <Avatar size={32} src={user?.imageUrl} icon={<UserOutlined />} />
+                  <Avatar size={32} src={user?.imageUrl || undefined} icon={<UserOutlined />} />
                   <Text>{user?.name?.split(' ').slice(0, 2).join(' ')}</Text>
                   <FaAngleDown style={{ color: '#888' }} />
                 </Space>
