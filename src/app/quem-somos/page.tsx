@@ -115,9 +115,9 @@ const teamMembers = [
         name: 'Rian Lima',
         role: 'CTO & Co-fundador',
         bio: 'O arquiteto da nossa tecnologia. Garante que a plataforma seja rápida, segura e fácil de usar para todos.',
-        avatar: 'https://i.imgur.com/57QCyQb.jpeg',
+        avatar: 'https://i.ibb.co/DfkfLjjY/final.jpg',
         socials: {
-            linkedin: '#',
+            linkedin: 'https://www.linkedin.com/in/rianlimadev/',
             github: 'https://github.com/rlimapro',
         }
     },
