@@ -9,7 +9,7 @@ import {
 import { useMemo } from "react";
 import { AgendamentoArenaCardData } from "@/app/api/entities/agendamento";
 import { parseDateToLocal } from "@/context/functions/convertDate";
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const { Text, Title } = Typography;
@@ -50,6 +50,7 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
         AUSENTE: { color: 'warning', icon: <StopOutlined />, text: 'Ausente' },
         CANCELADO: { color: 'error', icon: <CloseCircleOutlined />, text: 'Cancelado' },
         FINALIZADO: { color: 'default', icon: <CheckCircleOutlined />, text: 'Finalizado' },
+        AGUARDANDO_CONFIRMACAO: { color: 'warning', icon: <ClockCircleOutlined />, text: 'Aguardando Confirmação' },
     }), []);
 
     const duracaoHoras = calcularDuracaoHoras(agendamento.horarioInicio, agendamento.horarioFim);
@@ -96,7 +97,7 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
 
     const renderTopAction = () => {
         // Dropdown de Ações (para agendamentos individuais pendentes)
-        if (agendamento.status === 'PENDENTE' && agendamento.tipoAgrupamento === 'NORMAL') {
+        if ((agendamento.status === 'PENDENTE' || agendamento.status === 'AGUARDANDO_CONFIRMACAO') && agendamento.tipoAgrupamento === 'NORMAL') {
             return (
                 <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>
                     <Button type="text" shape="circle" icon={<MoreOutlined />} />
