@@ -8,7 +8,6 @@ import { getAgendamentoStatus, confirmarPagamentoPix } from '@/app/api/entities/
 import type { PixPagamentoResponse } from '@/app/api/entities/agendamento';
 import { useAuth } from '@/context/hooks/use-auth';
 import { IoArrowBackOutline } from 'react-icons/io5';
-import Link from 'next/link';
 import { formatarTelefone } from '@/context/functions/formatarTelefone';
 
 const { Title, Paragraph, Text } = Typography;
@@ -53,12 +52,13 @@ export const ModalPix: React.FC<ModalPixProps> = ({ open, onClose, pixData, onPa
     const [isCopied, setIsCopied] = useState(false);
     const [isPaid, setIsPaid] = useState(false);
     const [isConfirming, setIsConfirming] = useState(false);
+    const [isConfirmExitOpen, setIsConfirmExitOpen] = useState(false);
     const { user } = useAuth();
 
     const [step, setStep] = useState<1 | 2>(1);
     const [formData, setFormData] = useState({
         nomeCompleto: user?.name || '',
-        telefone: (user as any)?.telefone || ''
+        telefone: user?.telefone || ''
     });
 
     const timeLeft = useCountdown(pixData?.expiraEm);
@@ -231,15 +231,42 @@ export const ModalPix: React.FC<ModalPixProps> = ({ open, onClose, pixData, onPa
         );
     }
 
+    const handleCloseAttempt = () => {
+        if (isPaid || hasExpired) {
+            onClose();
+            return;
+        }
+
+        setIsConfirmExitOpen(true);
+    };
+
+    const timeString = `${String(timeLeft.minutes).padStart(2, '0')}:${String(timeLeft.seconds).padStart(2, '0')}`;
+
     return (
-        <Modal
-            open={open}
-            onCancel={onClose}
-            footer={null}
-            closable={!isPaid}
-            maskClosable={!isPaid}
-        >
-            {renderContent()}
-        </Modal>
+        <>
+            <Modal
+                open={open}
+                onCancel={handleCloseAttempt}
+                footer={null}
+                closable={!isPaid}
+                maskClosable={false}
+            >
+                {renderContent()}
+            </Modal>
+            <Modal
+                title="Você tem certeza que deseja sair?"
+                open={isConfirmExitOpen}
+                onOk={() => {
+                    setIsConfirmExitOpen(false);
+                    onClose();
+                }}
+                onCancel={() => setIsConfirmExitOpen(false)}
+                okText="Sim, sair"
+                cancelText="Continuar no pagamento"
+                centered
+            >
+                <p>Caso você saia, o agendamento só será liberado novamente em <strong>{timeString}</strong>.</p>
+            </Modal>
+        </>
     );
 };

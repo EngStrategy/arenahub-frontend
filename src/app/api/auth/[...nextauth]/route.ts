@@ -14,6 +14,7 @@ declare module "next-auth" {
     imageUrl: string;
     statusAssinatura?: StatusAssinatura;
     cpfCnpj?: string;
+    telefone?: string;
   }
 }
 
@@ -58,6 +59,7 @@ const handler = NextAuth({
         token.picture = user.imageUrl;
         token.statusAssinatura = user.statusAssinatura;
         token.cpfCnpj = user.cpfCnpj;
+        token.telefone = user.telefone;
 
         const nowInSeconds = Math.floor(Date.now() / 1000);
         token.exp = nowInSeconds + user.expiresIn;
@@ -78,6 +80,7 @@ const handler = NextAuth({
         token.picture = updatePayload.picture as string;
         token.statusAssinatura = updatePayload.statusAssinatura as StatusAssinatura;
         token.cpfCnpj = updatePayload.cpfCnpj as string | undefined;
+        token.telefone = updatePayload.telefone as string | undefined;
 
         return token;
       }
@@ -95,6 +98,7 @@ const handler = NextAuth({
         session.user.imageUrl = token.picture as string;
         session.user.statusAssinatura = token.statusAssinatura as StatusAssinatura;
         session.user.cpfCnpj = token.cpfCnpj as string | undefined;
+        session.user.telefone = token.telefone as string | undefined;
       }
 
       return session;
