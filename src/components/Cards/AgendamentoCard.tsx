@@ -42,7 +42,7 @@ export type AgendamentoCardData = {
     endTime: string;
     valor: number;
     esporte: TipoQuadra;
-    status: "pendente" | "aceito" | "pago" | "cancelado" | "ausente" | "solicitado";
+    status: "pendente" | "aceito" | "pago" | "cancelado" | "ausente" | "solicitado" | "aguardando_confirmacao";
     numeroJogadoresNecessarios?: number;
     quadraName: string;
     arenaName: string;
@@ -73,6 +73,7 @@ const StatusTag = ({ status }: { status: AgendamentoCardData['status'] }) => {
         cancelado: { color: 'error', icon: <CloseCircleOutlined />, text: 'Cancelado' },
         ausente: { color: 'error', icon: <CloseCircleOutlined />, text: 'Ausente' },
         solicitado: { color: 'default', icon: <InfoCircleOutlined />, text: 'Solicitado' },
+        aguardando_confirmacao: { color: 'warning', icon: <ClockCircleOutlined />, text: 'Aguardando Confirmação' },
     };
     const currentStatus = statusMap[status] || statusMap.pendente;
     return <Tag icon={currentStatus.icon} color={currentStatus.color}>{currentStatus.text}</Tag>;
@@ -218,7 +219,7 @@ export function CardAgendamento({ agendamento, onCancel, onAvaliacaoSubmit, onGe
         }
 
         // === LÓGICA DE AÇÃO NORMAL (para agendamento individual ativo) ===
-        const isActionable = ['pendente', 'aceito', 'pago'].includes(agendamento.status);
+        const isActionable = ['pendente', 'aceito', 'pago', 'aguardando_confirmacao'].includes(agendamento.status);
 
         // Se o agendamento for cancelado ou ausente, não mostra ações.
         if (!isActionable) {

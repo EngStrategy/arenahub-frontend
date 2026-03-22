@@ -325,14 +325,7 @@ export default function MeusAgendamentosArena() {
         try {
             await updateStatusAgendamentoArena(agendamentoId, newStatus);
 
-            setAgendamentos(prevAgendamentos =>
-                prevAgendamentos.filter(ag => ag.id !== agendamentoId)
-            );
-
-            setPagination(prev => ({
-                ...prev,
-                totalElements: prev.totalElements > 0 ? prev.totalElements - 1 : 0
-            }));
+            fetchAgendamentos(pagination.currentPage, filters, view);
 
         } catch (error) {
             console.error("Falha ao atualizar status:", error);

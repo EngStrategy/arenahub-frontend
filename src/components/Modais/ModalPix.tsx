@@ -4,8 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Spin, Typography, Button, App, Result, Flex, Input, Tooltip } from 'antd';
 import { CopyOutlined, CheckOutlined } from '@ant-design/icons';
 import { QRCodeSVG } from 'qrcode.react';
-import { getAgendamentoStatus } from '@/app/api/entities/agendamento';
+import { getAgendamentoStatus, confirmarPagamentoPix } from '@/app/api/entities/agendamento';
 import type { PixPagamentoResponse } from '@/app/api/entities/agendamento';
+import { useAuth } from '@/context/hooks/use-auth';
+import { IoArrowBackOutline } from 'react-icons/io5';
+import { formatarTelefone } from '@/context/functions/formatarTelefone';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -48,6 +51,15 @@ export const ModalPix: React.FC<ModalPixProps> = ({ open, onClose, pixData, onPa
     const { message } = App.useApp();
     const [isCopied, setIsCopied] = useState(false);
     const [isPaid, setIsPaid] = useState(false);
+    const [isConfirming, setIsConfirming] = useState(false);
+    const [isConfirmExitOpen, setIsConfirmExitOpen] = useState(false);
+    const { user } = useAuth();
+
+    const [step, setStep] = useState<1 | 2>(1);
+    const [formData, setFormData] = useState({
+        nomeCompleto: user?.name || '',
+        telefone: user?.telefone || ''
+    });
 
     const timeLeft = useCountdown(pixData?.expiraEm);
     const hasExpired = timeLeft.minutes === 0 && timeLeft.seconds === 0;
@@ -63,12 +75,12 @@ export const ModalPix: React.FC<ModalPixProps> = ({ open, onClose, pixData, onPa
         const interval = setInterval(async () => {
             try {
                 const { status } = await getAgendamentoStatus(pixData.agendamentoId);
-                if (status === 'PAGO') {
+                if (status === 'PAGO' || status === 'AGUARDANDO_CONFIRMACAO') {
                     setIsPaid(true);
                     clearInterval(interval);
                     setTimeout(() => {
                         onPaymentSuccess();
-                    }, 2000); // Espera 2 segundos na tela de sucesso antes de fechar
+                    }, 3000); // Espera 3 segundos na tela de sucesso antes de fechar
                 }
             } catch (error) {
                 console.error("Erro ao verificar status do pagamento:", error);
@@ -88,12 +100,80 @@ export const ModalPix: React.FC<ModalPixProps> = ({ open, onClose, pixData, onPa
         }
     };
 
+    const handleConfirmarPagamento = async () => {
+        if (!pixData) return;
+        setIsConfirming(true);
+        try {
+            await confirmarPagamentoPix(pixData.agendamentoId, {
+                nomeCompleto: formData.nomeCompleto || "Não informado",
+                telefone: formData.telefone || "Não informado"
+            });
+            message.success("Comprovante enviado com sucesso!");
+            setIsPaid(true);
+            setTimeout(() => {
+                onPaymentSuccess();
+            }, 3000);
+        } catch (error) {
+            console.error("Erro ao confirmar pagamento:", error);
+            message.error("Não foi possível confirmar o pagamento. Tente novamente.");
+        } finally {
+            setIsConfirming(false);
+        }
+    };
+
     const renderContent = () => {
         if (isPaid) {
-            return <Result status="success" title="Pagamento Confirmado!" subTitle="Seu agendamento foi efetuado com sucesso." />;
+            return <Result status="success" title="Comprovante Enviado!" subTitle="Fique atento ao seu email. A Arena irá verificar o seu comprovante em breve." />;
         }
         if (hasExpired) {
             return <Result status="warning" title="Pix Expirado" subTitle="O tempo para pagamento acabou. Por favor, gere um novo Pix para continuar." />;
+        }
+
+        if (step === 2) {
+            return (
+                <Flex vertical justify="center" gap="middle" style={{ padding: '20px 0' }}>
+                    <Title level={4}>Dados do Pagador</Title>
+                    <Paragraph>Para garantir a segurança, informe os dados de quem realizou a transferência PIX.</Paragraph>
+                    <Input
+                        placeholder="Nome Completo"
+                        value={formData.nomeCompleto}
+                        onChange={e => setFormData({ ...formData, nomeCompleto: e.target.value })}
+                        size="large"
+                    />
+                    {/* <Input
+                        placeholder="Telefone de Contato"
+                        value={formData.telefone}
+                        onChange={e => setFormData({ ...formData, telefone: e.target.value })}
+                        size="large"
+                    /> */}
+                    <Input
+                        placeholder="Telefone de Contato"
+                        value={formData.telefone}
+                        onChange={(e) => {
+                            setFormData({ ...formData, telefone: formatarTelefone(e.target.value) });
+                        }}
+                        size="large"
+                    />
+                    <Button
+                        type="primary"
+                        size="large"
+                        onClick={handleConfirmarPagamento}
+                        loading={isConfirming}
+                        disabled={!formData.nomeCompleto || !formData.telefone}
+                        style={{ marginTop: '16px' }}
+                    >
+                        Confirmar Envio do Comprovante
+                    </Button>
+                    <Button
+                        onClick={() => setStep(1)}
+                        type='link'
+                        disabled={isConfirming}
+                        className="flex flex-row items-center justify-center gap-1 !text-green-600 hover:!underline"
+                    >
+                        <IoArrowBackOutline /> Voltar para o código PIX
+                    </Button>
+                </Flex>
+            );
         }
 
         const qrCodeValue = pixData?.qrCodeData;
@@ -135,20 +215,58 @@ export const ModalPix: React.FC<ModalPixProps> = ({ open, onClose, pixData, onPa
                     </Tooltip>
                 </Input.Group>
 
-                <Spin tip="Aguardando pagamento..."  />
+                <Flex vertical align="center" gap="small" style={{ width: '100%', marginTop: '16px' }}>
+                    <Button
+                        type="primary"
+                        size="large"
+                        block
+                        loading={isConfirming}
+                        onClick={() => setStep(2)}
+                    >
+                        Já realizei o pagamento
+                    </Button>
+                    <Spin tip="Aguardando confirmação automática..." size="small" style={{ marginTop: '12px' }} />
+                </Flex>
             </Flex>
         );
     }
 
+    const handleCloseAttempt = () => {
+        if (isPaid || hasExpired) {
+            onClose();
+            return;
+        }
+
+        setIsConfirmExitOpen(true);
+    };
+
+    const timeString = `${String(timeLeft.minutes).padStart(2, '0')}:${String(timeLeft.seconds).padStart(2, '0')}`;
+
     return (
-        <Modal
-            open={open}
-            onCancel={onClose}
-            footer={null}
-            closable={!isPaid}
-            maskClosable={!isPaid}
-        >
-            {renderContent()}
-        </Modal>
+        <>
+            <Modal
+                open={open}
+                onCancel={handleCloseAttempt}
+                footer={null}
+                closable={!isPaid}
+                maskClosable={false}
+            >
+                {renderContent()}
+            </Modal>
+            <Modal
+                title="Você tem certeza que deseja sair?"
+                open={isConfirmExitOpen}
+                onOk={() => {
+                    setIsConfirmExitOpen(false);
+                    onClose();
+                }}
+                onCancel={() => setIsConfirmExitOpen(false)}
+                okText="Sim, sair"
+                cancelText="Continuar no pagamento"
+                centered
+            >
+                <p>Caso você saia, o agendamento só será liberado novamente em <strong>{timeString}</strong>.</p>
+            </Modal>
+        </>
     );
 };

@@ -11,6 +11,7 @@ declare module "next-auth" {
       imageUrl: string;
       statusAssinatura?: 'ATIVA' | 'INATIVA' | 'CANCELADA' | 'ATRASADA';
       cpfCnpj?: string;
+      telefone?: string;
     };
   }
 }

@@ -19,7 +19,7 @@ import { useTheme } from '@/context/ThemeProvider';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { formatarMaterial } from '@/context/functions/formatarMaterial';
 import { ButtonPrimary } from '../Buttons/ButtonPrimary';
-// import { ModalPix } from '../Modais/ModalPix';
+import { ModalPix } from '../Modais/ModalPix';
 // import { useAuth } from '@/context/hooks/use-auth';
 // import { validarCPF } from '@/context/functions/validarCPF';
 // import { formatarCPF } from '@/context/functions/formatarCPF';
@@ -85,9 +85,9 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
     const [submitting, setSubmitting] = useState(false);
     const { isDarkMode } = useTheme();
 
-    // const [isPixModalOpen, setIsPixModalOpen] = useState(false);
-    // const [pixData, setPixData] = useState<PixPagamentoResponse | null>(null);
-    // const [pixLoading, setPixLoading] = useState(false);
+    const [isPixModalOpen, setIsPixModalOpen] = useState(false);
+    const [pixData, setPixData] = useState<PixPagamentoResponse | null>(null);
+    const [pixLoading, setPixLoading] = useState(false);
 
     const buildPayload = (values: any): AgendamentoCreate | null => {
         if (!quadraSelecionada) {
@@ -266,34 +266,34 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
         }
     };
 
-    // const handlePagarComPix = async () => {
-    //     try {
-    //         const values = await form.validateFields();
-    //         const payload = buildPayload(values);
-    //         if (!payload) return;
+    const handlePagarComPix = async () => {
+        const values = await form.validateFields();
+        const payload = buildPayload(values);
+        if (!payload) return;
 
-    //         setPixLoading(true);
-    //         const response = await criarPagamentoPix(payload);
-    //         setPixData(response);
-    //         setIsPixModalOpen(true);
-    //         onClose(); // Fecha o drawer para focar no modal
-    //     } catch (error) {
-    //         console.error("Falha ao gerar Pix:", error);
-    //         notification.error({
-    //             message: "Falha ao gerar Pix",
-    //             description: (error as Error).message,
-    //             duration: 10,
-    //         });
-    //     } finally {
-    //         setPixLoading(false);
-    //     }
-    // };
+        setPixLoading(true);
+        try {
+            const response = await criarPagamentoPix(payload);
+            setPixData(response);
+            setIsPixModalOpen(true);
+            onClose(); // Fecha o drawer para focar no modal
+        } catch (error) {
+            console.error("Falha ao gerar Pix:", error);
+            notification.error({
+                message: "Falha ao gerar Pix",
+                description: (error as Error).message,
+                duration: 10,
+            });
+        } finally {
+            setPixLoading(false);
+        }
+    };
 
-    // const handlePaymentSuccess = () => {
-    //     setIsPixModalOpen(false);
-    //     message.success("Pagamento confirmado! Seu agendamento está garantido.", 5);
-    //     router.push('/perfil/atleta/agendamentos?aba=historico');
-    // };
+    const handlePaymentSuccess = () => {
+        setIsPixModalOpen(false);
+        message.success("A arena receberá os dados em breve e garantirá a reserva.", 5);
+        router.push('/perfil/atleta/agendamentos');
+    };
 
     const renderResumoHorario = () => {
         if (!selectedHorarios || selectedHorarios.length === 0 || !quadraSelecionada) return null;
@@ -544,42 +544,40 @@ export const DrawerConfirmacaoReserva: React.FC<DrawerProps> = ({
                             </div>
 
                             <Flex vertical gap="small" className="mt-4">
-                                {/* <ButtonPrimary
-                                    text="Pagar com Pix"
-                                    onClick={handlePagarComPix}
-                                    className="w-full"
-                                    loading={pixLoading}
-                                    size='large'
-                                /> */}
-                                <ButtonPrimary
-                                    text={submitting ? 'Agendando...' : 'Pagar na Arena'}
-                                    onClick={() => form.submit()}
-                                    className="w-full"
-                                    loading={submitting}
-                                    size='large'
-                                />
+                                {(arena.formaPagamento === 'PIX' || arena.formaPagamento === 'AMBOS') && (
+                                    <ButtonPrimary
+                                        text={pixLoading ? 'Gerando QR Code...' : 'Pagar com Pix'}
+                                        onClick={handlePagarComPix}
+                                        className="w-full"
+                                        loading={pixLoading}
+                                        size='large'
+                                    />
+                                )}
+                                {(arena.formaPagamento === 'LOCAL' || arena.formaPagamento === 'AMBOS') && (
+                                    <ButtonPrimary
+                                        ghost
+                                        text={submitting ? 'Agendando...' : 'Pagar na Arena'}
+                                        onClick={() => form.submit()}
+                                        className="w-full"
+                                        loading={submitting}
+                                        size='large'
+                                        disabled={pixLoading}
+                                    />
+                                )}
                             </Flex>
-
-                            {/* <ButtonPrimary
-                            text={submitting ? 'Agendando...' : 'Confirmar agendamento'}
-                            htmlType="submit"
-                            className="w-full"
-                            loading={submitting}
-                            size='large'
-                        /> */}
                         </div>
                     </Form>
                 </div>
             </Drawer>
 
-            {/* {isPixModalOpen && pixData && (
+            {isPixModalOpen && pixData && (
                 <ModalPix
                     open={isPixModalOpen}
                     onClose={() => setIsPixModalOpen(false)}
                     pixData={pixData}
                     onPaymentSuccess={handlePaymentSuccess}
                 />
-            )} */}
+            )}
         </>
     );
 }
