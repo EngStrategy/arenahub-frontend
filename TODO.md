@@ -1,0 +1,1 @@
+- [ ] nome e telefone do organizador em participações

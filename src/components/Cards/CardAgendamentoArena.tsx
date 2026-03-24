@@ -4,7 +4,7 @@ import { Avatar, Card, Dropdown, MenuProps, Space, Tag, Typography, Button } fro
 import {
     UserOutlined, MoreOutlined, CalendarOutlined, ClockCircleOutlined,
     DollarCircleOutlined, CheckCircleOutlined, CloseCircleOutlined, StopOutlined,
-    InfoCircleOutlined
+    InfoCircleOutlined, WhatsAppOutlined
 } from '@ant-design/icons';
 import { useMemo } from "react";
 import { AgendamentoArenaCardData } from "@/app/api/entities/agendamento";
@@ -59,6 +59,14 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
 
     const handleMenuClick: MenuProps['onClick'] = async ({ key }) => {
         try {
+            if (key === 'WHATSAPP') {
+                const textoBase = encodeURIComponent(`Olá, ${agendamento.nomeAtleta}! Somos da arena. Referente ao agendamento na quadra ${agendamento.nomeQuadra}...`);
+                const telefoneLimpo = agendamento.telefoneAtleta?.replace(/\D/g, '') || '';
+                if (telefoneLimpo) {
+                    window.open(`https://wa.me/55${telefoneLimpo}?text=${textoBase}`, '_blank');
+                }
+                return;
+            }
             await onStatusChange(agendamento.id, key as 'PAGO' | 'AUSENTE' | 'CANCELADO');
         } catch (error) {
             console.error("Erro ao alterar o status do agendamento:", error);
@@ -66,6 +74,15 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
     };
 
     const menuItems: MenuProps['items'] = [
+        {
+            key: 'WHATSAPP',
+            label: 'Mandar mensagem no WhatsApp',
+            icon: <WhatsAppOutlined style={{ color: '#25D366' }} />,
+            disabled: !agendamento.telefoneAtleta
+        },
+        {
+            type: 'divider',
+        },
         {
             key: 'PAGO',
             label: 'Marcar como Pago',

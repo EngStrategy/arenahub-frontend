@@ -3,14 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/context/ThemeProvider';
+import Link from 'next/link';
 
 export default function SmartAppBanner() {
     const [isVisible, setIsVisible] = useState(false);
+    const [isIOS, setIsIOS] = useState(false);
     const { isDarkMode } = useTheme();
 
     useEffect(() => {
         // Verifica se é mobile (Android, iOS)
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const checkIsIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isMobile = checkIsIOS || /Android/i.test(navigator.userAgent);
+        setIsIOS(checkIsIOS);
 
         // Verifica se o usuário já fechou o banner nesta sessão
         const bannerClosed = sessionStorage.getItem('smartAppBannerClosed');
@@ -54,19 +58,32 @@ export default function SmartAppBanner() {
 
                         <div className="flex flex-col min-w-0">
                             <span className={`text-sm font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>ArenaHub - Atletas</span>
-                            <span className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Baixe o app oficial</span>
+                            <span className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                {isIOS ? 'Acesse a plataforma web' : 'Baixe o app oficial'}
+                            </span>
                         </div>
                     </div>
 
-                    <a
-                        href="https://github.com/EngStrategy/arenahub-frontend/releases/download/arenahub/ArenaHub.apk"
-                        download="ArenaHub.apk"
-                        onClick={handleClose}
-                        className="ml-3 shrink-0 !bg-green-600 hover:!bg-green-700 !text-white text-xs font-bold py-1.5 px-3 rounded-full 
-                            uppercase tracking-wide transition-colors"
-                    >
-                        Instalar
-                    </a>
+                    {isIOS ? (
+                        <Link
+                            href="/arenas"
+                            onClick={handleClose}
+                            className="ml-3 shrink-0 !bg-green-600 hover:!bg-green-700 !text-white text-xs font-bold py-1.5 px-3 rounded-full 
+                                uppercase tracking-wide transition-colors"
+                        >
+                            Acessar
+                        </Link>
+                    ) : (
+                        <a
+                            href="https://github.com/EngStrategy/arenahub-frontend/releases/download/arenahub/ArenaHub.apk"
+                            download="ArenaHub.apk"
+                            onClick={handleClose}
+                            className="ml-3 shrink-0 !bg-green-600 hover:!bg-green-700 !text-white text-xs font-bold py-1.5 px-3 rounded-full 
+                                uppercase tracking-wide transition-colors"
+                        >
+                            Instalar
+                        </a>
+                    )}
                 </motion.div>
             )}
         </AnimatePresence>
