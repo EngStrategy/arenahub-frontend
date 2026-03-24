@@ -42,7 +42,7 @@ export type AgendamentoCardData = {
     endTime: string;
     valor: number;
     esporte: TipoQuadra;
-    status: "pendente" | "aceito" | "pago" | "cancelado" | "ausente" | "solicitado" | "aguardando_confirmacao";
+    status: "pendente" | "aceito" | "pago" | "cancelado" | "ausente" | "solicitado" | "aguardando_confirmacao" | "aguardando_pagamento";
     numeroJogadoresNecessarios?: number;
     quadraName: string;
     arenaName: string;
@@ -74,6 +74,7 @@ const StatusTag = ({ status }: { status: AgendamentoCardData['status'] }) => {
         ausente: { color: 'error', icon: <CloseCircleOutlined />, text: 'Ausente' },
         solicitado: { color: 'default', icon: <InfoCircleOutlined />, text: 'Solicitado' },
         aguardando_confirmacao: { color: 'warning', icon: <ClockCircleOutlined />, text: 'Aguardando Confirmação' },
+        aguardando_pagamento: { color: 'warning', icon: <ClockCircleOutlined />, text: 'Aguardando Pagamento' },
     };
     const currentStatus = statusMap[status] || statusMap.pendente;
     return <Tag icon={currentStatus.icon} color={currentStatus.color}>{currentStatus.text}</Tag>;

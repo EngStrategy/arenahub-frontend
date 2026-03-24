@@ -49,7 +49,7 @@ export function Hero() {
                                             Sua arena aberta para reservas 24h por dia.
                                         </p>
                                         <p className={`mt-1 font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                                            Comece a usar o ArenaHub sem custo de implementação.
+                                            Comece a usar o ArenaHub com 30 dias grátis!
                                         </p>
                                     </div>
                                 </div>
@@ -58,7 +58,7 @@ export function Hero() {
 
                         {/* Botões de Ação */}
                         <div className="mt-8">
-                            <div className="flex flex-wrap items-center gap-4">
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
                                 <Link
                                     href="/registro?aba=arena"
                                     className="!inline-flex !items-center !gap-2 !px-8 !py-4 !rounded-full !bg-green-600 !text-white 
@@ -81,14 +81,26 @@ export function Hero() {
                                             ? '!border-gray-600 !text-gray-300 hover:!bg-gray-800'
                                             : '!border-gray-300 !text-gray-600 hover:!bg-gray-100'}`}
                                 >
-                                    Baixar App (Atletas)
+                                    App (Android)
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                                     </svg>
                                 </a>
+                                <Link
+                                    href="/arenas"
+                                    className={`!inline-flex !items-center !gap-2 !px-6 !py-3 !rounded-full !border !font-semibold !transition-all !duration-300 focus:!outline-none focus:!ring-2 focus:!ring-offset-2 focus:!ring-gray-500
+                                    ${isDarkMode
+                                            ? '!border-gray-600 !text-gray-300 hover:!bg-gray-800'
+                                            : '!border-gray-300 !text-gray-600 hover:!bg-gray-100'}`}
+                                >
+                                    Acesso Web (iOS)
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                </Link>
                             </div>
                             <div className={`mt-3 text-sm font-medium ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>
-                                ✨ Crie sua conta de Arena e ganhe 30 dias grátis!
+                                Crie sua conta de Arena e ganhe 30 dias grátis!
                             </div>
                         </div>
                     </div>

@@ -22,8 +22,12 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const [theme, setThemeState] = useState<string>(() => {
-        if (typeof window === 'undefined') return 'light';
-        return localStorage.getItem('theme') || 'system';
+        if (typeof window === 'undefined' || !window.localStorage) return 'light';
+        try {
+            return window.localStorage.getItem('theme') || 'system';
+        } catch {
+            return 'light';
+        }
     });
 
     const [mounted, setMounted] = useState(false);

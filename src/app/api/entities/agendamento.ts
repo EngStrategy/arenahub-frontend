@@ -69,6 +69,7 @@ export interface AgendamentoArenaCardData {
     nomeQuadra: string;
     nomeAtleta: string;
     urlFotoAtleta?: string;
+    telefoneAtleta?: string;
     agendamentoFixoId?: number;
     tipoAgrupamento?: 'NORMAL' | 'FIXO_GRUPO';
 }

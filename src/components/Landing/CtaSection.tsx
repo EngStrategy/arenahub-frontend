@@ -44,8 +44,14 @@ export function Cta() {
                             download="ArenaHub.apk"
                             className="!inline-flex !items-center !px-6 !py-3 !rounded-full !border-2 !border-white/70 !text-white font-semibold hover:!bg-white/10 hover:!border-white !transition-colors !duration-300 focus:!outline-none focus:!ring-2 focus:!ring-offset-2 focus:!ring-white"
                         >
-                            Sou Atleta (Baixar App)
+                            App (Android)
                         </a>
+                        <Link
+                            href="/arenas"
+                            className="!inline-flex !items-center !px-6 !py-3 !rounded-full !border-2 !border-white/70 !text-white font-semibold hover:!bg-white/10 hover:!border-white !transition-colors !duration-300 focus:!outline-none focus:!ring-2 focus:!ring-offset-2 focus:!ring-white"
+                        >
+                            Acesso Web (iOS)
+                        </Link>
                     </div>
                 </motion.div>
             </div>

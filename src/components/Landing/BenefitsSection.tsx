@@ -118,6 +118,33 @@ export function Benefits() {
                                         <span><strong>Comunidade:</strong> Encontre jogos e junte-se a outros atletas.</span>
                                     </li>
                                 </ul>
+                                <div className="mt-8 w-full flex flex-col gap-3">
+                                    <a
+                                        href="https://github.com/EngStrategy/arenahub-frontend/releases/download/arenahub/ArenaHub.apk"
+                                        download="ArenaHub.apk"
+                                        className={`!flex !items-center !justify-center !gap-2 !w-full !px-8 !py-3 !rounded-lg !border-2 !font-semibold !transition-all !duration-300 focus:!outline-none focus:!ring-2 focus:!ring-offset-2
+                                        ${isDarkMode
+                                                ? '!border-gray-600 !text-gray-300 hover:!bg-gray-800 focus:!ring-gray-600'
+                                                : '!border-gray-300 !text-gray-600 hover:!bg-gray-100 focus:!ring-gray-300'}`}
+                                    >
+                                        App (Android)
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                                        </svg>
+                                    </a>
+                                    <Link
+                                        href="/arenas"
+                                        className={`!flex !items-center !justify-center !gap-2 !w-full !px-8 !py-3 !rounded-lg !border-2 !font-semibold !transition-all !duration-300 focus:!outline-none focus:!ring-2 focus:!ring-offset-2
+                                        ${isDarkMode
+                                                ? '!border-gray-600 !text-gray-300 hover:!bg-gray-800 focus:!ring-gray-600'
+                                                : '!border-gray-300 !text-gray-600 hover:!bg-gray-100 focus:!ring-gray-300'}`}
+                                    >
+                                        Acesso Web (iOS)
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </Link>
+                                </div>
                             </Flex>
                         </Card>
                     </motion.div>

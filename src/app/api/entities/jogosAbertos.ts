@@ -32,7 +32,7 @@ export const getAllJogosAbertos = async (
     params: JogosAbertosQueryParams = {}
 ): Promise<httpRequests.PaginatedResponse<JogosAbertos>> => {
     return httpRequests.getMethod<httpRequests.PaginatedResponse<JogosAbertos>>(
-        `${URLS.JOGOS_ABERTOS}`, 
+        `${URLS.JOGOS_ABERTOS}`,
         params
     );
 };
@@ -48,9 +48,9 @@ export const solicitarEntrada = async (agendamentoId: number): Promise<void> => 
 // Aceitar ou recusar entrada em um jogo aberto
 export const aceitarOuRecusarEntrada = async (solicitacaoId: number, aceitar: boolean): Promise<void> => {
     const url = `${URLS.JOGOS_ABERTOS}/solicitacoes/${solicitacaoId}`;
-    
+
     const payload = {
-        aceitar: aceitar 
+        aceitar: aceitar
     };
 
     console.log(`PATCH para ${url}. JSON enviado:`, payload);
