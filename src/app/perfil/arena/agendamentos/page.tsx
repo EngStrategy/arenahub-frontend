@@ -14,10 +14,10 @@ import {
     cancelarRecorrenciaArena,
     type AgendamentoArena,
     type AgendamentoArenaQueryParams,
-    type StatusAgendamentoArena,
     type AgendamentoArenaCardData,
     updateStatusAgendamentoArena,
-    listarAgendamentosFixosFilhosArena
+    listarAgendamentosFixosFilhosArena,
+    type FormaPagamento
 } from '@/app/api/entities/agendamento';
 import {
     getAllQuadras,
@@ -321,9 +321,9 @@ export default function MeusAgendamentosArena() {
         handleLimparFiltros();
     };
 
-    const handleStatusChange = async (agendamentoId: number, newStatus: 'PAGO' | 'AUSENTE' | 'CANCELADO') => {
+    const handleStatusChange = async (agendamentoId: number, newStatus: 'PAGO' | 'AUSENTE' | 'CANCELADO', formaPagamento?: FormaPagamento) => {
         try {
-            await updateStatusAgendamentoArena(agendamentoId, newStatus);
+            await updateStatusAgendamentoArena(agendamentoId, newStatus, formaPagamento);
 
             setAgendamentos(prevAgendamentos =>
                 prevAgendamentos.filter(ag => ag.id !== agendamentoId)

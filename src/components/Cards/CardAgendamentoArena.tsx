@@ -7,7 +7,7 @@ import {
     InfoCircleOutlined
 } from '@ant-design/icons';
 import { useMemo } from "react";
-import { AgendamentoArenaCardData } from "@/app/api/entities/agendamento";
+import { AgendamentoArenaCardData, FormaPagamento } from "@/app/api/entities/agendamento";
 import { parseDateToLocal } from "@/context/functions/convertDate";
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -17,7 +17,7 @@ const { Text, Title } = Typography;
 
 interface CardAgendamentoArenaProps {
     agendamento: AgendamentoArenaCardData;
-    onStatusChange: (agendamentoId: number, newStatus: 'PAGO' | 'AUSENTE' | 'CANCELADO') => Promise<void>;
+    onStatusChange: (agendamentoId: number, newStatus: 'PAGO' | 'AUSENTE' | 'CANCELADO', formaPagamento?: FormaPagamento) => Promise<void>;
     onGerenciarFixo?: () => void;
 }
 
@@ -52,13 +52,26 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
         FINALIZADO: { color: 'default', icon: <CheckCircleOutlined />, text: 'Finalizado' },
     }), []);
 
+    const formaPagamentoText: Record<string, string> = {
+        'PIX': 'Pix',
+        'DINHEIRO': 'Dinheiro',
+        'CARTAO_CREDITO': 'Cartão de Crédito',
+        'CARTAO_DEBITO': 'Cartão de Débito',
+        'OUTROS': 'Outros'
+    };
+
     const duracaoHoras = calcularDuracaoHoras(agendamento.horarioInicio, agendamento.horarioFim);
 
     const currentStatus = statusConfig[agendamento.status] || statusConfig.PENDENTE;
 
     const handleMenuClick: MenuProps['onClick'] = async ({ key }) => {
         try {
-            await onStatusChange(agendamento.id, key as 'PAGO' | 'AUSENTE' | 'CANCELADO');
+            if (key.startsWith('PAGO_')) {
+                const formaPagamento = key.replace('PAGO_', '') as FormaPagamento;
+                await onStatusChange(agendamento.id, 'PAGO', formaPagamento);
+            } else {
+                await onStatusChange(agendamento.id, key as 'AUSENTE' | 'CANCELADO');
+            }
         } catch (error) {
             console.error("Erro ao alterar o status do agendamento:", error);
         }
@@ -68,6 +81,13 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
         {
             key: 'PAGO',
             label: 'Marcar como Pago',
+            children: [
+                { key: 'PAGO_PIX', label: 'Pix' },
+                { key: 'PAGO_DINHEIRO', label: 'Dinheiro' },
+                { key: 'PAGO_CARTAO_CREDITO', label: 'Cartão de Crédito' },
+                { key: 'PAGO_CARTAO_DEBITO', label: 'Cartão de Débito' },
+                { key: 'PAGO_OUTROS', label: 'Outros' },
+            ]
         },
         {
             key: 'AUSENTE',
@@ -150,6 +170,7 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
             <div className="flex justify-between mt-4 pt-3 border-t border-gray-200">
                 <Tag icon={currentStatus.icon} color={currentStatus.color} className="!text-sm !py-1 !px-2">
                     {currentStatus.text}
+                    {agendamento.status === 'PAGO' && agendamento.formaPagamento && ` (${formaPagamentoText[agendamento.formaPagamento?.toUpperCase()] || agendamento.formaPagamento})`}
                 </Tag>
                 {
                     agendamento.tipoAgrupamento === 'FIXO_GRUPO' && (
