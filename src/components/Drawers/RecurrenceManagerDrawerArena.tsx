@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { type AgendamentoArenaCardData, StatusAgendamentoArena, cancelarRecorrenciaArena } from '@/app/api/entities/agendamento';
+import { type AgendamentoArenaCardData, StatusAgendamentoArena, cancelarRecorrenciaArena, FormaPagamento } from '@/app/api/entities/agendamento';
 import { parseDateToLocal } from '@/context/functions/convertDate';
 import { normalizeTime } from '@/context/functions/normalizeTime';
 
@@ -31,7 +31,7 @@ interface RecurrenceManagerDrawerArenaProps {
     onClose: () => void;
     agendamentoFixo: AgendamentoArenaMestre;
     onCancelFixo: (agendamentoFixoId: number) => Promise<void>;
-    onStatusChangeIndividual: (agendamentoId: number, newStatus: 'PAGO' | 'AUSENTE' | 'CANCELADO') => Promise<void>;
+    onStatusChangeIndividual: (agendamentoId: number, newStatus: 'PAGO' | 'AUSENTE' | 'CANCELADO', formaPagamento?: FormaPagamento) => Promise<void>;
     agendamentosFilhos: AgendamentoArenaCardData[];
     loadingFilhos: boolean;
 }
@@ -42,6 +42,14 @@ const statusConfig: Record<StatusAgendamentoArena, { color: string, icon: React.
     AUSENTE: { color: 'warning', icon: <StopOutlined />, text: 'Ausente' },
     CANCELADO: { color: 'error', icon: <CloseCircleOutlined />, text: 'Cancelado' },
     FINALIZADO: { color: 'default', icon: <CheckCircleOutlined />, text: 'Finalizado' },
+};
+
+const formaPagamentoText: Record<string, string> = {
+    'PIX': 'Pix',
+    'DINHEIRO': 'Dinheiro',
+    'CARTAO_CREDITO': 'Cartão de Crédito',
+    'CARTAO_DEBITO': 'Cartão de Débito',
+    'OUTROS': 'Outros'
 };
 
 
@@ -85,7 +93,12 @@ export const RecurrenceManagerDrawerArena = ({
         const agendamentoParaMensagem = agendamentosFilhos.find(item => item.id === agendamentoId);
 
         try {
-            await onStatusChangeIndividual(agendamentoId, key as 'PAGO' | 'AUSENTE' | 'CANCELADO');
+            if (key.startsWith('PAGO_')) {
+                const formaPagamento = key.replace('PAGO_', '') as FormaPagamento;
+                await onStatusChangeIndividual(agendamentoId, 'PAGO', formaPagamento);
+            } else {
+                await onStatusChangeIndividual(agendamentoId, key as 'AUSENTE' | 'CANCELADO');
+            }
 
             if (agendamentoParaMensagem) {
                 const dateObj = parseDateToLocal(agendamentoParaMensagem.dataAgendamento);
@@ -110,7 +123,17 @@ export const RecurrenceManagerDrawerArena = ({
 
     const renderActions = (item: AgendamentoArenaCardData) => {
         const menuItems: MenuProps['items'] = [
-            { key: 'PAGO', label: 'Marcar como Pago' },
+            {
+                key: 'PAGO',
+                label: 'Marcar como Pago',
+                children: [
+                    { key: 'PAGO_PIX', label: 'Pix' },
+                    { key: 'PAGO_DINHEIRO', label: 'Dinheiro' },
+                    { key: 'PAGO_CARTAO_CREDITO', label: 'Cartão de Crédito' },
+                    { key: 'PAGO_CARTAO_DEBITO', label: 'Cartão de Débito' },
+                    { key: 'PAGO_OUTROS', label: 'Outros' },
+                ]
+            },
             { key: 'AUSENTE', label: 'Marcar como Ausente' },
             { type: 'divider' },
             { key: 'CANCELADO', label: 'Cancelar Individual', danger: true },
@@ -202,7 +225,10 @@ export const RecurrenceManagerDrawerArena = ({
                                     }
                                     description={
                                         <Flex justify="space-between" align="center">
-                                            <Tag icon={config.icon} color={config.color}>{config.text}</Tag>
+                                            <Tag icon={config.icon} color={config.color}>
+                                                {config.text}
+                                                {item.status === 'PAGO' && item.formaPagamento && ` (${formaPagamentoText[item.formaPagamento?.toUpperCase()] || item.formaPagamento})`}
+                                            </Tag>
                                             <Text strong>
                                                 {item.valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                             </Text>
