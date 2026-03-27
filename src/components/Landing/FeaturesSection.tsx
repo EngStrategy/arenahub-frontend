@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, Typography } from 'antd';
-import { Search, LayoutDashboard, Globe, Shuffle, Star, Bell } from 'lucide-react';
+import { Search, LayoutDashboard, Globe, Shuffle, Star, Bell, QrCode } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from "@/context/ThemeProvider";
 
@@ -44,6 +44,12 @@ const features = [
         bgColor: "bg-indigo-100",
         title: "Notificações em Tempo Real",
         description: "Receba lembretes dos seus jogos e alertas sobre novas oportunidades na plataforma."
+    },
+    {
+        icon: <QrCode size={28} className="text-emerald-500" />,
+        bgColor: "bg-emerald-100",
+        title: "Pagamentos com PIX",
+        description: "Receba dos seus clientes diretamente via PIX com baixa automática, de forma segura e rápida."
     }
 ];
 

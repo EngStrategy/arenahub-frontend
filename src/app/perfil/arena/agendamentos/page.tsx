@@ -167,11 +167,8 @@ export default function MeusAgendamentosArena() {
         if (!isAuthenticated) return;
         setLoadingAgendamentos(true);
 
-        let statusParam: StatusAgendamentoArena | undefined = undefined;
+        let statusParam: StatusAgendamentoArena | undefined = statusForView[currentView];
 
-        if (currentView === 'historico') {
-            statusParam = statusForView[currentView];
-        }
         try {
             const params: AgendamentoArenaQueryParams = {
                 page: page - 1,
@@ -273,8 +270,10 @@ export default function MeusAgendamentosArena() {
             }));
 
             filhosMapeados.sort((a, b) => {
-                const dateA = new Date(a.dataAgendamento[0], a.dataAgendamento[1] - 1, a.dataAgendamento[2]).getTime();
-                const dateB = new Date(b.dataAgendamento[0], b.dataAgendamento[1] - 1, b.dataAgendamento[2]).getTime();
+                const dataA = a.dataAgendamento as any;
+                const dataB = b.dataAgendamento as any;
+                const dateA = new Date(dataA[0], dataA[1] - 1, dataA[2]).getTime();
+                const dateB = new Date(dataB[0], dataB[1] - 1, dataB[2]).getTime();
                 return dateA - dateB;
             });
 
@@ -325,14 +324,7 @@ export default function MeusAgendamentosArena() {
         try {
             await updateStatusAgendamentoArena(agendamentoId, newStatus, formaPagamento);
 
-            setAgendamentos(prevAgendamentos =>
-                prevAgendamentos.filter(ag => ag.id !== agendamentoId)
-            );
-
-            setPagination(prev => ({
-                ...prev,
-                totalElements: prev.totalElements > 0 ? prev.totalElements - 1 : 0
-            }));
+            fetchAgendamentos(pagination.currentPage, filters, view);
 
         } catch (error) {
             console.error("Falha ao atualizar status:", error);

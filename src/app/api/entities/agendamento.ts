@@ -2,7 +2,7 @@ import * as httpRequests from "../common/api_requests";
 import { URLS } from "../common/endpoints";
 import { TipoQuadra } from "./quadra";
 
-export type StatusAgendamento = "PENDENTE" | "AUSENTE" | "CANCELADO" | "PAGO" | "ACEITO" | "RECUSADO" | "FINALIZADO" | "AGUARDANDO_PAGAMENTO";
+export type StatusAgendamento = "PENDENTE" | "AUSENTE" | "CANCELADO" | "PAGO" | "ACEITO" | "RECUSADO" | "FINALIZADO" | "AGUARDANDO_PAGAMENTO" | "BLOQUEADO" | "AGUARDANDO_CONFIRMACAO";
 
 export type PeriodoAgendamentoFixo = "UM_MES" | "TRES_MESES" | "SEIS_MESES";
 
@@ -70,6 +70,7 @@ export interface AgendamentoArenaCardData {
     nomeQuadra: string;
     nomeAtleta: string;
     urlFotoAtleta?: string;
+    telefoneAtleta?: string;
     agendamentoFixoId?: number;
     tipoAgrupamento?: 'NORMAL' | 'FIXO_GRUPO';
 }
@@ -177,8 +178,18 @@ export const criarPagamentoPix = async (
     agendamentoData: AgendamentoCreate
 ): Promise<PixPagamentoResponse> => {
     return httpRequests.postMethod<PixPagamentoResponse>(
-        `${URLS.AGENDAMENTOS}/criar-pagamento-pix`,
+        `${URLS.AGENDAMENTOS}/bloquear`,
         agendamentoData
+    );
+};
+
+export const confirmarPagamentoPix = async (
+    agendamentoId: number,
+    data: { nomeCompleto: string; telefone: string }
+): Promise<{ message: string }> => {
+    return httpRequests.postMethod<{ message: string }>(
+        `${URLS.AGENDAMENTOS}/${agendamentoId}/confirmar-pix`,
+        data
     );
 };
 
@@ -192,7 +203,7 @@ export const getAgendamentoStatus = async (
 
 // ================================== Agendamentos Arena ==================================
 
-export type StatusAgendamentoArena = "PENDENTE" | "PAGO" | "CANCELADO" | "AUSENTE" | "FINALIZADO";
+export type StatusAgendamentoArena = "PENDENTE" | "PAGO" | "CANCELADO" | "AUSENTE" | "FINALIZADO" | "AGUARDANDO_CONFIRMACAO";
 
 export type FormaPagamento = "PIX" | "DINHEIRO" | "CARTAO_CREDITO" | "CARTAO_DEBITO" | "OUTROS";
 

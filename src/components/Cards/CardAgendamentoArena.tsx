@@ -4,12 +4,12 @@ import { Avatar, Card, Dropdown, MenuProps, Space, Tag, Typography, Button } fro
 import {
     UserOutlined, MoreOutlined, CalendarOutlined, ClockCircleOutlined,
     DollarCircleOutlined, CheckCircleOutlined, CloseCircleOutlined, StopOutlined,
-    InfoCircleOutlined
+    InfoCircleOutlined, WhatsAppOutlined
 } from '@ant-design/icons';
 import { useMemo } from "react";
 import { AgendamentoArenaCardData, FormaPagamento } from "@/app/api/entities/agendamento";
 import { parseDateToLocal } from "@/context/functions/convertDate";
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const { Text, Title } = Typography;
@@ -50,6 +50,7 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
         AUSENTE: { color: 'warning', icon: <StopOutlined />, text: 'Ausente' },
         CANCELADO: { color: 'error', icon: <CloseCircleOutlined />, text: 'Cancelado' },
         FINALIZADO: { color: 'default', icon: <CheckCircleOutlined />, text: 'Finalizado' },
+        AGUARDANDO_CONFIRMACAO: { color: 'warning', icon: <ClockCircleOutlined />, text: 'Aguardando Confirmação' },
     }), []);
 
     const formaPagamentoText: Record<string, string> = {
@@ -66,18 +67,37 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
 
     const handleMenuClick: MenuProps['onClick'] = async ({ key }) => {
         try {
+            if (key === 'WHATSAPP') {
+                const textoBase = encodeURIComponent(`Olá, ${agendamento.nomeAtleta}! Somos da arena. Referente ao agendamento na quadra ${agendamento.nomeQuadra}...`);
+                const telefoneLimpo = agendamento.telefoneAtleta?.replace(/\D/g, '') || '';
+                if (telefoneLimpo) {
+                    window.open(`https://wa.me/55${telefoneLimpo}?text=${textoBase}`, '_blank');
+                }
+                return;
+            }
+
             if (key.startsWith('PAGO_')) {
                 const formaPagamento = key.replace('PAGO_', '') as FormaPagamento;
                 await onStatusChange(agendamento.id, 'PAGO', formaPagamento);
             } else {
                 await onStatusChange(agendamento.id, key as 'AUSENTE' | 'CANCELADO');
             }
+
         } catch (error) {
             console.error("Erro ao alterar o status do agendamento:", error);
         }
     };
 
     const menuItems: MenuProps['items'] = [
+        {
+            key: 'WHATSAPP',
+            label: 'Mandar mensagem no WhatsApp',
+            icon: <WhatsAppOutlined style={{ color: '#25D366' }} />,
+            disabled: !agendamento.telefoneAtleta
+        },
+        {
+            type: 'divider',
+        },
         {
             key: 'PAGO',
             label: 'Marcar como Pago',
@@ -116,7 +136,7 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
 
     const renderTopAction = () => {
         // Dropdown de Ações (para agendamentos individuais pendentes)
-        if (agendamento.status === 'PENDENTE' && agendamento.tipoAgrupamento === 'NORMAL') {
+        if ((agendamento.status === 'PENDENTE' || agendamento.status === 'AGUARDANDO_CONFIRMACAO') && agendamento.tipoAgrupamento === 'NORMAL') {
             return (
                 <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} trigger={['click']}>
                     <Button type="text" shape="circle" icon={<MoreOutlined />} />

@@ -16,7 +16,7 @@ interface ButtonPrimaryProps {
     readonly icon?: React.ReactNode;
     readonly href?: string;
     readonly target?: string;
-    readonly rel?: string;    
+    readonly rel?: string;
     readonly onClick?: () => void;
 }
 
@@ -37,14 +37,14 @@ export function ButtonPrimary(
         href,
         target,
         rel,
-        onClick = () => {},
+        onClick = () => { },
     }: ButtonPrimaryProps
 ) {
     return (
         <Button
             type={type}
             htmlType={htmlType}
-            className={`bg-green-primary hover:!bg-green-500 !border-0 !shadow-none ${className} ${ghost ? 'hover:!text-white' : ''}`}
+            className={`bg-green-primary hover:!bg-green-800 !border-0 !shadow-none ${className} ${ghost ? 'hover:!text-white ' : ''}`}
             disabled={disabled}
             loading={loading}
             danger={danger}
