@@ -66,6 +66,7 @@ export interface AgendamentoArenaCardData {
     horarioFim: string;
     valorTotal: number;
     status: StatusAgendamentoArena;
+    formaPagamento?: FormaPagamento;
     nomeQuadra: string;
     nomeAtleta: string;
     urlFotoAtleta?: string;
@@ -204,6 +205,8 @@ export const getAgendamentoStatus = async (
 
 export type StatusAgendamentoArena = "PENDENTE" | "PAGO" | "CANCELADO" | "AUSENTE" | "FINALIZADO" | "AGUARDANDO_CONFIRMACAO";
 
+export type FormaPagamento = "PIX" | "DINHEIRO" | "CARTAO_CREDITO" | "CARTAO_DEBITO" | "OUTROS";
+
 export type AgendamentoArenaQueryParams = {
     page?: number;
     size?: number;
@@ -222,6 +225,7 @@ export type AgendamentoArena = {
     horarioFim: string;
     valorTotal: number;
     status: StatusAgendamentoArena;
+    formaPagamento?: FormaPagamento;
     vagasDisponiveis: number;
     esporte: TipoQuadra;
     quadraId: number;
@@ -283,9 +287,11 @@ export const getAllAgendamentosArena = async (
 
 export const updateStatusAgendamentoArena = async (
     agendamentoId: number,
-    status: StatusAgendamentoArena
+    status: StatusAgendamentoArena,
+    formaPagamento?: FormaPagamento
 ): Promise<void> => {
-    return httpRequests.patchMethod(`${URLS.ARENAAGENDAMENTOS}/${agendamentoId}/status`, { status });
+    const payload = formaPagamento ? { status, formaPagamento } : { status };
+    return httpRequests.patchMethod(`${URLS.ARENAAGENDAMENTOS}/${agendamentoId}/status`, payload);
 }
 
 export const getAgendamentosPendentesResolucao = async (): Promise<AgendamentoArena[]> => {
