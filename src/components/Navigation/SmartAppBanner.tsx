@@ -75,7 +75,7 @@ export default function SmartAppBanner() {
                         </Link>
                     ) : (
                         <a
-                            href="https://github.com/EngStrategy/arenahub-frontend/releases/download/arenahub/ArenaHub.apk"
+                            href="https://github.com/EngStrategy/arenahub-frontend/releases/download/arenahub_1.1/ArenaHub.apk"
                             download="ArenaHub.apk"
                             onClick={handleClose}
                             className="ml-3 shrink-0 !bg-green-600 hover:!bg-green-700 !text-white text-xs font-bold py-1.5 px-3 rounded-full 

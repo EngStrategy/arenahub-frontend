@@ -120,7 +120,7 @@ export function Benefits() {
                                 </ul>
                                 <div className="mt-8 w-full flex flex-col gap-3">
                                     <a
-                                        href="https://github.com/EngStrategy/arenahub-frontend/releases/download/arenahub/ArenaHub.apk"
+                                        href="https://github.com/EngStrategy/arenahub-frontend/releases/download/arenahub_1.1/ArenaHub.apk"
                                         download="ArenaHub.apk"
                                         className={`!flex !items-center !justify-center !gap-2 !w-full !px-8 !py-3 !rounded-lg !border-2 !font-semibold !transition-all !duration-300 focus:!outline-none focus:!ring-2 focus:!ring-offset-2
                                         ${isDarkMode
