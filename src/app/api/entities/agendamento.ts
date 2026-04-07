@@ -203,7 +203,7 @@ export const getAgendamentoStatus = async (
 
 // ================================== Agendamentos Arena ==================================
 
-export type StatusAgendamentoArena = "PENDENTE" | "PAGO" | "CANCELADO" | "AUSENTE" | "FINALIZADO" | "AGUARDANDO_CONFIRMACAO";
+export type StatusAgendamentoArena = "PENDENTE" | "PAGO" | "CANCELADO" | "AUSENTE" | "FINALIZADO" | "AGUARDANDO_CONFIRMACAO" | "AGUARDANDO_PAGAMENTO";
 
 export type FormaPagamento = "PIX" | "DINHEIRO" | "CARTAO_CREDITO" | "CARTAO_DEBITO" | "OUTROS";
 

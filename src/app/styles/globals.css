@@ -141,3 +141,17 @@ body {
 .animate-fadeIn {
   animation: fadeIn 2s ease-out forwards;
 }
+
+@media (max-width: 768px) {
+  .mobile-centered-submenu {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 80% !important;
+    max-width: 300px !important;
+    margin: 0 !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+  }
+}

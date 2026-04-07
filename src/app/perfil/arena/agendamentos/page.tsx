@@ -17,7 +17,8 @@ import {
     type AgendamentoArenaCardData,
     updateStatusAgendamentoArena,
     listarAgendamentosFixosFilhosArena,
-    type FormaPagamento
+    type FormaPagamento,
+    StatusAgendamentoArena
 } from '@/app/api/entities/agendamento';
 import {
     getAllQuadras,
@@ -88,8 +89,8 @@ const AgendamentosArenaSkeleton = () => (
 
 type ArenaView = 'ativos' | 'historico';
 
-const statusForView: Record<ArenaView, StatusAgendamentoArena> = {
-    ativos: 'PENDENTE',
+const statusForView: Record<ArenaView, StatusAgendamentoArena | undefined> = {
+    ativos: undefined,
     historico: 'FINALIZADO',
 };
 

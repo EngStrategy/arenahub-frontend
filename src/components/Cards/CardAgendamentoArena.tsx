@@ -51,6 +51,7 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
         CANCELADO: { color: 'error', icon: <CloseCircleOutlined />, text: 'Cancelado' },
         FINALIZADO: { color: 'default', icon: <CheckCircleOutlined />, text: 'Finalizado' },
         AGUARDANDO_CONFIRMACAO: { color: 'warning', icon: <ClockCircleOutlined />, text: 'Aguardando Confirmação' },
+        AGUARDANDO_PAGAMENTO: { color: 'warning', icon: <DollarCircleOutlined />, text: 'Aguardando Pagamento' },
     }), []);
 
     const formaPagamentoText: Record<string, string> = {
@@ -101,6 +102,7 @@ export const CardAgendamentoArena = ({ agendamento, onStatusChange, onGerenciarF
         {
             key: 'PAGO',
             label: 'Marcar como Pago',
+            popupClassName: 'mobile-centered-submenu',
             children: [
                 { key: 'PAGO_PIX', label: 'Pix' },
                 { key: 'PAGO_DINHEIRO', label: 'Dinheiro' },
