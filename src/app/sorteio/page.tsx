@@ -6,7 +6,6 @@ import {
     Typography,
     Form,
     Input,
-    Button,
     List,
     Avatar,
     Flex,
@@ -15,26 +14,24 @@ import {
     InputNumber,
     Row,
     Col,
-    Empty,
-    Rate,
     Tag
 } from 'antd';
-import { UserOutlined, DeleteOutlined, TeamOutlined, ShakeOutlined } from '@ant-design/icons';
+import { UserOutlined, TeamOutlined, ShakeOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/context/ThemeProvider';
 import { ButtonPrimary } from '@/components/Buttons/ButtonPrimary';
 import { useRef, useState } from 'react';
 import { SorteadorPageSkeleton } from './skeleton';
 import { useAuth } from '@/context/hooks/use-auth';
+import axios from 'axios';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
-type Jogador = {
-    id: number;
+type TimeSorteado = {
     nome: string;
-    urlFoto?: string;
-    nivel: number;
+    jogadores: string[];
 };
 
 const containerVariants = {
@@ -42,7 +39,7 @@ const containerVariants = {
     visible: {
         opacity: 1,
         transition: {
-            staggerChildren: 0.5, // Atraso entre o aparecimento de cada card de time
+            staggerChildren: 0.3,
         },
     },
 };
@@ -55,21 +52,6 @@ const cardVariants = {
     },
 };
 
-const playerListVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.8, // Atraso entre o aparecimento de cada jogador na lista
-        },
-    },
-}
-
-const playerItemVariants = {
-    hidden: { x: -20, opacity: 0 },
-    visible: { x: 0, opacity: 1 },
-};
-
 export default function SorteadorDeTimesPage() {
     const { message } = App.useApp();
     const [form] = Form.useForm();
@@ -77,57 +59,32 @@ export default function SorteadorDeTimesPage() {
     const resultsRef = useRef<HTMLDivElement>(null);
     const { isLoadingSession } = useAuth();
 
-    const [jogadores, setJogadores] = useState<Jogador[]>([]);
-    const [numeroDeTimes, setNumeroDeTimes] = useState<number>(2);
-    const [timesSorteados, setTimesSorteados] = useState<Jogador[][]>([]);
+    const [timesSorteados, setTimesSorteados] = useState<TimeSorteado[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleAdicionarJogador = (values: { nome: string; nivel: number }) => {
-        if (!values.nome) return;
-        const novoJogador: Jogador = {
-            id: Date.now(),
-            nome: values.nome,
-            nivel: values.nivel,
-            urlFoto: `https://api.dicebear.com/7.x/miniavs/svg?seed=${values.nome}`
-        };
-
-        setJogadores(prev => [...prev, novoJogador]);
-        form.resetFields();
-    };
-
-    const handleRemoverJogador = (id: number) => {
-        setJogadores(prev => prev.filter(j => j.id !== id));
-    };
-
-    const handleSortearTimes = () => {
-        if (jogadores.length < numeroDeTimes) {
-            message.error(`São necessários pelo menos ${numeroDeTimes} jogadores para formar ${numeroDeTimes} times.`);
-            return;
-        }
-
+    const handleSortearTimes = async (values: { listaRacha: string; quantidadeTimes: number }) => {
         setIsSubmitting(true);
         setTimesSorteados([]);
 
-        setTimeout(() => {
-            const jogadoresOrdenados = [...jogadores].sort((a, b) => b.nivel - a.nivel);
-            const novosTimes: Jogador[][] = Array.from({ length: numeroDeTimes }, () => []);
-            const forcaDosTimes: number[] = new Array(numeroDeTimes).fill(0);
+        try {
+            const response = await axios.post('/api/gerar-sorteio', values);
 
-            jogadoresOrdenados.forEach(jogador => {
-                const timeComMenorForcaIndex = forcaDosTimes.indexOf(Math.min(...forcaDosTimes));
-                novosTimes[timeComMenorForcaIndex].push(jogador);
-                forcaDosTimes[timeComMenorForcaIndex] += jogador.nivel;
-            });
+            if (response.data && response.data.times) {
+                setTimesSorteados(response.data.times);
+                message.success('Times sorteados com sucesso pela IA!');
 
-            setTimesSorteados(novosTimes);
+                setTimeout(() => {
+                    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            } else {
+                message.error('Erro ao processar o sorteio. Resposta inválida da IA.');
+            }
+        } catch (error: any) {
+            console.error('Erro ao sortear times:', error);
+            message.error(error.response?.data?.error || 'Erro ao conectar com a IA.');
+        } finally {
             setIsSubmitting(false);
-            message.success('Times balanceados com sucesso!');
-
-            setTimeout(() => {
-                resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-
-        }, 1000);
+        }
     };
 
     if (isLoadingSession) {
@@ -141,75 +98,54 @@ export default function SorteadorDeTimesPage() {
     return (
         <Content className={`!px-4 sm:!px-10 lg:!px-40 !pb-20 !py-8 flex-1 ${isDarkMode ? 'bg-dark-mode' : 'bg-light-mode'}`}>
             <div className="max-w-4xl mx-auto">
-                <Title level={2} className="!text-center">Sorteador de Times</Title>
+                <Title level={2} className="!text-center">Sorteador de Times com IA</Title>
                 <Text type="secondary" className="block text-center mb-8">
-                    Adicione os jogadores com seus respectivos níveis para formar times equilibrados.
+                    Cole a lista do seu racha e deixe a IA dividir os times de forma equilibrada.
                 </Text>
 
-                <Row gutter={[32, 32]}>
-                    <Col xs={24} md={12}>
-                        <Card title="1. Adicionar Jogadores">
-                            <Form form={form} layout="vertical" onFinish={handleAdicionarJogador} initialValues={{ nivel: 3 }}>
-                                <Form.Item name="nome" rules={[{ required: true, message: 'O nome do jogador é obrigatório' }]}>
-                                    <Input placeholder="Nome do Jogador" size="large" />
-                                </Form.Item>
-                                <Form.Item name="nivel" label="Nível do Jogador" rules={[{ required: true, message: 'O nível é obrigatório' }]}>
-                                    <Rate count={5} />
-                                </Form.Item>
-                                <Button type="primary" htmlType="submit" block size="large">
-                                    Adicionar Jogador
-                                </Button>
-                            </Form>
-                            <Divider />
-                            <Title level={5}>Jogadores na Lista ({jogadores.length})</Title>
-                            <List
-                                itemLayout="horizontal"
-                                dataSource={jogadores}
-                                renderItem={(jogador) => (
-                                    <List.Item
-                                        actions={[<Button key={jogador.id} type="text" danger icon={<DeleteOutlined />} onClick={() => handleRemoverJogador(jogador.id)} />]}
-                                    >
-                                        <List.Item.Meta
-                                            avatar={<Avatar src={jogador.urlFoto} icon={<UserOutlined />} />}
-                                            title={
-                                                <Flex align="center" gap="middle">
-                                                    <Text>{jogador.nome}</Text>
-                                                    <Rate disabled value={jogador.nivel} style={{ fontSize: 14 }} />
-                                                </Flex>
-                                            }
-                                        />
-                                    </List.Item>
-                                )}
-                                locale={{ emptyText: <Empty description="Nenhum jogador adicionado" /> }}
+                <Card className="shadow-md">
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        onFinish={handleSortearTimes}
+                        initialValues={{ quantidadeTimes: 2 }}
+                    >
+                        <Form.Item
+                            name="listaRacha"
+                            label="Lista do Racha"
+                            rules={[{ required: true, message: 'Insira a lista de jogadores' }]}
+                        >
+                            <TextArea
+                                placeholder="Cole aqui a lista de jogadores..."
+                                rows={8}
+                                size="large"
                             />
-                        </Card>
-                    </Col>
-                    <Col xs={24} md={12}>
-                        <Card title="2. Configurar e Sortear">
-                            <Form layout="vertical">
-                                <Form.Item label="Quantos times você quer formar?">
-                                    <InputNumber
-                                        min={2}
-                                        max={jogadores.length || 2}
-                                        value={numeroDeTimes}
-                                        onChange={(value) => setNumeroDeTimes(value || 2)}
-                                        size="large"
-                                        className="w-full"
-                                    />
-                                </Form.Item>
-                                <ButtonPrimary
-                                    text={isSubmitting ? "Sorteando..." : "Sortear Times"}
-                                    icon={<ShakeOutlined />}
-                                    onClick={handleSortearTimes}
-                                    block
-                                    size="large"
-                                    disabled={jogadores.length < numeroDeTimes || isSubmitting}
-                                    loading={isSubmitting}
-                                />
-                            </Form>
-                        </Card>
-                    </Col>
-                </Row>
+                        </Form.Item>
+
+                        <Form.Item
+                            name="quantidadeTimes"
+                            label="Quantidade de Times"
+                            rules={[{ required: true, message: 'Informe a quantidade de times' }]}
+                        >
+                            <InputNumber
+                                min={2}
+                                max={50}
+                                size="large"
+                                className="w-full"
+                            />
+                        </Form.Item>
+
+                        <ButtonPrimary
+                            text={isSubmitting ? "Sorteando com IA..." : "Sortear com IA"}
+                            icon={<ShakeOutlined />}
+                            htmlType="submit"
+                            block
+                            size="large"
+                            disabled={isSubmitting}
+                            loading={isSubmitting}
+                        />
+                    </Form>
+                </Card>
 
                 <div ref={resultsRef}>
                     <AnimatePresence>
@@ -217,38 +153,38 @@ export default function SorteadorDeTimesPage() {
                             <motion.div
                                 initial="hidden"
                                 animate="visible"
-                                variants={containerVariants} // Animação do container dos cards
+                                variants={containerVariants}
                                 className="mt-8"
                             >
                                 <Divider><Title level={3}>Times Sorteados</Title></Divider>
                                 <Row gutter={[16, 16]}>
-                                    {timesSorteados.map((time, index) => {
-                                        const forcaTotal = time.reduce((acc, jogador) => acc + jogador.nivel, 0);
-                                        return (
-                                            <Col key={index} xs={24} sm={12} md={timesSorteados.length > 2 ? 8 : 12}>
-                                                <motion.div variants={cardVariants}>
-                                                    <Card title={<><TeamOutlined className="mr-2" /> Time {index + 1} <Tag color="blue">Força: {forcaTotal}</Tag></>}>
-                                                        <motion.div initial="hidden" animate="visible" variants={playerListVariants}>
-                                                            <List
-                                                                dataSource={time}
-                                                                renderItem={jogador => (
-                                                                    <motion.div variants={playerItemVariants}>
-                                                                        <List.Item>
-                                                                            <List.Item.Meta
-                                                                                avatar={<Avatar src={jogador.urlFoto} icon={<UserOutlined />} />}
-                                                                                title={jogador.nome}
-                                                                                description={<Rate disabled value={jogador.nivel} style={{ fontSize: 12 }} />}
-                                                                            />
-                                                                        </List.Item>
-                                                                    </motion.div>
-                                                                )}
-                                                            />
-                                                        </motion.div>
-                                                    </Card>
-                                                </motion.div>
-                                            </Col>
-                                        )
-                                    })}
+                                    {timesSorteados.map((time, index) => (
+                                        <Col key={index} xs={24} sm={12} md={timesSorteados.length > 2 ? 8 : 12}>
+                                            <motion.div variants={cardVariants}>
+                                                <Card
+                                                    title={
+                                                        <Flex align="center" justify="space-between">
+                                                            <span><TeamOutlined className="mr-2" /> {time.nome}</span>
+                                                            <Tag color="blue">{time.jogadores.length} Jogadores</Tag>
+                                                        </Flex>
+                                                    }
+                                                    className="h-full shadow-sm"
+                                                >
+                                                    <List
+                                                        dataSource={time.jogadores}
+                                                        renderItem={jogador => (
+                                                            <List.Item>
+                                                                <List.Item.Meta
+                                                                    avatar={<Avatar icon={<UserOutlined />} />}
+                                                                    title={jogador}
+                                                                />
+                                                            </List.Item>
+                                                        )}
+                                                    />
+                                                </Card>
+                                            </motion.div>
+                                        </Col>
+                                    ))}
                                 </Row>
                             </motion.div>
                         )}

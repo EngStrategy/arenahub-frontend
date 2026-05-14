@@ -20,7 +20,12 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icons/logo_arenahub_icone.svg",
   },
-  keywords: ["arenahub", "aluguel de quadras", "alugar jogo", "jogar futebol", "gestão de arenas", "agendamento de quadras", "plataforma de esportes", "gestão de espaços esportivos", "agendamento de espaços esportivos", "plataforma de gestão esportiva", "quadras esportivas"],
+  keywords: ["arenahub", "aluguel de quadras", "alugar jogo", "jogar futebol",
+    "gestão de arenas", "agendamento de quadras", "plataforma de esportes",
+    "gestão de espaços esportivos", "agendamento de espaços esportivos",
+    "plataforma de gestão esportiva", "quadras esportivas", "sortear times",
+    "sortear time com ia", "gerar sorteio", "ferramenta de sorteio", "sorteio de times",
+    "sorteador de times com ia", "sorteio aleatório de times"],
   authors: [{ name: "Sávio Soares", url: "https://saviosoaresufc.github.io/meu-portfolio" }],
   alternates: {
     canonical: "/",
